@@ -1,0 +1,13 @@
+{% if faults %}
+  {% for f in faults %}
+  <div class="info-card" style="border-color:rgba(255,59,59,.35)">
+    <h3 style="color:var(--red)">{{ f.fault_type }}</h3>
+    <div style="font:11px/1.6 var(--font-mono);color:var(--text-sec)">{{ f.description }}</div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="info-card">
+    <h3>No active faults</h3>
+    <div style="color:var(--text-muted);font:11px/1 var(--font-mono)">Network is healthy</div>
+  </div>
+{% endif %}

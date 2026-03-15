@@ -1,0 +1,8 @@
+{% for evt in events %}
+<div class="event-row cat-{{ evt.category }}">
+  <span class="event-time">{{ "%.2f"|format(evt.at) }}s</span>
+  <span class="event-cat cat-{{ evt.category }}">{{ evt.category|upper }}</span>
+  <span class="event-peer">{{ evt.peer_id[-8:] if evt.peer_id else "—" }}</span>
+  <span class="event-msg">{{ evt.message or evt.event_type }}</span>
+</div>
+{% endfor %}

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumina P2P · NOPS</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── 1. Status strip ──────────────────────────────────────────── -->
+  <div id="status-strip"></div>
+
+  <!-- ── 2. Topbar ────────────────────────────────────────────────── -->
+  <div id="topbar">
+    <span class="app-brand">◈ LUMINA · P2P</span>
+    <div class="vdiv"></div>
+    <div class="tb-controls">
+      <span id="hdr-status-dot" class="status-dot offline"></span>
+      <span id="hdr-status-label" class="status-label">OFFLINE</span>
+      <div id="scenario-indicator" class="scenario-indicator" style="display:none">
+        <span class="scenario-name-badge"></span>
+        <span class="phase-text"></span>
+      </div>
+      <div class="vdiv"></div>
+      <button id="btn-play" class="btn btn-primary" onclick="doPlay()">▶ START</button>
+      <button class="btn" onclick="doReset()">↺ RESET</button>
+      <div class="vdiv"></div>
+      <span class="ctrl-label">SPEED</span>
+      <select class="speed-sel" onchange="setSpeed(parseFloat(this.value))">
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+        <option value="8">8×</option>
+        <option value="16">16×</option>
+      </select>
+      <div class="vdiv"></div>
+      <span class="ctrl-label">NODES</span>
+      <input id="nodes-input" type="number" min="2" max="100" value="20" class="nodes-input" />
+      <button class="btn" onclick="applyNodeCount()">APPLY</button>
+    </div>
+    <div class="tb-right">
+      <div class="vdiv"></div>
+      <span id="hdr-time" class="time-val">0.00s</span>
+      <div class="vdiv"></div>
+      <div class="stat-chip">
+        <span id="hdr-node-count" class="stat-val">0</span>
+        <span class="stat-unit">nodes</span>
+      </div>
+      <div class="stat-chip">
+        <span id="hdr-event-count" class="stat-val">0</span>
+        <span class="stat-unit">events</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Tab bar ────────────────────────────────────────────────── -->
+  <div id="tab-bar">
+    <span class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">◈ DASHBOARD</span>
+    <span class="tab" data-tab="gossip"   onclick="switchTab('gossip')">⚡ GOSSIP</span>
+    <span class="tab" data-tab="topology" onclick="switchTab('topology')">◇ TOPOLOGY</span>
+    <span class="tab" data-tab="fault"    onclick="switchTab('fault')">⚠ FAULT</span>
+    <span class="tab" data-tab="trace"    onclick="switchTab('trace')">→ TRACE</span>
+  </div>
+
+  <!-- ── 4. Main ───────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- ══ DASHBOARD ════════════════════════════════════════════════ -->
+    <div id="view-dashboard" class="tab-view active">
+
+      <!-- LEFT SIDEBAR: METRICS ─────────────────────────────────── -->
+      <div id="sidebar-left" class="sidebar">
+        <div class="sb-scroll">
+          
+          <button class="btn" style="margin:12px 14px;width:calc(100% - 28px);text-align:left;display:flex;justify-content:space-between;align-items:center"
+                  onclick="toggleDrawer()">
+            <span>☰ SCENARIOS</span>
+            <span style="opacity:0.5;font-size:8px">CTRL+L</span>
+          </button>
+
+          <!-- NETWORK NODES -->
+          <div class="sb-section">
+            <div class="sb-title">Network Nodes</div>
+            <div class="sb-row"><span class="sb-lbl">Total</span>      <span class="sb-val" id="mn-total">0</span></div>
+            <div class="sb-row"><span class="sb-lbl"><span class="s-dot s-decoded"></span>Decoded</span>   <span class="sb-val g" id="mn-decoded">0</span></div>
+            <div class="sb-row"><span class="sb-lbl"><span class="s-dot s-receiving"></span>Receiving</span><span class="sb-val b" id="mn-receiving">0</span></div>
+            <div class="sb-row"><span class="sb-lbl"><span class="s-dot s-origin"></span>Origin</span>     <span class="sb-val c" id="mn-origin">0</span></div>
+            <div class="sb-row"><span class="sb-lbl"><span class="s-dot s-failed"></span>Failed</span>     <span class="sb-val r" id="mn-failed">0</span></div>
+            <div class="sb-row"><span class="sb-lbl"><span class="s-dot s-idle"></span>Idle</span>         <span class="sb-val"  id="mn-idle">0</span></div>
+          </div>
+
+          <!-- DATA CHUNKS -->
+          <div class="sb-section">
+            <div class="sb-title">Data Chunks</div>
+            <div class="sb-row"><span class="sb-lbl">Messages sent</span>  <span class="sb-val"  id="dc-sent">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Messages recv</span>  <span class="sb-val"  id="dc-recv">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Gossip blocks</span> <span class="sb-val g" id="dc-gossip">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Control (IHAVE)</span><span class="sb-val"  id="dc-ihave">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">DHT routing</span>   <span class="sb-val p" id="dc-dht">0</span></div>
+            <div class="sb-row" style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.03);padding-top:4px">
+              <span class="sb-lbl">Total Bandwidth</span>
+              <span class="sb-val c" id="dc-bytes">0 B</span>
+            </div>
+          </div>
+
+          <!-- GOSSIP MESH -->
+          <div class="sb-section">
+            <div class="sb-title">Gossip Mesh</div>
+            <div class="sb-row"><span class="sb-lbl">Mesh size</span>    <span class="sb-val c" id="gm-mesh">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Grafts</span>       <span class="sb-val g" id="gm-grafts">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Prunes</span>       <span class="sb-val r" id="gm-prunes">0</span></div>
+            <div class="sb-row"><span class="sb-lbl">Semaphore blk</span><span class="sb-val a" id="gm-semaphore">0</span></div>
+          </div>
+
+          <!-- THROUGHPUT SPARK -->
+          <div class="sb-section">
+            <div class="sb-title">Traffic Rate</div>
+            <div class="sb-row"><span class="sb-lbl">msg/s</span><span class="sb-val c" id="metric-throughput">0.0</span></div>
+            <canvas id="spark-throughput" class="spark"></canvas>
+          </div>
+
+          <!-- EVENT RATE SPARK -->
+          <div class="sb-section">
+            <div class="sb-title">Event Flux</div>
+            <div class="sb-row"><span class="sb-lbl">evt/s</span><span class="sb-val g" id="metric-evt-rate">0.0</span></div>
+            <canvas id="spark-eventrate" class="spark"></canvas>
+          </div>
+
+        </div>
+      </div><!-- /#sidebar-left -->
+
+      <!-- GRAPH AREA ────────────────────────────────────────────── -->
+      <div id="graph-area">
+
+        <!-- Scenario drawer (overlay) -->
+        <div id="scenario-drawer">
+          <div class="drawer-header">
+            <span class="drawer-section-label">Simulation Scenarios</span>
+            <button class="drawer-close" onclick="toggleDrawer(false)">✕</button>
+          </div>
+          <div id="scenario-cards" class="scenario-cards"></div>
+          <div class="launch-row">
+            <button id="btn-launch" class="btn-launch" onclick="launchScenario()">▶ LAUNCH SIMULATION</button>
+          </div>
+        </div>
+
+        <!-- Node state legend bar -->
+        <div id="node-legend">
+          <span class="leg-item"><span class="leg-dot s-idle"></span>idle</span>
+          <span class="leg-item"><span class="leg-dot s-origin"></span>origin</span>
+          <span class="leg-item"><span class="leg-dot s-decoded"></span>decoded</span>
+          <span class="leg-item"><span class="leg-dot s-receiving"></span>receiving</span>
+          <span class="leg-item"><span class="leg-dot s-failed"></span>failed</span>
+          <span class="leg-item"><span class="leg-dot s-error"></span>error</span>
+        </div>
+
+        <!-- SVG graph -->
+        <svg id="graph-svg"></svg>
+
+        <!-- Graph toolbar -->
+        <div id="graph-toolbar">
+          <button id="btn-heat" class="btn" onclick="graph.toggleHeat()">◉ HEATMAP</button>
+          <button class="btn" onclick="graph.fitView()">⌖ FIT VIEW</button>
+        </div>
+
+        <!-- Node inspector panel -->
+        <div id="node-inspector"></div>
+
+        <!-- Node context menu -->
+        <div id="node-context-menu">
+          <div class="ctx-item" onclick="selectNode(state.contextNodeId)">Inspect Details</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item danger" onclick="injectFault('drop', state.contextNodeId)">Drop Traffic</div>
+        </div>
+
+      </div><!-- /#graph-area -->
+
+      <!-- RIGHT SIDEBAR: TOOLS & LOG ────────────────────────────── -->
+      <div id="sidebar-right" class="sidebar">
+        
+        <!-- FAULT INJECTOR PANEL -->
+        <div class="sb-section" id="fault-injector">
+          <div class="sb-title">Manual Fault Injector</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+            <button class="btn btn-primary" onclick="injectFault('partition')">PARTITION</button>
+            <button class="btn btn-primary" onclick="injectFault('sybil')">SYBIL ATTACK</button>
+            <button class="btn btn-primary" onclick="injectFault('eclipse')">ECLIPSE</button>
+            <button class="btn btn-primary" onclick="injectFault('drop')">DROP PEER</button>
+          </div>
+        </div>
+
+        <!-- EVENT LOG -->
+        <div id="evt-log">
+          <div class="evt-log-header">
+            <span class="evt-log-title">Live Event Stream</span>
+            <div class="evt-filters">
+              <button class="filter-btn active" onclick="setFilter(null)">ALL</button>
+              <button class="filter-btn" data-cat="gossip"     onclick="setFilter('gossip')">MSG</button>
+              <button class="filter-btn" data-cat="fault"      onclick="setFilter('fault')">ERR</button>
+            </div>
+          </div>
+          <div class="evt-table-head">
+            <span class="evt-col-hdr">Time</span>
+            <span class="evt-col-hdr">Peer</span>
+            <span class="evt-col-hdr">Event</span>
+          </div>
+          <div id="event-list"></div>
+        </div>
+
+      </div><!-- /#sidebar-right -->
+
+    </div><!-- /#view-dashboard -->
+
+    <!-- ══ GOSSIP tab ════════════════════════════════════════════ -->
+    <div id="view-gossip" class="tab-view">
+      <div class="full-view">
+        <h2>GossipSub v1.1 Mesh Status</h2>
+        <p>Real-time view of mesh link stability, IHAVE/IWANT propagation, and peer scoring metrics.</p>
+        <div class="info-grid" hx-get="/api/partials/gossip" hx-trigger="load, every 2s" hx-target="this">
+          <div class="info-card"><h3>Loading mesh state…</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TOPOLOGY tab ══════════════════════════════════════════ -->
+    <div id="view-topology" class="tab-view">
+      <div class="full-view">
+        <h2>Network Topology & Routing</h2>
+        <p>Dynamic graph representing the DHT routing table and active GossipSub mesh links.</p>
+        <div class="info-grid" hx-get="/api/partials/topology" hx-trigger="load, every 2s" hx-target="this">
+          <div class="info-card"><h3>Mapping topology…</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FAULT tab ═════════════════════════════════════════════ -->
+    <div id="view-fault" class="tab-view">
+      <div class="full-view">
+        <h2>Active Network Faults</h2>
+        <p>Currently active partitions, throttled nodes, and simulated adversarial behaviors.</p>
+        <div hx-get="/api/partials/faults" hx-trigger="load, every 1s" hx-target="this">
+          <div class="info-card"><h3>Scanning for faults…</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TRACE tab ══════════════════════════════════════════════ -->
+    <div id="view-trace" class="tab-view">
+      <div class="full-view">
+        <h2>Message Propagation Trace</h2>
+        <p>Vertical hop-by-hop breakdown of block delivery across the network.</p>
+        <div hx-get="/api/partials/trace" hx-trigger="load, every 1s" hx-target="this">
+          <div class="info-card"><h3>Aggregating trace data…</h3></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#main -->
+
+  <!-- ── 5. Scrubber ───────────────────────────────────────────────── -->
+  <div id="scrubber">
+    <span id="scrub-state" class="scrub-state">■ STOPPED</span>
+    <div id="scrub-track" class="scrub-track">
+      <div class="scrub-fill" id="scrub-fill" style="width:0%"></div>
+      <div class="scrub-head" id="scrub-head" style="left:0%"></div>
+    </div>
+    <span id="scrub-time-lbl" class="scrub-time">0.00s / 120s</span>
+  </div>
+
+</div><!-- /#app -->
+<script src="/static/js/app.js" type="module"></script>
+</body>
+</html>
