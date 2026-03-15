@@ -2,11 +2,16 @@
 # ──────────────────────────────────────────────────────────────
 # Lumina P2P Simulator — start script
 #
-# Starts the FastAPI backend AND the SvelteKit frontend (frontend-v2).
+# Starts the FastAPI backend with the built-in frontend (Jinja2+HTMX+D3.js).
+#
+# The built-in frontend is the primary, production-ready interface.
+# Optional: Start SvelteKit frontend v2 with --frontend-v2 flag
+# (Note: frontend-v2 has Svelte 5 runes compatibility issues and is not recommended)
 #
 # Usage:
-#   ./start.sh              # default: 20 nodes, port 8000
-#   ./start.sh --nodes 50   # custom node count
+#   ./start.sh                    # default: 20 nodes, port 8000
+#   ./start.sh --nodes 50         # custom node count
+#   ./start.sh --frontend-v2      # also start SvelteKit frontend on 5173 (not recommended)
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -20,6 +25,7 @@ NODE_COUNT="${LUMINA_NODE_COUNT:-20}"
 LOG_LEVEL="${LUMINA_LOG_LEVEL:-INFO}"
 PORT="${LUMINA_PORT:-8000}"
 FE_PORT=5173
+START_FRONTEND_V2=false
 
 # ── Parse args ──
 while [[ $# -gt 0 ]]; do
@@ -27,8 +33,9 @@ while [[ $# -gt 0 ]]; do
     --nodes)  NODE_COUNT="$2"; shift 2 ;;
     --port)   PORT="$2";       shift 2 ;;
     --log)    LOG_LEVEL="$2";  shift 2 ;;
+    --frontend-v2)  START_FRONTEND_V2=true; shift 1 ;;
     --help|-h)
-      echo "Usage: $0 [--nodes N] [--port PORT] [--log LEVEL]"
+      echo "Usage: $0 [--nodes N] [--port PORT] [--log LEVEL] [--frontend-v2]"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -67,14 +74,16 @@ trap cleanup EXIT INT TERM HUP
 
 # ── Pre-flight ──
 command -v uv &>/dev/null || { err "uv not found."; exit 1; }
-command -v bun &>/dev/null || { err "bun not found."; exit 1; }
+if $START_FRONTEND_V2; then
+  command -v bun &>/dev/null || { err "bun not found (required for --frontend-v2)."; exit 1; }
+fi
 
 # ── Install deps ──
 if [[ ! -d "$ROOT/.venv" ]]; then
   info "Installing backend deps..."
   (cd "$ROOT" && uv sync)
 fi
-if [[ ! -d "$ROOT/frontend-v2/node_modules" ]]; then
+if $START_FRONTEND_V2 && [[ ! -d "$ROOT/frontend-v2/node_modules" ]]; then
   info "Installing frontend-v2 deps..."
   (cd "$ROOT/frontend-v2" && bun install)
 fi
@@ -91,10 +100,12 @@ setsid bash -c "cd '$ROOT' && exec uv run uvicorn backend.main:app \
   --reload" &
 SERVER_PID=$!
 
-# ── Start Frontend ──
-info "Starting SvelteKit Frontend-v2..."
-(cd "$ROOT/frontend-v2" && exec bun run dev --port $FE_PORT) &
-FRONTEND_PID=$!
+# ── Start Frontend v2 (Optional) ──
+if $START_FRONTEND_V2; then
+  warn "Starting SvelteKit Frontend-v2 (optional, not recommended)..."
+  (cd "$ROOT/frontend-v2" && exec bun run dev --port $FE_PORT) &
+  FRONTEND_PID=$!
+fi
 
 # ── Wait for Backend Ready ──
 log "Waiting for backend..."
@@ -110,8 +121,10 @@ echo ""
 echo -e "  ${CYAN}╔══════════════════════════════════════════════╗${RESET}"
 echo -e "  ${CYAN}║${RESET}  ${BOLD}${GREEN}Lumina P2P Simulator — NOC v2${RESET}               ${CYAN}║${RESET}"
 echo -e "  ${CYAN}║${RESET}                                              ${CYAN}║${RESET}"
-echo -e "  ${CYAN}║${RESET}  Frontend: ${BOLD}${CYAN}http://localhost:${FE_PORT}${RESET}           ${CYAN}║${RESET}"
-echo -e "  ${CYAN}║${RESET}  Backend:  ${DIM}http://localhost:${PORT}${RESET}              ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}  ${BOLD}Primary:${RESET}  ${CYAN}http://localhost:${PORT}${RESET}  (Jinja2+HTMX) ${CYAN}║${RESET}"
+if $START_FRONTEND_V2; then
+  echo -e "  ${CYAN}║${RESET}  Optional: ${CYAN}http://localhost:${FE_PORT}${RESET}  (SvelteKit)    ${CYAN}║${RESET}"
+fi
 echo -e "  ${CYAN}║${RESET}                                              ${CYAN}║${RESET}"
 echo -e "  ${CYAN}║${RESET}  Nodes:    ${GREEN}${NODE_COUNT}${RESET}                               ${CYAN}║${RESET}"
 echo -e "  ${CYAN}╚══════════════════════════════════════════════╝${RESET}"
