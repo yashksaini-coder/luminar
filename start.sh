@@ -18,7 +18,7 @@ SHUTTING_DOWN=false
 # Defaults
 NODE_COUNT="${LUMINAR_NODE_COUNT:-20}"
 LOG_LEVEL="${LUMINAR_LOG_LEVEL:-INFO}"
-PORT="${LUMINAR_PORT:-8000}"
+PORT="${PORT:-${LUMINAR_PORT:-8000}}"
 PROD_MODE=false
 
 # ── Parse args ──
@@ -76,7 +76,10 @@ cleanup() {
 trap cleanup EXIT INT TERM HUP
 
 # ── Pre-flight checks ──
-command -v uv &>/dev/null || { err "uv not found. Install: https://docs.astral.sh/uv/"; exit 1; }
+if ! command -v uv &>/dev/null; then
+  warn "uv not found — installing via pip..."
+  pip install --quiet uv || { err "Failed to install uv. Install manually: https://docs.astral.sh/uv/"; exit 1; }
+fi
 
 # ── Install deps ──
 if [[ ! -d "$ROOT/.venv" ]]; then

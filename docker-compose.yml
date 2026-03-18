@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: docker/Dockerfile.backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:

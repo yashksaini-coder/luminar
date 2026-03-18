@@ -3,7 +3,7 @@ region: nyc
 
 services:
   - name: backend
-    dockerfile_path: docker/Dockerfile.backend
+    dockerfile_path: Dockerfile
     source_dir: /
     http_port: 8080
     instance_count: 1
