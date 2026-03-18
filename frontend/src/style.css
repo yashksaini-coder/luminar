@@ -192,6 +192,23 @@ html, body {
   display: block;
 }
 
+.tb-gh-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text3);
+  border-radius: var(--radius);
+  transition: color 0.12s, background 0.12s;
+  text-decoration: none;
+}
+
+.tb-gh-link:hover {
+  color: var(--text);
+  background: var(--border-subtle);
+}
+
 /* ── Toolbar Input ── */
 .tb-input {
   background: var(--bg);
