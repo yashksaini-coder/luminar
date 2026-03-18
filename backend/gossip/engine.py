@@ -36,6 +36,8 @@ HEARTBEAT_INTERVAL = 1.0  # Seconds between heartbeats
 SCORE_THRESHOLD_GRAFT = -5.0   # Don't graft peers with score below this
 SCORE_THRESHOLD_PRUNE = -10.0  # Prune peers with score below this (regardless of mesh size)
 HISTORY_WINDOW = 50  # Number of recent msg_ids to track for IHAVE/IWANT
+MAX_TRACES = 5000    # Maximum number of message traces to retain
+MAX_SEEN_PER_PEER = 2000  # Maximum seen msg_ids per peer
 
 
 @dataclass
@@ -190,6 +192,13 @@ class GossipEngine:
         )
         trace.add_hop(origin, sim_time, 0.0, 0)
         self._traces[msg_id] = trace
+
+        # Evict oldest traces to bound memory
+        if len(self._traces) > MAX_TRACES:
+            keys = list(self._traces.keys())
+            for k in keys[:len(keys) - MAX_TRACES]:
+                del self._traces[k]
+
         self._seen.setdefault(origin, set()).add(msg_id)
         self._add_history(origin, msg_id)
 
@@ -233,10 +242,14 @@ class GossipEngine:
             return
 
         # Check dedup
-        seen = self._seen.get(to_peer, set())
+        seen = self._seen.setdefault(to_peer, set())
         if msg_id in seen:
             return
         seen.add(msg_id)
+        # Bound seen set per peer to prevent unbounded growth
+        if len(seen) > MAX_SEEN_PER_PEER:
+            seen_list = list(seen)
+            self._seen[to_peer] = set(seen_list[-MAX_SEEN_PER_PEER:])
         self._add_history(to_peer, msg_id)
 
         # Clear any pending IWANT for this message
@@ -321,9 +334,10 @@ class GossipEngine:
             # GRAFT: if mesh too small, add highest-scored candidates
             if len(peer_mesh) < D_LOW:
                 candidates = list(neighbors - peer_mesh)
-                # Filter by graft threshold and sort by score
-                scored = [(c, self.scorer.compute_score(topic, c, sim_time))
-                          for c in candidates if self.scorer.compute_score(topic, c, sim_time) > SCORE_THRESHOLD_GRAFT]
+                # Filter by graft threshold and sort by score (compute once per candidate)
+                scored = [(c, s) for c in candidates
+                          for s in (self.scorer.compute_score(topic, c, sim_time),)
+                          if s > SCORE_THRESHOLD_GRAFT]
                 scored.sort(key=lambda x: -x[1])  # Highest score first
                 needed = D - len(peer_mesh)
                 to_graft = [c for c, _ in scored[:needed]]

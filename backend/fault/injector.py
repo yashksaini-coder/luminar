@@ -25,6 +25,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Sybil fanout: how many honest peers each sybil targets
+D_SYBIL_FANOUT = 4
+
 
 class FaultInjector:
     def __init__(
@@ -65,8 +68,8 @@ class FaultInjector:
         for f in self._active_faults.values():
             if f["type"] != "partition":
                 continue
-            ga = set(f["group_a"])
-            gb = set(f["group_b"])
+            ga = f["group_a"]
+            gb = f["group_b"]
             if (peer_a in ga and peer_b in gb) or (peer_a in gb and peer_b in ga):
                 return True
         return False
@@ -106,18 +109,18 @@ class FaultInjector:
     async def inject_partition(self, group_a: list[str], group_b: list[str]) -> str:
         """Create a network partition. Returns fault_id."""
         fault_id = f"fault-{uuid.uuid4().hex[:8]}"
-        fault = {"id": fault_id, "type": "partition", "group_a": group_a, "group_b": group_b}
+        ga_set = set(group_a)
+        gb_set = set(group_b)
+        fault = {"id": fault_id, "type": "partition", "group_a": ga_set, "group_b": gb_set}
         self._active_faults[fault_id] = fault
 
         # Prune cross-partition mesh links
         for topic_mesh in self.gossip._mesh.values():
             for peer_id, mesh_peers in topic_mesh.items():
-                if peer_id in group_a:
-                    to_remove = mesh_peers & set(group_b)
-                    mesh_peers -= to_remove
-                elif peer_id in group_b:
-                    to_remove = mesh_peers & set(group_a)
-                    mesh_peers -= to_remove
+                if peer_id in ga_set:
+                    mesh_peers -= gb_set
+                elif peer_id in gb_set:
+                    mesh_peers -= ga_set
 
         await self._event_bus.emit(
             FaultInjected(
@@ -323,7 +326,3 @@ class FaultInjector:
             if await self.clear_fault(fid):
                 count += 1
         return count
-
-
-# Sybil fanout: how many honest peers each sybil targets
-D_SYBIL_FANOUT = 4

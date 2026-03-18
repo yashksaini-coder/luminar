@@ -106,6 +106,10 @@ class NodePool:
 
     def wire_topology(self, edges: list[tuple[str, str]]) -> None:
         """Apply topology edges to nodes and gossip engine."""
+        # Clear old connections first
+        for node in self._nodes.values():
+            node.connected_peers.clear()
+
         # Wire node connections
         for a, b in edges:
             node_a = self.get_node(a)

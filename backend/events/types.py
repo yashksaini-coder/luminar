@@ -1,4 +1,4 @@
-"""Typed event dataclasses for the Lumina P2P event bus.
+"""Typed event dataclasses for the Luminar event bus.
 
 Every event emitted by the simulation flows through EventBus as one of these types.
 All events carry an `at` timestamp (simulation time in seconds) and serialize to JSON

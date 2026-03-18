@@ -6,6 +6,7 @@ of recent events for replay/scrubbing and optionally writes JSONL for persistenc
 
 from __future__ import annotations
 
+import bisect
 import logging
 from collections import deque
 from typing import TYPE_CHECKING
@@ -67,8 +68,14 @@ class EventBus:
             self._subscribers.remove(ch)
 
     def events_since(self, t: float) -> list[BaseEvent]:
-        """Return all buffered events with `at >= t`."""
-        return [e for e in self._ring if e.at >= t]
+        """Return all buffered events with `at >= t`. Uses bisect for O(log n) lookup."""
+        ring = self._ring
+        if not ring:
+            return []
+        # Binary search on the time-ordered ring buffer
+        times = [e.at for e in ring]
+        idx = bisect.bisect_left(times, t)
+        return list(ring)[idx:]
 
     def events_between(self, t_start: float, t_end: float) -> list[BaseEvent]:
         """Return buffered events in [t_start, t_end]."""

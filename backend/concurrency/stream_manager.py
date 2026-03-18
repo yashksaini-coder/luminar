@@ -110,6 +110,7 @@ class StreamManager:
                     raise StreamTimeoutError(to_peer, self._open_timeout)
 
             self._open_streams[stream_id] = record
+            _trio_open_time = trio.current_time()
             await self._event_bus.emit(
                 StreamOpened(
                     at=sim_time,
@@ -124,6 +125,7 @@ class StreamManager:
                 yield record
             finally:
                 # ALWAYS close — this was the original bug
+                close_time = sim_time + (trio.current_time() - _trio_open_time)
                 self._open_streams.pop(stream_id, None)
                 if record.stream is not None:
                     try:
@@ -131,7 +133,7 @@ class StreamManager:
                     except Exception:
                         logger.debug("Stream %s already closed", stream_id)
                 await self._event_bus.emit(
-                    StreamClosed(at=sim_time, stream_id=stream_id, reason="normal")
+                    StreamClosed(at=close_time, stream_id=stream_id, reason="normal")
                 )
 
 

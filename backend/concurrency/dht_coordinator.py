@@ -104,7 +104,7 @@ class DHTQueryCoordinator:
             self._active_queries[query_id] = {
                 "initiator": initiator,
                 "target": target_key,
-                "started_at": sim_time,
+                "started_at": trio.current_time(),
             }
 
             await self._event_bus.emit(
@@ -125,7 +125,7 @@ class DHTQueryCoordinator:
                             await trio.sleep(0.01)
                             result = {"found": True, "target": target_key}
 
-                        elapsed_ms = (sim_time - self._active_queries[query_id]["started_at"]) * 1000
+                        elapsed_ms = (trio.current_time() - self._active_queries[query_id]["started_at"]) * 1000
                         await self._event_bus.emit(
                             DHTQueryCompleted(
                                 at=sim_time,

@@ -1,4 +1,4 @@
-"""Pre-built simulation scenarios for Lumina P2P."""
+"""Pre-built simulation scenarios for Luminarr."""
 
 from __future__ import annotations
 

@@ -33,9 +33,13 @@ class MetricsCollector:
             total_sent += node["messages_sent"]
             total_received += node["messages_received"]
 
-        # Count events by category
+        # Count events by category — take a snapshot to avoid mutation during iteration
         event_counts = {}
-        for event in self._event_bus.ring:
+        try:
+            ring_snapshot = list(self._event_bus.ring)
+        except RuntimeError:
+            ring_snapshot = []
+        for event in ring_snapshot:
             cat = event.category.value
             event_counts[cat] = event_counts.get(cat, 0) + 1
 
