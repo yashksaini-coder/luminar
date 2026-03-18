@@ -1,44 +1,52 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────
-# Lumina P2P Simulator — start script
+# Luminar P2P Simulator — start script
 #
-# Starts the FastAPI backend with the built-in frontend (Jinja2+HTMX+D3.js).
-#
-# The built-in frontend is the primary, production-ready interface.
-# Optional: Start SvelteKit frontend v2 with --frontend-v2 flag
-# (Note: frontend-v2 has Svelte 5 runes compatibility issues and is not recommended)
+# Starts the FastAPI backend API server.
 #
 # Usage:
 #   ./start.sh                    # default: 20 nodes, port 8000
 #   ./start.sh --nodes 50         # custom node count
-#   ./start.sh --frontend-v2      # also start SvelteKit frontend on 5173 (not recommended)
+#   ./start.sh --prod             # no --reload (demo/production mode)
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_PID=""
-FRONTEND_PID=""
 SHUTTING_DOWN=false
 
 # Defaults
-NODE_COUNT="${LUMINA_NODE_COUNT:-20}"
-LOG_LEVEL="${LUMINA_LOG_LEVEL:-INFO}"
-PORT="${LUMINA_PORT:-8000}"
-FE_PORT=5173
-START_FRONTEND_V2=false
+NODE_COUNT="${LUMINAR_NODE_COUNT:-20}"
+LOG_LEVEL="${LUMINAR_LOG_LEVEL:-INFO}"
+PORT="${LUMINAR_PORT:-8000}"
+PROD_MODE=false
 
 # ── Parse args ──
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --nodes)  NODE_COUNT="$2"; shift 2 ;;
-    --port)   PORT="$2";       shift 2 ;;
-    --log)    LOG_LEVEL="$2";  shift 2 ;;
-    --frontend-v2)  START_FRONTEND_V2=true; shift 1 ;;
+    --nodes)      NODE_COUNT="$2"; shift 2 ;;
+    --port)       PORT="$2";       shift 2 ;;
+    --log)        LOG_LEVEL="$2";  shift 2 ;;
+    --prod)       PROD_MODE=true;  shift 1 ;;
     --help|-h)
-      echo "Usage: $0 [--nodes N] [--port PORT] [--log LEVEL] [--frontend-v2]"
+      cat <<'USAGE'
+Usage: ./start.sh [OPTIONS]
+
+Options:
+  --nodes N       Number of simulated peers (default: 20, range: 2-100)
+  --port PORT     Backend port (default: 8000)
+  --log LEVEL     Log level: DEBUG, INFO, WARNING, ERROR (default: INFO)
+  --prod          Disable hot-reload (suitable for demos)
+  -h, --help      Show this help
+
+Environment variables:
+  LUMINAR_NODE_COUNT   Same as --nodes
+  LUMINAR_LOG_LEVEL    Same as --log
+  LUMINAR_PORT         Same as --port
+USAGE
       exit 0
       ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    *) echo "Unknown option: $1 (try --help)"; exit 1 ;;
   esac
 done
 
@@ -57,80 +65,77 @@ cleanup() {
   SHUTTING_DOWN=true
   echo ""
   warn "Shutting down..."
-  
-  if [[ -n "$FRONTEND_PID" ]]; then
-    kill -TERM "$FRONTEND_PID" 2>/dev/null || true
+
+  if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
+    kill -TERM "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" 2>/dev/null || true
   fi
-  if [[ -n "$SERVER_PID" ]]; then
-    kill -TERM -- -"$SERVER_PID" 2>/dev/null || kill -TERM "$SERVER_PID" 2>/dev/null || true
-  fi
-  
-  # Clean up ports
-  lsof -ti :"$PORT" 2>/dev/null | xargs kill -9 2>/dev/null || true
-  lsof -ti :"$FE_PORT" 2>/dev/null | xargs kill -9 2>/dev/null || true
+
   info "Stopped."
 }
 trap cleanup EXIT INT TERM HUP
 
-# ── Pre-flight ──
-command -v uv &>/dev/null || { err "uv not found."; exit 1; }
-if $START_FRONTEND_V2; then
-  command -v bun &>/dev/null || { err "bun not found (required for --frontend-v2)."; exit 1; }
-fi
+# ── Pre-flight checks ──
+command -v uv &>/dev/null || { err "uv not found. Install: https://docs.astral.sh/uv/"; exit 1; }
 
 # ── Install deps ──
 if [[ ! -d "$ROOT/.venv" ]]; then
-  info "Installing backend deps..."
+  info "Installing dependencies..."
   (cd "$ROOT" && uv sync)
-fi
-if $START_FRONTEND_V2 && [[ ! -d "$ROOT/frontend-v2/node_modules" ]]; then
-  info "Installing frontend-v2 deps..."
-  (cd "$ROOT/frontend-v2" && bun install)
 fi
 
 # ── Start Backend ──
-info "Starting Lumina Backend on port ${PORT}..."
-export LUMINA_NODE_COUNT="$NODE_COUNT"
-export LUMINA_LOG_LEVEL="$LOG_LEVEL"
+info "Starting backend on port ${PORT} (${NODE_COUNT} nodes)..."
+export LUMINAR_NODE_COUNT="$NODE_COUNT"
+export LUMINAR_LOG_LEVEL="$LOG_LEVEL"
 
-setsid bash -c "cd '$ROOT' && exec uv run uvicorn backend.main:app \
-  --host 0.0.0.0 \
-  --port $PORT \
-  --log-level $(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]') \
-  --reload" &
-SERVER_PID=$!
-
-# ── Start Frontend v2 (Optional) ──
-if $START_FRONTEND_V2; then
-  warn "Starting SvelteKit Frontend-v2 (optional, not recommended)..."
-  (cd "$ROOT/frontend-v2" && exec bun run dev --port $FE_PORT) &
-  FRONTEND_PID=$!
+UVICORN_ARGS=(
+  backend.main:app
+  --host 0.0.0.0
+  --port "$PORT"
+  --log-level "$(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')"
+)
+if ! $PROD_MODE; then
+  UVICORN_ARGS+=(--reload)
 fi
 
+uv run uvicorn "${UVICORN_ARGS[@]}" &
+SERVER_PID=$!
+
 # ── Wait for Backend Ready ──
-log "Waiting for backend..."
+log "Waiting for backend to be ready..."
+READY=false
 for i in $(seq 1 40); do
   if curl -sf "http://localhost:${PORT}/api/sim/snapshot" >/dev/null 2>&1; then
+    READY=true
     break
   fi
   sleep 0.5
 done
 
+if ! $READY; then
+  err "Backend failed to start within 20 seconds."
+  exit 1
+fi
+
 # ── Banner ──
 echo ""
-echo -e "  ${CYAN}╔══════════════════════════════════════════════╗${RESET}"
-echo -e "  ${CYAN}║${RESET}  ${BOLD}${GREEN}Lumina P2P Simulator — NOC v2${RESET}               ${CYAN}║${RESET}"
-echo -e "  ${CYAN}║${RESET}                                              ${CYAN}║${RESET}"
-echo -e "  ${CYAN}║${RESET}  ${BOLD}Primary:${RESET}  ${CYAN}http://localhost:${PORT}${RESET}  (Jinja2+HTMX) ${CYAN}║${RESET}"
-if $START_FRONTEND_V2; then
-  echo -e "  ${CYAN}║${RESET}  Optional: ${CYAN}http://localhost:${FE_PORT}${RESET}  (SvelteKit)    ${CYAN}║${RESET}"
+echo -e "  ${CYAN}╔══════════════════════════════════════════════════════╗${RESET}"
+echo -e "  ${CYAN}║${RESET}  ${BOLD}${GREEN}Luminar P2P Simulator${RESET}                                 ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}                                                      ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}  API:       ${CYAN}http://localhost:${PORT}${RESET}                      ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}  API docs:  ${CYAN}http://localhost:${PORT}/docs${RESET}                  ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}  WebSocket: ${CYAN}ws://localhost:${PORT}/ws/events${RESET}               ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}                                                      ${CYAN}║${RESET}"
+echo -e "  ${CYAN}║${RESET}  Nodes: ${GREEN}${NODE_COUNT}${RESET}    Speed: ${GREEN}1.0x${RESET}    Log: ${GREEN}${LOG_LEVEL}${RESET}              ${CYAN}║${RESET}"
+if $PROD_MODE; then
+echo -e "  ${CYAN}║${RESET}  Mode:  ${YELLOW}production${RESET} (no hot-reload)                     ${CYAN}║${RESET}"
 fi
-echo -e "  ${CYAN}║${RESET}                                              ${CYAN}║${RESET}"
-echo -e "  ${CYAN}║${RESET}  Nodes:    ${GREEN}${NODE_COUNT}${RESET}                               ${CYAN}║${RESET}"
-echo -e "  ${CYAN}╚══════════════════════════════════════════════╝${RESET}"
+echo -e "  ${CYAN}╚══════════════════════════════════════════════════════╝${RESET}"
 echo ""
+info "Press Ctrl+C to stop."
 
-# ── Watch ──
-while kill -0 "$SERVER_PID" 2>/dev/null; do sleep 2; done
-err "Backend exited!"
+# ── Watch backend process ──
+wait "$SERVER_PID" 2>/dev/null
+err "Backend exited unexpectedly."
 exit 1

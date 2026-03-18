@@ -9,8 +9,7 @@ dist/
 build/
 *.egg-info/
 
-# uv
-uv.lock
+# uv — lock file is committed for reproducible builds
 
 # Node
 node_modules/
@@ -43,3 +42,6 @@ traces/
 # Coverage
 htmlcov/
 .coverage
+
+# AI assistant config
+.claude/
