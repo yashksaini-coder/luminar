@@ -19,6 +19,7 @@ import trio
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.fault.injector import FaultInjector
@@ -750,3 +751,10 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
 async def active_scenario():
     """Return the currently running scenario and its phase progress."""
     return scenario_runner.get_status()
+
+
+# --- SPA static files (must be last — catches all non-API routes) ---
+
+_FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.isdir(_FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIST, html=True), name="frontend")
