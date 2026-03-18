@@ -3,17 +3,13 @@ region: nyc
 
 services:
   - name: backend
+    dockerfile_path: docker/Dockerfile.backend
     source_dir: /
-    build_command: pip install uv && uv sync --no-dev --frozen
-    run_command: uv run uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xs
     routes:
-      - path: /api
-      - path: /ws
-      - path: /docs
-      - path: /openapi.json
+      - path: /
     envs:
       - key: LUMINAR_NODE_COUNT
         value: "50"
@@ -21,17 +17,6 @@ services:
         value: "INFO"
     health_check:
       http_path: /api/sim/snapshot
-      initial_delay_seconds: 15
+      initial_delay_seconds: 20
       period_seconds: 30
       failure_threshold: 3
-
-static_sites:
-  - name: frontend
-    build_command: cd frontend && npm ci && npm run build
-    output_dir: frontend/dist
-    source_dir: /
-    routes:
-      - path: /
-    envs:
-      - key: NODE_ENV
-        value: "production"
