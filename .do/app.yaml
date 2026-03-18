@@ -3,8 +3,9 @@ region: nyc
 
 services:
   - name: backend
-    dockerfile_path: docker/Dockerfile.backend
     source_dir: /
+    build_command: pip install uv && uv sync --no-dev --frozen
+    run_command: uv run uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xs
