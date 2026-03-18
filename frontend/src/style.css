@@ -335,6 +335,7 @@ html, body {
   display: flex;
   overflow: hidden;
   min-height: 0;
+  position: relative;
 }
 
 /* ── Stats Panel (left) ── */
@@ -890,4 +891,190 @@ input[type="range"]::-moz-range-thumb {
 .milestone-row:hover {
   background: var(--border-subtle);
   border-radius: 2px;
+}
+
+/* ── Peer Inspector ── */
+#peer-inspector {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 210px;
+  height: 100%;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text2);
+  z-index: 30;
+  transform: translateX(100%);
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+#peer-inspector.open {
+  transform: translateX(0);
+}
+
+.pi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.pi-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pi-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pi-state-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pi-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 2px;
+}
+
+.pi-close:hover {
+  color: var(--text);
+  background: var(--border-subtle);
+}
+
+.pi-peer-id {
+  padding: 4px 10px;
+  font-size: 9px;
+  color: var(--text3);
+  word-break: break-all;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.pi-metrics {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.pi-sep {
+  color: var(--text3);
+}
+
+.pi-sent { color: oklch(0.72 0.12 230); font-weight: 600; }
+.pi-recv { color: oklch(0.75 0.14 155); font-weight: 600; }
+.pi-score { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.pi-section-title {
+  padding: 5px 10px 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.pi-spark-wrap {
+  padding: 2px 8px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.pi-peers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 3px 8px 6px;
+  max-height: 72px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.pi-peer-chip {
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  color: var(--text2);
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: var(--font);
+}
+
+.pi-peer-chip:hover {
+  background: var(--border);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.pi-events {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0;
+  min-height: 0;
+}
+
+.pi-ev-row {
+  display: grid;
+  grid-template-columns: 50px 18px 12px 1fr;
+  gap: 3px;
+  padding: 1px 10px;
+  font-size: 9px;
+  align-items: center;
+  line-height: 1.5;
+}
+
+.pi-ev-row:hover {
+  background: var(--border-subtle);
+}
+
+.pi-ev-ts {
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+.pi-ev-type {
+  font-weight: 600;
+}
+
+.pi-ev-dir {
+  color: var(--text3);
+  text-align: center;
+}
+
+.pi-ev-peer {
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -276,6 +276,7 @@ export function renderLayers() {
         _nodeClickHandled = true
         const idx = info.object._idx
         store.selectedNode = store.selectedNode === idx ? -1 : idx
+        document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
         renderLayers()
       }
     },
