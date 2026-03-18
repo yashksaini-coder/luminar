@@ -6,7 +6,7 @@ const BASE: string = import.meta.env.VITE_API_URL ?? ''
 
 async function get<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(path)
+    const res = await fetch(BASE + path)
     if (!res.ok) return null
     return await res.json()
   } catch { return null }
@@ -14,7 +14,7 @@ async function get<T>(path: string): Promise<T | null> {
 
 async function post<T>(path: string, body?: unknown): Promise<T | null> {
   try {
-    const res = await fetch(path, {
+    const res = await fetch(BASE + path, {
       method: 'POST',
       headers: body != null ? { 'Content-Type': 'application/json' } : undefined,
       body: body != null ? JSON.stringify(body) : undefined,
