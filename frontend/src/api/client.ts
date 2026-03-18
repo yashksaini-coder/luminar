@@ -1,6 +1,8 @@
 import type { SimSnapshot, MetricsSnapshot, AppEvent, ScenarioDefinition, ActiveFault } from '../types'
 
-const BASE = ''  // Vite proxy handles /api -> backend
+// Dev: Vite proxy forwards /api → localhost:8000
+// Prod: VITE_API_URL points to the deployed backend
+const BASE: string = import.meta.env.VITE_API_URL ?? ''
 
 async function get<T>(path: string): Promise<T | null> {
   try {

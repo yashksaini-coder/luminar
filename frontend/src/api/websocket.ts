@@ -48,8 +48,11 @@ class WSManager {
   }
 
   private open() {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:'
-    this.socket = new WebSocket(`${proto}//${location.host}/ws/events`)
+    const apiUrl: string = import.meta.env.VITE_API_URL ?? ''
+    const wsUrl = apiUrl
+      ? apiUrl.replace(/^https/, 'wss').replace(/^http/, 'ws') + '/ws/events'
+      : `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/events`
+    this.socket = new WebSocket(wsUrl)
 
     this.socket.onopen = () => {
       this.reconnectDelay = 1000
