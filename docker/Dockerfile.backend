@@ -2,14 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install uv for fast dependency management
+# Build deps for fastecdsa (required by py-libp2p)
+RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ libgmp-dev libc6-dev && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml .
+COPY pyproject.toml uv.lock ./
 COPY backend/ backend/
 
-RUN uv pip install --system -e "."
+RUN uv sync --no-dev --frozen
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+ENV LUMINAR_NODE_COUNT=20
+ENV LUMINAR_LOG_LEVEL=INFO
+
+CMD ["uv", "run", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

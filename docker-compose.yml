@@ -7,23 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
-      - ./traces:/app/traces
     environment:
-      - LUMINA_NODE_COUNT=20
-      - LUMINA_MAX_STREAMS=64
-      - LUMINA_LOG_LEVEL=INFO
-    restart: unless-stopped
-
-  frontend-ng:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend-ng
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./frontend-ng/src:/app/src
-    depends_on:
-      - backend
-    environment:
-      - API_URL=http://backend:8000
+      - LUMINAR_NODE_COUNT=20
+      - LUMINAR_LOG_LEVEL=INFO
     restart: unless-stopped
