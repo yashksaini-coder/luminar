@@ -6,6 +6,7 @@ Output is a list of edges that NodePool uses to wire up peer connections.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 
 import networkx as nx
@@ -106,6 +107,7 @@ class TopologyManager:
 
         # Degree distribution (histogram buckets)
         from collections import Counter
+
         degree_counts = Counter(degrees)
         degree_dist = [{"degree": d, "count": c} for d, c in sorted(degree_counts.items())]
 
@@ -140,10 +142,8 @@ class TopologyManager:
         # Algebraic connectivity (Fiedler value) — measures how well-connected
         algebraic_connectivity = 0.0
         if is_connected and n > 2:
-            try:
+            with contextlib.suppress(Exception):
                 algebraic_connectivity = round(nx.algebraic_connectivity(g), 4)
-            except Exception:
-                pass
 
         return {
             "nodes": n,

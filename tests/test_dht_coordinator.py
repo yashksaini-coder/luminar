@@ -1,7 +1,7 @@
 """Tests for DHTQueryCoordinator — verifies timeout, retry, and semaphore guards."""
 
-import trio
 import pytest
+import trio
 
 from backend.concurrency.dht_coordinator import DHTQueryCoordinator, DHTQueryExhaustedError
 from backend.events.bus import EventBus
@@ -26,6 +26,7 @@ async def test_basic_query(coordinator):
 
 async def test_query_with_custom_fn(coordinator):
     """Custom query function is called and result returned."""
+
     async def my_query(key):
         return {"key": key, "value": 42}
 

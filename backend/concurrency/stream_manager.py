@@ -104,9 +104,7 @@ class StreamManager:
                 with trio.move_on_after(self._open_timeout) as cancel_scope:
                     record.stream = await dial_fn(to_peer, protocol)
                 if cancel_scope.cancelled_caught:
-                    await self._event_bus.emit(
-                        StreamTimeout(at=sim_time, peer_id=to_peer)
-                    )
+                    await self._event_bus.emit(StreamTimeout(at=sim_time, peer_id=to_peer))
                     raise StreamTimeoutError(to_peer, self._open_timeout)
 
             self._open_streams[stream_id] = record

@@ -28,21 +28,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # GossipSub parameters
-D = 6        # Target mesh degree
-D_LOW = 4    # Below this, GRAFT new peers
-D_HIGH = 8   # Above this, PRUNE excess peers
-D_LAZY = 6   # Number of peers to gossip IHAVE to
+D = 6  # Target mesh degree
+D_LOW = 4  # Below this, GRAFT new peers
+D_HIGH = 8  # Above this, PRUNE excess peers
+D_LAZY = 6  # Number of peers to gossip IHAVE to
 HEARTBEAT_INTERVAL = 1.0  # Seconds between heartbeats
-SCORE_THRESHOLD_GRAFT = -5.0   # Don't graft peers with score below this
+SCORE_THRESHOLD_GRAFT = -5.0  # Don't graft peers with score below this
 SCORE_THRESHOLD_PRUNE = -10.0  # Prune peers with score below this (regardless of mesh size)
 HISTORY_WINDOW = 50  # Number of recent msg_ids to track for IHAVE/IWANT
-MAX_TRACES = 5000    # Maximum number of message traces to retain
+MAX_TRACES = 5000  # Maximum number of message traces to retain
 MAX_SEEN_PER_PEER = 2000  # Maximum seen msg_ids per peer
 
 
 @dataclass
 class MessageTrace:
     """Tracks a single message through the network."""
+
     msg_id: str
     topic: str
     origin: str
@@ -53,12 +54,14 @@ class MessageTrace:
     fully_propagated_at: float | None = None
 
     def add_hop(self, peer_id: str, received_at: float, relay_latency_ms: float, hop_index: int):
-        self.hops.append({
-            "peer": peer_id,
-            "time": received_at,
-            "latency_ms": relay_latency_ms,
-            "hop": hop_index,
-        })
+        self.hops.append(
+            {
+                "peer": peer_id,
+                "time": received_at,
+                "latency_ms": relay_latency_ms,
+                "hop": hop_index,
+            }
+        )
         if peer_id != self.origin and self.first_delivery_peer is None:
             self.first_delivery_peer = peer_id
         self.delivered_to.add(peer_id)
@@ -144,10 +147,9 @@ class GossipEngine:
             self._mesh[topic] = {}
         neighbors = self._topology.get(peer_id, set())
         subscribed_neighbors = neighbors & self._subscriptions.get(topic, set())
-        mesh_peers = set(random.sample(
-            list(subscribed_neighbors),
-            min(D, len(subscribed_neighbors))
-        ))
+        mesh_peers = set(
+            random.sample(list(subscribed_neighbors), min(D, len(subscribed_neighbors)))
+        )
         self._mesh[topic][peer_id] = mesh_peers
 
         # Record mesh join for scoring
@@ -165,10 +167,9 @@ class GossipEngine:
         for pid in peer_ids:
             neighbors = self._topology.get(pid, set())
             subscribed_neighbors = neighbors & self._subscriptions.get(topic, set())
-            mesh_peers = set(random.sample(
-                list(subscribed_neighbors),
-                min(D, len(subscribed_neighbors))
-            ))
+            mesh_peers = set(
+                random.sample(list(subscribed_neighbors), min(D, len(subscribed_neighbors)))
+            )
             self._mesh.setdefault(topic, {})[pid] = mesh_peers
             self.scorer.on_graft(topic, pid, self._clock.time)
 
@@ -196,15 +197,15 @@ class GossipEngine:
         # Evict oldest traces to bound memory
         if len(self._traces) > MAX_TRACES:
             keys = list(self._traces.keys())
-            for k in keys[:len(keys) - MAX_TRACES]:
+            for k in keys[: len(keys) - MAX_TRACES]:
                 del self._traces[k]
 
         self._seen.setdefault(origin, set()).add(msg_id)
         self._add_history(origin, msg_id)
 
-        await self._event_bus.emit(GossipMessage(
-            at=sim_time, topic=topic, from_peer=origin, msg_id=msg_id, hops=0
-        ))
+        await self._event_bus.emit(
+            GossipMessage(at=sim_time, topic=topic, from_peer=origin, msg_id=msg_id, hops=0)
+        )
 
         # Flood publish: send to ALL topology neighbors who subscribe to this topic
         subscribers = self._subscriptions.get(topic, set())
@@ -234,11 +235,11 @@ class GossipEngine:
         fi = self._fault_injector
 
         # Check if target peer is failed
-        if fi and hasattr(fi, 'is_peer_failed') and fi.is_peer_failed(to_peer):
+        if fi and hasattr(fi, "is_peer_failed") and fi.is_peer_failed(to_peer):
             return
 
         # Check partition
-        if fi and hasattr(fi, 'is_partitioned') and fi.is_partitioned(from_peer, to_peer):
+        if fi and hasattr(fi, "is_partitioned") and fi.is_partitioned(from_peer, to_peer):
             return
 
         # Check dedup
@@ -262,7 +263,7 @@ class GossipEngine:
 
         # Simulate network latency (5-50ms base)
         latency_ms = random.uniform(5.0, 50.0)
-        if fi and hasattr(fi, 'get_latency'):
+        if fi and hasattr(fi, "get_latency"):
             latency_ms += fi.get_latency(from_peer, to_peer)
 
         await trio.sleep(latency_ms / 1000.0 / max(self._clock.speed, 0.1))
@@ -277,9 +278,9 @@ class GossipEngine:
         if to_peer in mesh_peers_of_origin:
             self.scorer.on_mesh_delivery(topic, to_peer)
 
-        await self._event_bus.emit(GossipMessage(
-            at=sim_time, topic=topic, from_peer=to_peer, msg_id=msg_id, hops=hop
-        ))
+        await self._event_bus.emit(
+            GossipMessage(at=sim_time, topic=topic, from_peer=to_peer, msg_id=msg_id, hops=hop)
+        )
 
         # Continue propagation ONLY to mesh peers (not flood after first hop)
         mesh_peers = self._mesh.get(topic, {}).get(to_peer, set())
@@ -317,8 +318,11 @@ class GossipEngine:
 
             if len(peer_mesh) - len(to_prune) > D_HIGH:
                 # Still too many — prune lowest-scored excess
-                remaining = [(mp, self.scorer.compute_score(topic, mp, sim_time))
-                             for mp in peer_mesh if mp not in to_prune]
+                remaining = [
+                    (mp, self.scorer.compute_score(topic, mp, sim_time))
+                    for mp in peer_mesh
+                    if mp not in to_prune
+                ]
                 remaining.sort(key=lambda x: x[1])
                 target_remove = len(peer_mesh) - len(to_prune) - D
                 for mp, _ in remaining[:target_remove]:
@@ -327,17 +331,20 @@ class GossipEngine:
             for prunee in to_prune:
                 peer_mesh.discard(prunee)
                 self.scorer.on_prune(topic, prunee)
-                await self._event_bus.emit(GossipPrune(
-                    at=sim_time, from_peer=peer_id, to_peer=prunee, topic=topic
-                ))
+                await self._event_bus.emit(
+                    GossipPrune(at=sim_time, from_peer=peer_id, to_peer=prunee, topic=topic)
+                )
 
             # GRAFT: if mesh too small, add highest-scored candidates
             if len(peer_mesh) < D_LOW:
                 candidates = list(neighbors - peer_mesh)
                 # Filter by graft threshold and sort by score (compute once per candidate)
-                scored = [(c, s) for c in candidates
-                          for s in (self.scorer.compute_score(topic, c, sim_time),)
-                          if s > SCORE_THRESHOLD_GRAFT]
+                scored = [
+                    (c, s)
+                    for c in candidates
+                    for s in (self.scorer.compute_score(topic, c, sim_time),)
+                    if s > SCORE_THRESHOLD_GRAFT
+                ]
                 scored.sort(key=lambda x: -x[1])  # Highest score first
                 needed = D - len(peer_mesh)
                 to_graft = [c for c, _ in scored[:needed]]
@@ -346,15 +353,15 @@ class GossipEngine:
                 if len(to_graft) < needed:
                     remaining = [c for c in candidates if c not in to_graft]
                     random.shuffle(remaining)
-                    to_graft.extend(remaining[:needed - len(to_graft)])
+                    to_graft.extend(remaining[: needed - len(to_graft)])
 
                 for graftee in to_graft:
                     peer_mesh.add(graftee)
                     mesh.setdefault(graftee, set()).add(peer_id)
                     self.scorer.on_graft(topic, graftee, sim_time)
-                    await self._event_bus.emit(GossipGraft(
-                        at=sim_time, from_peer=peer_id, to_peer=graftee, topic=topic
-                    ))
+                    await self._event_bus.emit(
+                        GossipGraft(at=sim_time, from_peer=peer_id, to_peer=graftee, topic=topic)
+                    )
 
             mesh[peer_id] = peer_mesh
 
@@ -362,20 +369,20 @@ class GossipEngine:
             history = self._history.get(peer_id, [])
             if history:
                 recent = history[-10:]
-                gossip_targets = list((neighbors - peer_mesh))[:D_LAZY]
+                gossip_targets = list(neighbors - peer_mesh)[:D_LAZY]
                 for target in gossip_targets:
                     # Only send IHAVE for messages the target hasn't seen
                     target_seen = self._seen.get(target, set())
                     unseen = [mid for mid in recent if mid not in target_seen]
                     if unseen:
-                        await self._event_bus.emit(GossipIHave(
-                            at=sim_time, from_peer=peer_id, msg_ids=unseen
-                        ))
+                        await self._event_bus.emit(
+                            GossipIHave(at=sim_time, from_peer=peer_id, msg_ids=unseen)
+                        )
                         # Target responds with IWANT for missing messages
                         self._iwant_pending.setdefault(target, set()).update(unseen)
-                        await self._event_bus.emit(GossipIWant(
-                            at=sim_time, from_peer=target, msg_ids=unseen
-                        ))
+                        await self._event_bus.emit(
+                            GossipIWant(at=sim_time, from_peer=target, msg_ids=unseen)
+                        )
 
         # Process IWANT: deliver requested messages
         await self._process_iwants(topic, mesh, sim_time)
@@ -399,10 +406,15 @@ class GossipEngine:
                             self._seen.setdefault(peer_id, set()).add(msg_id)
                             self._add_history(peer_id, msg_id)
                             trace.add_hop(peer_id, sim_time, 0.0, trace.max_hop_depth() + 1)
-                            await self._event_bus.emit(GossipMessage(
-                                at=sim_time, topic=topic, from_peer=peer_id,
-                                msg_id=msg_id, hops=trace.max_hop_depth()
-                            ))
+                            await self._event_bus.emit(
+                                GossipMessage(
+                                    at=sim_time,
+                                    topic=topic,
+                                    from_peer=peer_id,
+                                    msg_id=msg_id,
+                                    hops=trace.max_hop_depth(),
+                                )
+                            )
                         wanted.discard(msg_id)
                         break
 
@@ -475,8 +487,10 @@ class GossipEngine:
                 latency_cdf.append({"percentile": pct, "latency_ms": round(sorted_lat[idx], 1)})
 
         # Delivery ratio distribution (last 20 messages)
-        recent_ratios = [{"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(n), 3)}
-                         for t in sorted(traces, key=lambda t: t.created_at)[-20:]]
+        recent_ratios = [
+            {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(n), 3)}
+            for t in sorted(traces, key=lambda t: t.created_at)[-20:]
+        ]
 
         # Mesh stability: avg degree per peer
         mesh = self._mesh.get(topic, {})

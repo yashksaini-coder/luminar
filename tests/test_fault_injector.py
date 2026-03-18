@@ -1,10 +1,9 @@
 """Tests for FaultInjector — functional fault effects on gossip propagation."""
 
-import trio
 import pytest
+import trio
 
 from backend.events.bus import EventBus
-from backend.gossip.engine import GossipEngine
 from backend.simulation.clock import SimulationClock
 from backend.simulation.node_pool import NodePool, NodeState
 
@@ -42,6 +41,7 @@ def node_pool(event_bus, clock):
 @pytest.fixture
 def fault_injector(event_bus, clock, node_pool):
     from backend.fault.injector import FaultInjector
+
     fi = FaultInjector(event_bus, clock, node_pool)
     node_pool.gossip._fault_injector = fi
     return fi
@@ -62,7 +62,7 @@ async def test_latency_adds_delay(fault_injector, node_pool):
 
 async def test_partition_blocks_relay(fault_injector, node_pool, event_bus):
     """A partition prevents message propagation across the boundary."""
-    fault_id = await fault_injector.inject_partition(
+    await fault_injector.inject_partition(
         group_a=["peer-0", "peer-1"],
         group_b=["peer-2", "peer-3", "peer-4", "peer-5"],
     )
@@ -86,7 +86,7 @@ async def test_partition_blocks_relay(fault_injector, node_pool, event_bus):
 
 async def test_drop_peer_marks_failed(fault_injector, node_pool):
     """Dropping a peer sets its state to FAILED and removes it from meshes."""
-    fault_id = await fault_injector.drop_peer("peer-2")
+    await fault_injector.drop_peer("peer-2")
     node = node_pool.get_node("peer-2")
     assert node.state == NodeState.FAILED
     assert node.gossip_score == 0.0
@@ -129,12 +129,12 @@ async def test_clear_fault_recovers_peer(fault_injector, node_pool, event_bus):
 
 async def test_sybil_adds_fake_mesh_peers(fault_injector, node_pool):
     """Sybil attack injects fake nodes into honest peers' meshes."""
-    fault_id = await fault_injector.inject_sybil(3, "lumina/blocks/1.0")
+    await fault_injector.inject_sybil(3, "lumina/blocks/1.0")
     mesh = node_pool.gossip.get_mesh_state("lumina/blocks/1.0")
 
     # At least some honest peers should have sybil nodes in their mesh
     sybil_count = 0
-    for peer_id, peers in mesh.items():
+    for _peer_id, peers in mesh.items():
         for p in peers:
             if p.startswith("sybil-"):
                 sybil_count += 1
@@ -155,7 +155,7 @@ async def test_clear_sybil_removes_fake_peers(fault_injector, node_pool):
 
 async def test_eclipse_replaces_mesh(fault_injector, node_pool):
     """Eclipse attack replaces target's mesh with attacker nodes."""
-    fault_id = await fault_injector.inject_eclipse("peer-2", 3)
+    await fault_injector.inject_eclipse("peer-2", 3)
     mesh = node_pool.gossip.get_mesh_state("lumina/blocks/1.0")
 
     target_mesh = mesh.get("peer-2", [])

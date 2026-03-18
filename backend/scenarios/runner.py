@@ -96,9 +96,7 @@ class ScenarioRunner:
             except Exception:
                 logger.exception("ScenarioRunner loop error — continuing")
 
-    async def _execute_phase(
-        self, phase: ScenarioPhase, fault_injector: FaultInjector
-    ) -> None:
+    async def _execute_phase(self, phase: ScenarioPhase, fault_injector: FaultInjector) -> None:
         """Execute a single scenario phase action."""
         action = phase.action
         params = phase.params

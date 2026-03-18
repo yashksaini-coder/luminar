@@ -77,7 +77,11 @@ class SimulationEngine:
             SimulationStateChanged(at=0.0, state="stopped", speed=self.clock.speed)
         )
 
-    def wire_topology(self, edges: list[tuple[str, str]], positions: dict[str, tuple[float, float]]) -> None:
+    def wire_topology(
+        self,
+        edges: list[tuple[str, str]],
+        positions: dict[str, tuple[float, float]],
+    ) -> None:
         """Apply topology to the node pool."""
         for peer_id, (x, y) in positions.items():
             node = self.node_pool.get_node(peer_id)

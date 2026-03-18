@@ -1,10 +1,9 @@
 """Tests for EventBus — fan-out, ring buffer, subscriber management."""
 
-import trio
 import pytest
 
 from backend.events.bus import EventBus
-from backend.events.types import PeerConnected, ClockTick
+from backend.events.types import ClockTick, PeerConnected
 
 
 @pytest.fixture

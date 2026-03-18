@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from backend.events.types import EventCategory
-
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
     from backend.simulation.node_pool import NodePool

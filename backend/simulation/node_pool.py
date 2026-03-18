@@ -6,10 +6,11 @@ follows the GossipSub mesh overlay, tracked hop-by-hop for trace visualization.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import random
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import trio
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_TOPIC = "lumina/blocks/1.0"
 
 
-class NodeState(str, Enum):
+class NodeState(StrEnum):
     IDLE = "idle"
     ORIGIN = "origin"
     RECEIVING = "receiving"
@@ -134,9 +135,7 @@ class NodePool:
 
         for node in self._nodes.values():
             node.state = NodeState.JOINING
-            await self._event_bus.emit(
-                PeerConnected(at=self._clock.time, peer_id=node.peer_id)
-            )
+            await self._event_bus.emit(PeerConnected(at=self._clock.time, peer_id=node.peer_id))
             node.state = NodeState.IDLE
 
         # Start peer loops and heartbeat
@@ -241,11 +240,9 @@ class NodePool:
             initiator = random.choice(peers)
             target_key = f"key-{random.randint(0, 999)}"
 
-            try:
+            with contextlib.suppress(Exception):
                 await self.dht_coordinator.query_peer(
                     initiator=initiator.peer_id,
                     target_key=target_key,
                     sim_time=self._clock.time,
-                )
-            except Exception:
-                pass  # Query failures are logged by the coordinator
+                )  # Query failures are logged by the coordinator

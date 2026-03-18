@@ -83,7 +83,9 @@ class FaultInjector:
 
     # ── Injection ──
 
-    async def inject_latency(self, peer_a: str, peer_b: str, ms: float, jitter_ms: float = 0) -> str:
+    async def inject_latency(
+        self, peer_a: str, peer_b: str, ms: float, jitter_ms: float = 0
+    ) -> str:
         """Inject latency between two peers. Returns fault_id."""
         fault_id = f"fault-{uuid.uuid4().hex[:8]}"
         fault = {
@@ -146,7 +148,7 @@ class FaultInjector:
         # Remove peer from all mesh memberships
         for topic_mesh in self.gossip._mesh.values():
             # Remove from others' meshes
-            for other_peer, mesh_peers in topic_mesh.items():
+            for _other_peer, mesh_peers in topic_mesh.items():
                 mesh_peers.discard(peer_id)
             # Clear this peer's own mesh
             if peer_id in topic_mesh:
@@ -210,7 +212,12 @@ class FaultInjector:
                 params={"n_attackers": n_attackers, "fault_id": fault_id},
             )
         )
-        logger.info("Injected %d sybils into topic %s (fault %s)", n_attackers, target_topic, fault_id)
+        logger.info(
+            "Injected %d sybils into topic %s (fault %s)",
+            n_attackers,
+            target_topic,
+            fault_id,
+        )
         return fault_id
 
     async def inject_eclipse(self, target_peer_id: str, n_attackers: int) -> str:
@@ -262,7 +269,12 @@ class FaultInjector:
                 params={"n_attackers": n_attackers, "fault_id": fault_id},
             )
         )
-        logger.info("Eclipsed %s with %d attackers (fault %s)", target_peer_id, n_attackers, fault_id)
+        logger.info(
+            "Eclipsed %s with %d attackers (fault %s)",
+            target_peer_id,
+            n_attackers,
+            fault_id,
+        )
         return fault_id
 
     # ── Recovery ──
@@ -278,6 +290,7 @@ class FaultInjector:
         if fault_type == "drop":
             # Recover the peer
             from backend.simulation.node_pool import NodeState
+
             node = self._node_pool.get_node(fault["peer_id"])
             if node:
                 node.state = NodeState.IDLE
@@ -292,7 +305,7 @@ class FaultInjector:
             for topic_mesh in self.gossip._mesh.values():
                 for sid in sybil_ids:
                     topic_mesh.pop(sid, None)
-                for peer_id, mesh_peers in topic_mesh.items():
+                for _peer_id, mesh_peers in topic_mesh.items():
                     mesh_peers -= sybil_ids
             for sid in sybil_ids:
                 self.gossip._seen.pop(sid, None)
@@ -305,7 +318,7 @@ class FaultInjector:
             for topic_mesh in self.gossip._mesh.values():
                 for aid in attacker_ids:
                     topic_mesh.pop(aid, None)
-                for peer_id, mesh_peers in topic_mesh.items():
+                for _peer_id, mesh_peers in topic_mesh.items():
                     mesh_peers -= attacker_ids
             for aid in attacker_ids:
                 self.gossip._seen.pop(aid, None)

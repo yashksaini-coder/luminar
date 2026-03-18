@@ -1,7 +1,7 @@
 """Tests for GossipEngine — topology-aware message propagation."""
 
-import trio
 import pytest
+import trio
 
 from backend.events.bus import EventBus
 from backend.gossip.engine import GossipEngine
@@ -26,11 +26,13 @@ def clock(event_bus):
 def gossip(event_bus, clock):
     g = GossipEngine(event_bus, clock)
     # Simple triangle topology: 0-1, 1-2, 0-2
-    g.set_topology([
-        ("peer-0", "peer-1"),
-        ("peer-1", "peer-2"),
-        ("peer-0", "peer-2"),
-    ])
+    g.set_topology(
+        [
+            ("peer-0", "peer-1"),
+            ("peer-1", "peer-2"),
+            ("peer-0", "peer-2"),
+        ]
+    )
     g.subscribe_all(["peer-0", "peer-1", "peer-2"], "test-topic")
     return g
 
@@ -85,11 +87,13 @@ async def test_topology_is_respected(event_bus, clock):
     """Messages only flow along topology edges."""
     g = GossipEngine(event_bus, clock)
     # Linear topology: 0-1-2-3 (no shortcut from 0 to 3)
-    g.set_topology([
-        ("peer-0", "peer-1"),
-        ("peer-1", "peer-2"),
-        ("peer-2", "peer-3"),
-    ])
+    g.set_topology(
+        [
+            ("peer-0", "peer-1"),
+            ("peer-1", "peer-2"),
+            ("peer-2", "peer-3"),
+        ]
+    )
     g.subscribe_all(["peer-0", "peer-1", "peer-2", "peer-3"], "linear-topic")
 
     async with trio.open_nursery() as nursery:
@@ -119,7 +123,7 @@ async def test_heartbeat_grafts(event_bus, clock):
     """Heartbeat GRAFTs peers when mesh is below D_LOW."""
     g = GossipEngine(event_bus, clock)
     # Star topology: 0 connects to 1,2,3,4,5
-    edges = [(f"peer-0", f"peer-{i}") for i in range(1, 6)]
+    edges = [("peer-0", f"peer-{i}") for i in range(1, 6)]
     g.set_topology(edges)
     g.subscribe_all([f"peer-{i}" for i in range(6)], "star-topic")
 

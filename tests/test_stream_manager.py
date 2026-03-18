@@ -1,7 +1,7 @@
 """Tests for StreamManager — verifies semaphore exhaustion, timeout, and always-close guarantees."""
 
-import trio
 import pytest
+import trio
 
 from backend.concurrency.stream_manager import StreamManager, StreamTimeoutError
 from backend.events.bus import EventBus
@@ -106,7 +106,7 @@ async def test_100x_find_peer_no_hang(event_bus):
 
     async def do_stream(i):
         nonlocal completed
-        async with sm.open_stream(f"peer-{i}", f"peer-{i+100}", "/test/1.0"):
+        async with sm.open_stream(f"peer-{i}", f"peer-{i + 100}", "/test/1.0"):
             await trio.sleep(0.01)
         completed += 1
 

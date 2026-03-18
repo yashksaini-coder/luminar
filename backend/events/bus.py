@@ -7,6 +7,7 @@ of recent events for replay/scrubbing and optionally writes JSONL for persistenc
 from __future__ import annotations
 
 import bisect
+import contextlib
 import logging
 from collections import deque
 from typing import TYPE_CHECKING
@@ -44,10 +45,8 @@ class EventBus:
 
     def unsubscribe(self, send_ch: trio.MemorySendChannel) -> None:
         """Remove a subscriber."""
-        try:
+        with contextlib.suppress(ValueError):
             self._subscribers.remove(send_ch)
-        except ValueError:
-            pass
 
     async def emit(self, event: BaseEvent) -> None:
         """Broadcast event to all subscribers and append to ring buffer."""

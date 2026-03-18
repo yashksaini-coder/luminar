@@ -7,14 +7,14 @@ via orjson for WebSocket fan-out.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from enum import Enum
+from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 from typing import Any
 
 import orjson
 
 
-class EventCategory(str, Enum):
+class EventCategory(StrEnum):
     CLOCK = "clock"
     CONNECTION = "connection"
     STREAM = "stream"
@@ -49,6 +49,7 @@ class BaseEvent:
 
 # --- Clock ---
 
+
 @dataclass(slots=True, frozen=True)
 class ClockTick(BaseEvent):
     speed: float = 1.0
@@ -59,6 +60,7 @@ class ClockTick(BaseEvent):
 
 
 # --- Connection ---
+
 
 @dataclass(slots=True, frozen=True)
 class PeerConnected(BaseEvent):
@@ -81,6 +83,7 @@ class PeerDisconnected(BaseEvent):
 
 
 # --- Stream ---
+
 
 @dataclass(slots=True, frozen=True)
 class StreamOpened(BaseEvent):
@@ -124,6 +127,7 @@ class SemaphoreBlocked(BaseEvent):
 
 
 # --- DHT ---
+
 
 @dataclass(slots=True, frozen=True)
 class DHTQueryStarted(BaseEvent):
@@ -170,6 +174,7 @@ class DHTRoutingTableUpdate(BaseEvent):
 
 
 # --- GossipSub ---
+
 
 @dataclass(slots=True, frozen=True)
 class GossipGraft(BaseEvent):
@@ -227,6 +232,7 @@ class GossipMessage(BaseEvent):
 
 # --- Fault ---
 
+
 @dataclass(slots=True, frozen=True)
 class FaultInjected(BaseEvent):
     fault_type: str = ""
@@ -259,6 +265,7 @@ class PeerRecovered(BaseEvent):
 
 # --- Health ---
 
+
 @dataclass(slots=True, frozen=True)
 class NodeHealthSnapshot(BaseEvent):
     peer_id: str = ""
@@ -273,6 +280,7 @@ class NodeHealthSnapshot(BaseEvent):
 
 
 # --- Simulation ---
+
 
 @dataclass(slots=True, frozen=True)
 class SimulationStateChanged(BaseEvent):

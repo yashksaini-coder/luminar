@@ -125,7 +125,8 @@ class DHTQueryCoordinator:
                             await trio.sleep(0.01)
                             result = {"found": True, "target": target_key}
 
-                        elapsed_ms = (trio.current_time() - self._active_queries[query_id]["started_at"]) * 1000
+                        start_time = self._active_queries[query_id]["started_at"]
+                        elapsed_ms = (trio.current_time() - start_time) * 1000
                         await self._event_bus.emit(
                             DHTQueryCompleted(
                                 at=sim_time,
@@ -138,9 +139,7 @@ class DHTQueryCoordinator:
                         return result
 
                     if cancel_scope.cancelled_caught:
-                        logger.debug(
-                            "DHT query %s attempt %d timed out", query_id, attempt + 1
-                        )
+                        logger.debug("DHT query %s attempt %d timed out", query_id, attempt + 1)
                         if attempt < self._max_retries - 1:
                             await trio.sleep(backoff.next())
 
@@ -163,6 +162,4 @@ class DHTQueryExhaustedError(Exception):
         self.query_id = query_id
         self.target = target
         self.retries = retries
-        super().__init__(
-            f"DHT query {query_id} for {target} failed after {retries} retries"
-        )
+        super().__init__(f"DHT query {query_id} for {target} failed after {retries} retries")

@@ -17,8 +17,8 @@ from contextlib import asynccontextmanager
 import orjson
 import trio
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from backend.fault.injector import FaultInjector
@@ -49,6 +49,7 @@ def _run_simulation_in_trio(
     started_event: threading.Event,
 ) -> None:
     """Run the simulation engine inside a trio event loop on a background thread."""
+
     async def _main():
         global _trio_token, _sim_cancel_scope
         _trio_token = trio.lowlevel.current_trio_token()
@@ -124,6 +125,7 @@ app.add_middleware(
 
 # --- WebSocket ---
 
+
 @app.websocket("/ws/events")
 async def websocket_events(ws: WebSocket):
     """Multiplexed WebSocket: streams events, snapshots, metrics, and analytics.
@@ -153,7 +155,7 @@ async def websocket_events(ws: WebSocket):
                 delta = current_count - last_event_count
                 try:
                     snapshot = list(engine.event_bus.ring)
-                    new_events = snapshot[-min(delta, 200):]
+                    new_events = snapshot[-min(delta, 200) :]
                 except RuntimeError:
                     new_events = []  # deque mutated during iteration
                 for event in new_events:
@@ -190,6 +192,7 @@ async def websocket_events(ws: WebSocket):
 
 
 # --- Simulation Control ---
+
 
 @app.post("/api/sim/play")
 async def sim_play():
@@ -285,6 +288,7 @@ async def sim_snapshot():
 
 # --- Nodes ---
 
+
 @app.get("/api/nodes")
 async def get_nodes():
     if engine is None:
@@ -303,6 +307,7 @@ async def get_node(peer_id: str):
 
 
 # --- Topology ---
+
 
 @app.get("/api/topology/list")
 async def topology_list():
@@ -361,6 +366,7 @@ async def topology_preview(req: TopologyRequest):
 async def topology_metrics():
     """Return metrics for the currently active topology."""
     import networkx as nx
+
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
     # Rebuild graph from current edges
@@ -385,6 +391,7 @@ async def topology_metrics():
 # manipulates shared state (thread-safe enough for our single-writer model)
 # we use a sync wrapper: mutate state directly, emit events via a helper.
 
+
 def _run_trio_coro(async_fn, *args):
     """Run a trio-async fault method from the asyncio thread.
 
@@ -397,6 +404,7 @@ def _run_trio_coro(async_fn, *args):
     global _trio_token
     if _trio_token is not None:
         import trio
+
         return trio.from_thread.run(async_fn, *args, trio_token=_trio_token)
     return None
 
@@ -415,7 +423,13 @@ async def fault_latency(req: LatencyRequest):
     loop = asyncio.get_running_loop()
     fault_id = await loop.run_in_executor(
         None,
-        lambda: _run_trio_coro(fault_injector.inject_latency, req.peer_a, req.peer_b, req.ms, req.jitter_ms),
+        lambda: _run_trio_coro(
+            fault_injector.inject_latency,
+            req.peer_a,
+            req.peer_b,
+            req.ms,
+            req.jitter_ms,
+        ),
     )
     return {"ok": True, "fault_id": fault_id}
 
@@ -524,6 +538,7 @@ async def fault_active():
 
 # --- Metrics ---
 
+
 @app.get("/api/metrics/snapshot")
 async def metrics_snapshot():
     if metrics_collector is None:
@@ -532,6 +547,7 @@ async def metrics_snapshot():
 
 
 # --- Events ---
+
 
 @app.get("/api/events/recent")
 async def events_recent(since: float = 0.0):
@@ -542,6 +558,7 @@ async def events_recent(since: float = 0.0):
 
 
 # --- Gossip / Trace ---
+
 
 @app.get("/api/gossip/mesh")
 async def gossip_mesh():
@@ -682,8 +699,10 @@ async def list_scenarios():
 
 
 @app.post("/api/scenarios/{scenario_id}/launch")
-async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest = LaunchScenarioRequest()):
+async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = None):
     """Launch a pre-built scenario: reset sim, apply topology, start playback, arm phase runner."""
+    if req is None:
+        req = LaunchScenarioRequest()
     scenario = SCENARIOS.get(scenario_id)
     if not scenario:
         raise HTTPException(status_code=404, detail=f"Unknown scenario: {scenario_id}")
@@ -731,5 +750,3 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest = LaunchS
 async def active_scenario():
     """Return the currently running scenario and its phase progress."""
     return scenario_runner.get_status()
-
-

@@ -11,26 +11,26 @@ P4: Invalid messages       — penalizes peers sending invalid/duplicate message
 
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class PeerScoreParams:
     """Tunable scoring weights."""
+
     # P1: Time in mesh (positive, capped)
     time_in_mesh_weight: float = 0.5
-    time_in_mesh_quantum: float = 1.0    # seconds per unit
-    time_in_mesh_cap: float = 10.0       # max score from P1
+    time_in_mesh_quantum: float = 1.0  # seconds per unit
+    time_in_mesh_cap: float = 10.0  # max score from P1
 
     # P2: First message deliveries (positive)
     first_message_weight: float = 1.0
-    first_message_decay: float = 0.9     # per heartbeat
+    first_message_decay: float = 0.9  # per heartbeat
 
     # P3: Mesh message delivery ratio (negative when low)
     mesh_delivery_weight: float = -1.0
     mesh_delivery_threshold: float = 0.5  # below this ratio → penalty
-    mesh_delivery_activation: float = 5.0 # seconds before P3 activates
+    mesh_delivery_activation: float = 5.0  # seconds before P3 activates
 
     # P4: Invalid messages (negative)
     invalid_message_weight: float = -10.0
@@ -40,6 +40,7 @@ class PeerScoreParams:
 @dataclass
 class TopicPeerScore:
     """Per-topic score state for a single peer."""
+
     mesh_join_time: float = -1.0
     first_message_deliveries: float = 0.0
     mesh_messages_delivered: int = 0
@@ -103,7 +104,7 @@ class PeerScoreTracker:
     def decay(self, topic: str) -> None:
         """Apply per-heartbeat decay to counters."""
         p = self._params
-        for peer_id, s in self._scores.get(topic, {}).items():
+        for _peer_id, s in self._scores.get(topic, {}).items():
             s.first_message_deliveries *= p.first_message_decay
             s.invalid_messages *= p.invalid_message_decay
 

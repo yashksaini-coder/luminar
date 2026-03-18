@@ -1,6 +1,6 @@
 """Tests for TopologyManager — graph generation and conversion."""
 
-from backend.topology.manager import TopologyManager, TopologyConfig
+from backend.topology.manager import TopologyConfig, TopologyManager
 
 
 def test_random_graph():
@@ -20,7 +20,13 @@ def test_scale_free_graph():
 
 def test_clustered_graph():
     tm = TopologyManager()
-    config = TopologyConfig(topo_type="clustered", n_nodes=21, n_clusters=3, intra_p=0.5, inter_p=0.05)
+    config = TopologyConfig(
+        topo_type="clustered",
+        n_nodes=21,
+        n_clusters=3,
+        intra_p=0.5,
+        inter_p=0.05,
+    )
     g = tm.generate(config)
     assert len(g.nodes) == 21
 
@@ -60,9 +66,11 @@ def test_all_supported_types():
 
 # ── Metrics Tests ──
 
+
 def test_metrics_complete_graph():
     """Complete graph has known properties."""
     import networkx as nx
+
     g = nx.complete_graph(5)
     m = TopologyManager.compute_metrics(g)
     assert m["nodes"] == 5
@@ -77,6 +85,7 @@ def test_metrics_complete_graph():
 def test_metrics_ring():
     """Ring has diameter n//2, clustering 0, avg degree 2."""
     import networkx as nx
+
     g = nx.cycle_graph(8)
     m = TopologyManager.compute_metrics(g)
     assert m["nodes"] == 8
@@ -90,6 +99,7 @@ def test_metrics_ring():
 def test_metrics_star():
     """Star has diameter 2."""
     import networkx as nx
+
     g = nx.star_graph(5)
     m = TopologyManager.compute_metrics(g)
     assert m["nodes"] == 6
@@ -100,6 +110,7 @@ def test_metrics_star():
 def test_metrics_disconnected():
     """Disconnected graph reports components and measures largest."""
     import networkx as nx
+
     g = nx.Graph()
     g.add_edges_from([(0, 1), (1, 2)])
     g.add_edges_from([(3, 4)])
@@ -114,6 +125,7 @@ def test_metrics_disconnected():
 def test_metrics_degree_distribution():
     """Degree distribution has correct counts."""
     import networkx as nx
+
     g = nx.star_graph(3)
     m = TopologyManager.compute_metrics(g)
     dd = {d["degree"]: d["count"] for d in m["degree_distribution"]}
@@ -124,6 +136,7 @@ def test_metrics_degree_distribution():
 def test_metrics_path_graph():
     """Path graph has known diameter and avg path length."""
     import networkx as nx
+
     g = nx.path_graph(5)
     m = TopologyManager.compute_metrics(g)
     assert m["diameter"] == 4
@@ -134,6 +147,7 @@ def test_metrics_path_graph():
 def test_metrics_empty_graph():
     """Empty graph returns basic info."""
     import networkx as nx
+
     g = nx.Graph()
     m = TopologyManager.compute_metrics(g)
     assert m["nodes"] == 0
