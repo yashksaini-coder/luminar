@@ -75,7 +75,7 @@ This starts both backend and frontend with:
 
   ╔══════════════════════════════════════════════╗
   ║                                              ║
-  ║  Lumina P2P Simulator                        ║
+  ║  Luminar Simulator                        ║
   ║                                              ║
   ║  Frontend  http://localhost:4200             ║
   ║  Backend   http://localhost:8000             ║

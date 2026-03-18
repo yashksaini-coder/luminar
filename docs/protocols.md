@@ -4,7 +4,7 @@
 
 ### Overview
 
-GossipSub is a topic-based pub/sub protocol that creates an overlay mesh network on top of the physical peer connections. Lumina implements the core GossipSub v1.1 specification as used in Ethereum 2.0.
+GossipSub is a topic-based pub/sub protocol that creates an overlay mesh network on top of the physical peer connections. Luminar implements the core GossipSub v1.1 specification as used in Ethereum 2.0.
 
 ### Data Structures
 
@@ -282,33 +282,11 @@ Time 0.29: C retries  ← Spread out (good)
 
 ### Two-Semaphore Design
 
-Lumina uses two independent semaphores for different protocol layers:
+Luminar uses two independent semaphores for different protocol layers:
 
-```
-┌──────────────────────────────────────────┐
-│            Application Layer             │
-│                                          │
-│   ┌──────────────────────────────────┐   │
-│   │  DHTQueryCoordinator (sem=8)     │   │
-│   │                                  │   │
-│   │  Limits: 8 parallel DHT queries  │   │
-│   │  Timeout: 5s per query           │   │
-│   │  Retries: 3 with backoff         │   │
-│   └──────────────────────────────────┘   │
-│                                          │
-├──────────────────────────────────────────┤
-│            Transport Layer               │
-│                                          │
-│   ┌──────────────────────────────────┐   │
-│   │  StreamManager (sem=64)          │   │
-│   │                                  │   │
-│   │  Limits: 64 concurrent streams   │   │
-│   │  Timeout: 10s per dial           │   │
-│   │  Cleanup: guaranteed via finally │   │
-│   └──────────────────────────────────┘   │
-│                                          │
-└──────────────────────────────────────────┘
-```
+<div align="center">
+  <img src="../assets/semaphore-design.png" alt="Two Semaphores" width="600" />
+</div>
 
 ### Why Two Semaphores?
 

@@ -21,7 +21,7 @@ Trio provides **structured concurrency** — every async task has a well-defined
 - Clean cancellation (cancelling a nursery cancels all child tasks)
 - No silent exception swallowing (exceptions propagate to parent nurseries)
 
-Since py-libp2p is built on Trio, Lumina uses Trio exclusively to avoid the complexity and bugs of mixing async runtimes.
+Since py-libp2p is built on Trio, Luminar uses Trio exclusively to avoid the complexity and bugs of mixing async runtimes.
 
 ## 4.2 Entry Point — `backend/main.py`
 
