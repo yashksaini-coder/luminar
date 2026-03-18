@@ -12,9 +12,10 @@ COPY backend/ backend/
 
 RUN uv sync --no-dev --frozen
 
-EXPOSE 8000
+EXPOSE 8080
 
 ENV LUMINAR_NODE_COUNT=20
 ENV LUMINAR_LOG_LEVEL=INFO
+ENV PORT=8080
 
-CMD ["uv", "run", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uv run uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
