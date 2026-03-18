@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luminar P2P Network Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- TOOLBAR (top bar) -->
+    <div id="toolbar">
+      <span id="brand">LUMINAR</span>
+      <span class="tb-sep"></span>
+      <span id="connection-status">
+        <span id="status-dot" class="dot-offline"></span>
+        <span id="status-label">OFFLINE</span>
+      </span>
+      <span class="tb-sep"></span>
+
+      <!-- Scenario picker -->
+      <div id="scenario-picker" class="dd-wrap">
+        <button class="tb-btn" id="scenario-btn">Scenarios &#9662;</button>
+        <div id="scenario-dropdown" class="dd-dropdown" style="display:none"></div>
+      </div>
+
+      <span class="tb-sep"></span>
+
+      <!-- Fault injection -->
+      <div id="fault-picker" class="dd-wrap">
+        <button class="tb-btn" id="fault-btn">Inject Fault &#9662;</button>
+        <div id="fault-dropdown" class="dd-dropdown" style="display:none">
+          <button class="dd-item" data-fault="partition"><span class="dd-icon" style="color:oklch(0.72 0.14 60)">||</span> Network Partition</button>
+          <button class="dd-item" data-fault="sybil"><span class="dd-icon" style="color:oklch(0.65 0.20 25)">S</span> Sybil Attack</button>
+          <button class="dd-item" data-fault="eclipse"><span class="dd-icon" style="color:oklch(0.72 0.14 300)">E</span> Eclipse Attack</button>
+          <button class="dd-item" data-fault="drop"><span class="dd-icon" style="color:oklch(0.65 0.20 25)">x</span> Drop Peer</button>
+          <div class="dd-divider"></div>
+          <button class="dd-item dd-danger" data-fault="clear-all">Clear All Faults</button>
+        </div>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <!-- Duration presets -->
+      <label class="tb-label">Duration</label>
+      <div id="duration-presets" class="preset-group">
+        <button class="preset-btn" data-duration="60">1m</button>
+        <button class="preset-btn" data-duration="120">2m</button>
+        <button class="preset-btn active" data-duration="300">5m</button>
+        <button class="preset-btn" data-duration="600">10m</button>
+      </div>
+
+      <span class="tb-sep"></span>
+
+      <!-- Node count presets -->
+      <label class="tb-label">Nodes</label>
+      <div id="node-presets" class="preset-group">
+        <button class="preset-btn active" data-nodes="20">20</button>
+        <button class="preset-btn" data-nodes="50">50</button>
+        <button class="preset-btn" data-nodes="100">100</button>
+        <button class="preset-btn" data-nodes="200">200</button>
+        <button class="preset-btn" data-nodes="500">500</button>
+      </div>
+
+      <span class="tb-sep"></span>
+      <span id="sim-time" class="tb-value">0.00s</span>
+    </div>
+
+    <!-- MAIN AREA (3 columns) -->
+    <div id="main">
+      <!-- LEFT: Stats Panel -->
+      <div id="stats-panel">
+        <h2>Statistics</h2>
+        <div id="stats-content"></div>
+        <div id="charts-section"></div>
+      </div>
+
+      <!-- CENTER: Map/Graph -->
+      <div id="map-container">
+        <canvas id="deck-canvas"></canvas>
+        <canvas id="ring-canvas"></canvas>
+
+        <!-- Mode switcher (Force/Hops/Latency) -->
+        <div id="mode-switcher">
+          <button class="mode-tab active" data-mode="force">Force</button>
+          <button class="mode-tab" data-mode="grid">Grid</button>
+          <button class="mode-tab" data-mode="radial">Radial</button>
+        </div>
+
+        <!-- Node legend (top-right) -->
+        <div id="node-legend" style="display:none">
+          <div class="nl-titlebar">
+            <span>Legend</span>
+            <button id="settings-btn" class="tb-icon-btn" title="Settings">&#9881;</button>
+          </div>
+          <div id="legend-fills"></div>
+          <div id="legend-rings"></div>
+          <div id="settings-panel" style="display:none"></div>
+        </div>
+
+        <!-- Node tooltip (hidden) -->
+        <div id="tooltip" style="display:none"></div>
+
+        <!-- Active faults indicator -->
+        <div id="active-faults" style="display:none">
+          <div id="faults-list"></div>
+        </div>
+
+        <!-- Timeline bar (bottom, floating) -->
+        <div id="timeline-bar">
+          <div id="tl-controls">
+            <button id="btn-reset" class="tb-icon-btn" title="Reset (R)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9m0 0v4m0-4H8"/>
+              </svg>
+            </button>
+            <button id="btn-play" class="tb-icon-btn" title="Play/Pause (Space)">
+              <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6,3 20,12 6,21"/>
+              </svg>
+              <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                <rect x="5" y="3" width="4" height="18"/>
+                <rect x="15" y="3" width="4" height="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div id="tl-scrubber">
+            <input type="range" id="timeline" min="0" max="1000000" value="0" step="1">
+            <div id="tl-markers"></div>
+          </div>
+
+          <div id="tl-right">
+            <span id="tl-current">0.000s</span>
+            <span class="tb-sep-small">/</span>
+            <span id="tl-total">0s</span>
+            <span class="tb-sep"></span>
+            <div id="speed-presets" class="preset-group">
+              <button class="preset-btn speed-btn" data-speed="0.5">0.5x</button>
+              <button class="preset-btn speed-btn active" data-speed="1">1x</button>
+              <button class="preset-btn speed-btn" data-speed="2">2x</button>
+              <button class="preset-btn speed-btn" data-speed="3">3x</button>
+              <button class="preset-btn speed-btn" data-speed="5">5x</button>
+              <button class="preset-btn speed-btn" data-speed="10">10x</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Event Log -->
+      <div id="event-log">
+        <div id="event-log-header">
+          <h2>Event log</h2>
+          <button id="clear-filter-btn" class="tb-icon-btn" style="display:none" title="Clear filter">&#10005;</button>
+        </div>
+        <div id="event-type-filter"></div>
+        <div id="event-log-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/app.ts"></script>
+</body>
+</html>
