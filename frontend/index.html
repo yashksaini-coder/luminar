@@ -149,6 +149,33 @@
         </div>
       </div>
 
+      <!-- PEER INSPECTOR (slide-in drawer, overlays event log when a node is selected) -->
+      <div id="peer-inspector">
+        <div class="pi-header">
+          <div class="pi-title">
+            <span id="pi-name" class="pi-name">—</span>
+            <span id="pi-state" class="pi-state-badge">idle</span>
+          </div>
+          <button id="pi-close" class="pi-close" title="Close (click canvas to deselect)">&#10005;</button>
+        </div>
+        <div id="pi-peer-id" class="pi-peer-id">—</div>
+        <div class="pi-metrics">
+          <span id="pi-sent" class="pi-metric pi-sent">↑0</span>
+          <span class="pi-sep">·</span>
+          <span id="pi-recv" class="pi-metric pi-recv">↓0</span>
+          <span class="pi-sep">·</span>
+          <span id="pi-score" class="pi-metric pi-score">0.000</span>
+          <span class="pi-sep">·</span>
+          <span id="pi-peer-count" class="pi-metric">0 peers</span>
+        </div>
+        <div class="pi-section-title">Score history</div>
+        <div class="pi-spark-wrap"><canvas id="pi-score-spark"></canvas></div>
+        <div class="pi-section-title">Connected peers</div>
+        <div id="pi-peers" class="pi-peers"></div>
+        <div class="pi-section-title">Live events</div>
+        <div id="pi-events" class="pi-events"></div>
+      </div>
+
       <!-- RIGHT: Event Log -->
       <div id="event-log">
         <div id="event-log-header">

@@ -7,6 +7,7 @@ import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
 import { initEventsPanel, appendEvents } from './ui/events-panel'
+import { initPeerInspector, refreshPeerInspector, appendPeerInspectorEvents } from './ui/peer-inspector'
 import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
@@ -217,6 +218,7 @@ function handleWsEvents(events: AppEvent[]) {
   }
 
   appendEvents(events)
+  appendPeerInspectorEvents(events)
 
   const simTimeEl = document.getElementById('sim-time')
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
@@ -317,6 +319,7 @@ function handleWsSnapshot(snap: any) {
   }
 
   updatePlaybackUI()
+  refreshPeerInspector()
 
   const simTimeEl = document.getElementById('sim-time')
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
@@ -410,6 +413,7 @@ async function main() {
   // Initialize UI
   initStatsPanel()
   initEventsPanel()
+  initPeerInspector()
   initPlayback()
   initLegend()
   initKeyboard()
