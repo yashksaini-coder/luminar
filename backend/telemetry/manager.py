@@ -120,6 +120,7 @@ class TelemetryManager:
         if trio_token is not None and event_bus is not None:
             try:
                 import trio
+
                 from backend.events.types import NodeHealthSnapshot
 
                 snapshot_event = NodeHealthSnapshot(
@@ -141,27 +142,29 @@ class TelemetryManager:
         result = []
         for p in list(self._peers.values()):
             x, y = _geo_to_canvas(p.lat, p.lon, p.peer_id)
-            result.append({
-                "peer_id": p.peer_id,
-                "index": p.index,
-                "state": "receiving",  # telemetry nodes are always "active"
-                "connected_peers": p.connected_peers,
-                "messages_sent": p.messages_sent,
-                "messages_received": p.messages_received,
-                "gossip_score": p.gossip_score,
-                "cpu": p.cpu,
-                "mem_mb": p.mem_mb,
-                "open_streams": p.open_streams,
-                "best_block": p.best_block,
-                "finalized_block": p.finalized_block,
-                "node_name": p.node_name,
-                "network": p.network,
-                "client_version": p.client_version,
-                "city": p.city,
-                "x": x,
-                "y": y,
-                "is_telemetry": True,
-            })
+            result.append(
+                {
+                    "peer_id": p.peer_id,
+                    "index": p.index,
+                    "state": "receiving",  # telemetry nodes are always "active"
+                    "connected_peers": p.connected_peers,
+                    "messages_sent": p.messages_sent,
+                    "messages_received": p.messages_received,
+                    "gossip_score": p.gossip_score,
+                    "cpu": p.cpu,
+                    "mem_mb": p.mem_mb,
+                    "open_streams": p.open_streams,
+                    "best_block": p.best_block,
+                    "finalized_block": p.finalized_block,
+                    "node_name": p.node_name,
+                    "network": p.network,
+                    "client_version": p.client_version,
+                    "city": p.city,
+                    "x": x,
+                    "y": y,
+                    "is_telemetry": True,
+                }
+            )
         return result
 
     def get_status(self) -> dict:

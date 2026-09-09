@@ -793,7 +793,9 @@ async def websocket_telemetry(ws: WebSocket):
             try:
                 data = orjson.loads(text)
                 payload = TelemetryPayload(**data)
-                await telemetry_manager.ingest(payload, _trio_token, engine.event_bus if engine else None)
+                await telemetry_manager.ingest(
+                    payload, _trio_token, engine.event_bus if engine else None
+                )
                 await ws.send_text('{"ok":true}')
             except Exception as exc:
                 await ws.send_text(f'{{"ok":false,"error":{str(exc)!r}}}')
