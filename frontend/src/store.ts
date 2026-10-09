@@ -56,6 +56,9 @@ export interface AppStore {
   particlesEnabled: boolean
   showLabels: boolean
   showEdges: boolean
+  stageTheme: boolean
+  hero: boolean
+  scale: { node: number; particle: number; edgeAlpha: number }  // stage theme bumps these
 
   // Gossip analytics
   gossipAnalytics: {
@@ -70,6 +73,7 @@ export interface AppStore {
     mesh_stability: { avg_degree: number; min_degree: number; max_degree: number }
   } | null
   milestones: { label: string; time: number; color: string }[]
+  beats: { label: string; time: number; color: string }[]  // narrator-derived, merged into milestones
 }
 
 export const store: AppStore = {
@@ -104,7 +108,11 @@ export const store: AppStore = {
   particlesEnabled: true,
   showLabels: true,
   showEdges: true,
+  stageTheme: false,
+  hero: false,
+  scale: { node: 1, particle: 1, edgeAlpha: 1 },
   maxDuration: 300,  // default 5 minutes
   gossipAnalytics: null,
   milestones: [],
+  beats: [],
 }

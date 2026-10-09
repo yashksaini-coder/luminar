@@ -14,6 +14,7 @@ import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
+import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands } from './ui/narrator'
 import { formatTime } from './format'
 import { oklchToRgba, P } from './palette'
 import type { AppEvent } from './types'
@@ -44,7 +45,7 @@ function computeMilestones() {
   if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
   if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'oklch(0.72 0.12 230)' })
 
-  store.milestones = ms
+  store.milestones = [...store.beats, ...ms]
 }
 
 function recomputeLayout() {
@@ -165,6 +166,7 @@ function handleWsEvents(events: AppEvent[]) {
     store.events = store.events.slice(-store.maxEvents)
   }
   store.eventCount += events.length
+  narratorOnEvents(events)
 
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
@@ -247,6 +249,43 @@ function handleWsEdges(frame: { edges: [string, string][] }) {
 
 function handleWsScenario(frame: any) {
   store.activeScenario = frame.active ? frame : null
+  narratorOnScenario()
+}
+
+// ── Presentation prefs: stage theme + hero layout (keys t/h, legend, URL, localStorage) ──
+function applyPrefs() {
+  if (store.stageTheme) document.documentElement.setAttribute('data-theme', 'stage')
+  else document.documentElement.removeAttribute('data-theme')
+  document.getElementById('app')!.classList.toggle('hero', store.hero)
+  store.scale = store.stageTheme
+    ? { node: 1.4, particle: 1.8, edgeAlpha: 1.6 }
+    : { node: 1, particle: 1, edgeAlpha: 1 }
+  const url = new URL(location.href)
+  store.stageTheme ? url.searchParams.set('theme', 'stage') : url.searchParams.delete('theme')
+  store.hero ? url.searchParams.set('hero', '1') : url.searchParams.delete('hero')
+  history.replaceState(null, '', url)
+  try { localStorage.setItem('luminar.prefs', JSON.stringify({ stageTheme: store.stageTheme, hero: store.hero })) } catch { /* private mode */ }
+  handleResize()
+  renderBands()
+  renderLayers()
+}
+
+function loadPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('luminar.prefs') ?? '{}')
+    store.stageTheme = !!saved.stageTheme
+    store.hero = !!saved.hero
+  } catch { /* ignore */ }
+  const q = new URLSearchParams(location.search)
+  if (q.has('theme')) store.stageTheme = q.get('theme') === 'stage'
+  if (q.has('hero')) store.hero = q.get('hero') === '1'
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) store.particlesEnabled = false
+  document.addEventListener('luminar:pref', (e: Event) => {
+    const key = (e as CustomEvent<'stageTheme' | 'hero'>).detail
+    store[key] = !store[key]
+    applyPrefs()
+  })
+  applyPrefs()
 }
 
 function handleWsGap(frame: { dropped: number }) {
@@ -425,6 +464,7 @@ function handleWsMetrics(m: any) {
 function handleWsAnalytics(analytics: any) {
   store.gossipAnalytics = analytics
   updateStatsPanel()
+  narratorOnAnalytics()
 }
 
 // ── WebSocket-pushed telemetry status handler ──
@@ -549,6 +589,8 @@ async function main() {
     new ResizeObserver(() => handleResize()).observe(mapContainer)
   }
 
+  initNarrator()
+  loadPrefs()
   ws.bind(
     handleWsEvents,
     updateConnectionStatus,

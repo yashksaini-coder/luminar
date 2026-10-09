@@ -6,11 +6,12 @@ import { store } from '../store'
 export interface ReelFrame { t: number; frame: any }
 export interface ReelMeta { name: string; title: string; file: string; nodes?: number; blurb?: string }
 
+const TICK_MS = 50  // same cadence as the live WS batch
 let frames: ReelFrame[] = []
 let cursor = 0          // next frame index to dispatch
 let elapsed = 0         // reel-ms played so far (scaled by speed)
 let lastTick = 0
-let raf = 0
+let timer: ReturnType<typeof setInterval> | null = null
 let playing = false
 let speed = 1
 let onTick: (() => void) | null = null
@@ -52,13 +53,16 @@ export function playReel() {
   if (cursor >= frames.length) seekReel(0)
   playing = true
   lastTick = performance.now()
-  raf = requestAnimationFrame(step)
+  // setInterval, not rAF: rAF stalls in occluded/background windows, and a booth laptop
+  // alt-tabbing to Grafana must not freeze the reel. Elapsed time is wall-clock based,
+  // so a throttled 1 Hz tick still dispatches the right frames in a burst.
+  timer = setInterval(() => step(performance.now()), TICK_MS)
 }
 
 export function pauseReel() {
   playing = false
-  if (raf) cancelAnimationFrame(raf)
-  raf = 0
+  if (timer) clearInterval(timer)
+  timer = null
 }
 
 export function toggleReel() { playing ? pauseReel() : playReel() }
@@ -104,11 +108,10 @@ function step(now: number) {
   elapsed += (now - lastTick) * speed
   lastTick = now
   while (cursor < frames.length && frames[cursor].t <= elapsed) {
-    ws.dispatch(frames[cursor].frame)
-    cursor++
+    const f = frames[cursor++].frame
+    try { ws.dispatch(f) } catch (err) { console.error('[reel] frame skipped', f?.type ?? f?.event_type, err) }
   }
   ws.flush()
   onTick?.()
-  if (cursor >= frames.length) { playing = false; raf = 0; onTick?.(); return }
-  raf = requestAnimationFrame(step)
+  if (cursor >= frames.length) { pauseReel(); store.playing = false; onTick?.() }
 }

@@ -104,7 +104,7 @@ export function renderLayers() {
   if (n === 0 || nodePositions.length === 0) { deck.setProps({ layers: [] }); return }
 
   // Node radius scales with count; smaller in grid/radial for cleaner look
-  const baseRadius = Math.max(3, Math.min(8, 200 / Math.sqrt(n)))
+  const baseRadius = Math.max(3, Math.min(8, 200 / Math.sqrt(n))) * store.scale.node
   const nodeRadius = store.layoutMode === 'force' ? baseRadius : baseRadius * 0.7
   const now = performance.now()
 
@@ -150,7 +150,7 @@ export function renderLayers() {
 
   // 1. Topology edges (all modes — lighter in grid/radial for cleaner look)
   if (store.showEdges && edgeData.length > 0) {
-    const edgeAlpha = store.layoutMode === 'force' ? 200 : 80
+    const edgeAlpha = Math.min(255, (store.layoutMode === 'force' ? 200 : 80) * store.scale.edgeAlpha)
     layers.push(new LineLayer({
       id: 'edges',
       data: edgeData,
@@ -282,7 +282,7 @@ export function renderLayers() {
       return {
         position: bezierPoint(src, tgt, t),
         color: [p.color[0], p.color[1], p.color[2], alpha] as [number, number, number, number],
-        radius: nodeRadius * (p.fizzle ? 0.5 : 0.4),  // Small dots like netviz arc particles
+        radius: nodeRadius * (p.fizzle ? 0.5 : 0.4) * store.scale.particle,
       }
     }).filter(Boolean)
 
