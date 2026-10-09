@@ -2,7 +2,7 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
-import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop } from './map/renderer'
+import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
@@ -62,8 +62,9 @@ function recomputeLayout() {
   const layoutEdges = attackerLinks.length ? [...store.edges, ...attackerLinks] : store.edges
 
   if (store.layoutMode === 'force') {
-    // Live d3-force simulation with Obsidian-like interactive physics
-    stopLiveForce()
+    // Live d3-force simulation with Obsidian-like interactive physics.
+    // startLiveForce restarts in place and reuses positions for nodes it already knows;
+    // calling stopLiveForce() first would wipe that memory and re-seed the whole graph.
     startLiveForce(store.nodes, layoutEdges, (positions) => {
       store.nodePositions = positions
       renderLayers()
@@ -79,6 +80,9 @@ function recomputeLayout() {
     requestAnimationFrame(() => fitView())
   }
 }
+
+// Debug / e2e handle (read-only use): window.__luminar.store, .fitView, .viewState()
+;(window as any).__luminar = { store, fitView, viewState: getViewState }
 
 async function fetchSnapshot() {
   const snap = await api.simSnapshot()

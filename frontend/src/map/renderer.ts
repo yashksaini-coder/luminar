@@ -454,6 +454,12 @@ function stopAnimationLoop() {
   cancelAnimationFrame(animationFrame)
 }
 
+/** Current deck view state (debug / e2e). */
+export function getViewState(): unknown {
+  const vm = (deck as any)?.viewManager
+  return vm?.getViewports?.()[0] ? { ...vm.getViewports()[0] } : null
+}
+
 export function fitView() {
   if (!deck) return
   const positions = store.nodePositions
