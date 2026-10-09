@@ -53,10 +53,18 @@ function recomputeLayout() {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
 
+  // Attackers are not in the topology edge list; link them to the meshes they sit in
+  // so the force layout places them next to their targets.
+  const attackerLinks: [string, string][] = []
+  for (const n of store.nodes) {
+    if (n.state === 'attacker') for (const t of n.connected_peers) attackerLinks.push([n.peer_id, t])
+  }
+  const layoutEdges = attackerLinks.length ? [...store.edges, ...attackerLinks] : store.edges
+
   if (store.layoutMode === 'force') {
     // Live d3-force simulation with Obsidian-like interactive physics
     stopLiveForce()
-    startLiveForce(store.nodes, store.edges, (positions) => {
+    startLiveForce(store.nodes, layoutEdges, (positions) => {
       store.nodePositions = positions
       renderLayers()
     })
@@ -65,7 +73,7 @@ function recomputeLayout() {
   } else {
     // Static layouts (grid, radial) — compute once, no physics
     stopLiveForce()
-    const result = computeLayout(store.layoutMode, store.nodes, store.edges)
+    const result = computeLayout(store.layoutMode, store.nodes, layoutEdges)
     store.nodePositions = result.positions
     renderLayers()
     requestAnimationFrame(() => fitView())
@@ -154,7 +162,11 @@ function handleWsEvents(events: AppEvent[]) {
 
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
-    if (evt.event_type === 'GossipMessage' && evt.from_peer) {
+    if (evt.event_type === 'GossipMessage' && evt.from_peer && evt.to_peer) {
+      // Sender-correct hop (spam from attackers, relays after feature 2)
+      const color = evt.from_peer.startsWith('sybil-') ? oklchToRgba(P.attacker, 220) : undefined
+      spawnParticle(evt.from_peer, evt.to_peer, color)
+    } else if (evt.event_type === 'GossipMessage' && evt.from_peer) {
       const fromIdx = store.nodeIndex.get(evt.from_peer)
       const fromNode = fromIdx !== undefined ? store.nodes[fromIdx] : undefined
       if (fromNode) {
@@ -176,12 +188,13 @@ function handleWsEvents(events: AppEvent[]) {
     }
 
     // Spawn particles for DHT queries
-    if (evt.event_type === 'DHTQueryStarted' && evt.peer_id) {
-      const dhtIdx = store.nodeIndex.get(evt.peer_id)
+    const initiator = evt.initiator as string | undefined
+    if (evt.event_type === 'DHTQueryStarted' && initiator) {
+      const dhtIdx = store.nodeIndex.get(initiator)
       const node = dhtIdx !== undefined ? store.nodes[dhtIdx] : undefined
       if (node && node.connected_peers.length > 0) {
         const target = node.connected_peers[Math.floor(Math.random() * node.connected_peers.length)]
-        spawnParticle(evt.peer_id, target, oklchToRgba(P.routing, 200))
+        spawnParticle(initiator, target, oklchToRgba(P.routing, 200))
       }
     }
 

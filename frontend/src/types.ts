@@ -1,6 +1,6 @@
 export type LayoutMode = 'force' | 'grid' | 'radial'
 export type SimState = 'running' | 'paused' | 'stopped'
-export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed'
+export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed' | 'attacker'
 
 export interface PeerNode {
   peer_id: string

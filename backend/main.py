@@ -157,6 +157,8 @@ async def websocket_events(ws: WebSocket):
 
             # ── Events (every tick, 20Hz) ──
             current_count = engine.event_bus.event_count
+            if current_count < last_event_count:
+                last_event_count = 0  # bus was cleared (reset / scenario launch) — resync
             if current_count > last_event_count:
                 delta = current_count - last_event_count
                 try:
@@ -729,12 +731,12 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
 
-    # 1. Reset simulation clock and events
+    # 1. Clear existing faults properly (removes attacker ids from meshes/subscriptions),
+    #    then reset the clock and bus so the FaultCleared events do not linger.
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
-
-    # 2. Clear any existing faults directly (no event emission needed — we reset the bus too)
-    fault_injector._active_faults.clear()
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(

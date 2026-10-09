@@ -1,7 +1,7 @@
 import { Deck, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer, LineLayer } from '@deck.gl/layers'
 import { store } from '../store'
-import { chrome, STATE_COLORS, oklchToRgba, P, PULSE_RING_DURATION_MS } from '../palette'
+import { chrome, STATE_COLORS, nodeFillColor, oklchToRgba, P, PULSE_RING_DURATION_MS } from '../palette'
 import type { PeerNode } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -267,7 +267,7 @@ export function renderLayers() {
     getPosition: (d: any) => d._pos,
     getRadius: (d: any) =>
       d._idx === selectedNode ? nodeRadius * 1.5 : nodeRadius,
-    getFillColor: (d: PeerNode) => STATE_COLORS[d.state] ?? STATE_COLORS.idle,
+    getFillColor: (d: PeerNode) => nodeFillColor(d),
     radiusUnits: 'common' as const,
     antialiasing: true,
     pickable: true,
@@ -296,7 +296,7 @@ export function renderLayers() {
       renderLayers()
     },
     updateTriggers: {
-      getFillColor: [nodes.map(nd => nd.state).join(',')],
+      getFillColor: [nodes.map(nd => nd.state + (nd.state === 'attacker' ? nd.connected_peers.length : '')).join(',')],
       getRadius: [selectedNode],
       getPosition: [nodePositions],
     },

@@ -27,6 +27,7 @@ export function initLegend() {
     ['joining', 'Joining'],
     ['failed', 'Failed'],
     ['error', 'Error'],
+    ['attacker', 'Attacker'],
   ]
 
   for (const [state, label] of states) {

@@ -197,3 +197,117 @@ async def test_fault_events_emitted(fault_injector, event_bus):
     types = {e.fault_type for e in fault_events}
     assert "latency" in types
     assert "drop" in types
+
+
+# ── Scoring that bites (Devcon 8 roadmap §3.1) ──
+
+TOPIC = "lumina/blocks/1.0"
+
+
+def _honest_meshes_containing(gossip, peer_id: str) -> list[str]:
+    mesh = gossip.get_mesh_state(TOPIC)
+    return [p for p, peers in mesh.items() if p.startswith("peer-") and peer_id in peers]
+
+
+async def test_sybil_ids_are_deterministic(fault_injector, node_pool):
+    """Attacker ids are stable across runs so reels and URLs can name them."""
+    await fault_injector.inject_sybil(2, TOPIC)
+    mesh = node_pool.gossip.get_mesh_state(TOPIC)
+    assert "sybil-0" in mesh and "sybil-1" in mesh
+    fid = await fault_injector.inject_eclipse("peer-2", 2)
+    assert set(node_pool.gossip.get_mesh_state(TOPIC)["peer-2"]) == {"eclipse-0", "eclipse-1"}
+    await fault_injector.clear_fault(fid)
+    # A second sybil fault must not collide with the first one's ids
+    await fault_injector.inject_sybil(1, TOPIC)
+    assert "sybil-2" in node_pool.gossip.get_mesh_state(TOPIC)
+
+
+async def test_sybil_graft_is_visible_and_scored(fault_injector, node_pool, event_bus):
+    """Injecting a sybil emits a GRAFT per target and registers it with the scorer."""
+    await fault_injector.inject_sybil(1, TOPIC)
+    grafts = [e for e in event_bus.ring if e.event_type == "GossipGraft" and e.to_peer == "sybil-0"]
+    assert len(grafts) == len(_honest_meshes_containing(node_pool.gossip, "sybil-0")) > 0
+    assert node_pool.gossip.get_score_detail(TOPIC, "sybil-0")["in_mesh"] is True
+
+
+async def test_sybil_pruned_by_score_in_two_heartbeats(fault_injector, node_pool, event_bus, clock):
+    """P4 makes the prune threshold reachable: not after one heartbeat, yes after two."""
+    from backend.gossip.engine import SCORE_THRESHOLD_PRUNE
+
+    gossip = node_pool.gossip
+    await fault_injector.inject_sybil(2, TOPIC)
+    assert _honest_meshes_containing(gossip, "sybil-0")
+
+    clock._time += 1.0
+    await gossip.heartbeat(TOPIC)
+    # Heartbeat 1: P4 = -10 exactly, not < -10 → still in mesh
+    assert _honest_meshes_containing(gossip, "sybil-0")
+    assert not [e for e in event_bus.ring if e.event_type == "GossipPrune" and e.reason == "score"]
+    # Spam left the attacker as visible messages toward its mesh targets
+    spam = [
+        e for e in event_bus.ring if e.event_type == "GossipMessage" and e.from_peer == "sybil-0"
+    ]
+    assert spam and all(
+        e.to_peer.startswith("peer-") and e.msg_id.startswith("spam-") for e in spam
+    )
+
+    clock._time += 1.0
+    await gossip.heartbeat(TOPIC)
+    for sid in ("sybil-0", "sybil-1"):
+        assert gossip.scorer.compute_score(TOPIC, sid, clock.time) < SCORE_THRESHOLD_PRUNE
+        assert not _honest_meshes_containing(gossip, sid)
+    prunes = [e for e in event_bus.ring if e.event_type == "GossipPrune" and e.reason == "score"]
+    assert prunes and all(e.to_peer.startswith("sybil-") for e in prunes)
+
+
+async def test_eclipse_stays_until_clear(fault_injector, node_pool, clock):
+    """Eclipse attackers are silent: scoring never prunes them, only clear_fault does."""
+    gossip = node_pool.gossip
+    fid = await fault_injector.inject_eclipse("peer-2", 4)
+    for _ in range(3):
+        clock._time += 1.0
+        await gossip.heartbeat(TOPIC)
+    mesh = gossip.get_mesh_state(TOPIC)["peer-2"]
+    assert all(f"eclipse-{i}" in mesh for i in range(4))
+    for i in range(4):
+        assert gossip.scorer.compute_score(TOPIC, f"eclipse-{i}", clock.time) >= -0.25
+    await fault_injector.clear_fault(fid)
+    assert not any(p.startswith("eclipse-") for p in gossip.get_mesh_state(TOPIC).get("peer-2", []))
+
+
+async def test_prune_reason_defaults_to_overflow(event_bus):
+    from backend.events.types import GossipPrune
+
+    e = GossipPrune(at=1.0, from_peer="peer-0", to_peer="peer-1", topic=TOPIC)
+    assert e.to_dict()["reason"] == "overflow"
+
+
+async def test_snapshot_includes_attackers_as_nodes():
+    """Attackers appear in the snapshot so the frontend can draw, click and animate them."""
+    from backend.fault.injector import FaultInjector
+    from backend.simulation.engine import SimulationEngine
+
+    engine = SimulationEngine(n_nodes=6)
+    edges = [(f"peer-{i}", f"peer-{(i + 1) % 6}") for i in range(6)]
+    positions = {f"peer-{i}": (float(i * 10), 5.0) for i in range(6)}
+    engine.wire_topology(edges, positions)
+    fi = FaultInjector(engine.event_bus, engine.clock, engine.node_pool)
+    engine.node_pool.gossip._fault_injector = fi
+
+    assert all(n["peer_id"].startswith("peer-") for n in engine.get_snapshot()["nodes"])
+    await fi.inject_sybil(2, TOPIC)
+    fid = await fi.inject_eclipse("peer-3", 4)
+
+    nodes = {n["peer_id"]: n for n in engine.get_snapshot()["nodes"]}
+    assert engine.get_snapshot()["node_count"] == 6  # honest count unchanged
+    for aid in ("sybil-0", "sybil-1", "eclipse-0", "eclipse-3"):
+        n = nodes[aid]
+        assert n["state"] == "attacker"
+        assert n["connected_peers"] and all(p.startswith("peer-") for p in n["connected_peers"])
+        assert n["index"] >= 20000
+        assert isinstance(n["x"], float) and isinstance(n["gossip_score"], float)
+    assert nodes["eclipse-0"]["connected_peers"] == ["peer-3"]
+
+    await fi.clear_fault(fid)
+    ids = {n["peer_id"] for n in engine.get_snapshot()["nodes"]}
+    assert not any(i.startswith("eclipse-") for i in ids) and "sybil-0" in ids

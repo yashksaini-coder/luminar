@@ -123,6 +123,7 @@ class GossipEngine:
         self._iwant_pending: dict[str, set[str]] = {}
         # Message counter
         self._msg_counter = 0
+        self._spam_counter = 0
         # Peer scoring
         self.scorer = PeerScoreTracker()
 
@@ -298,23 +299,26 @@ class GossipEngine:
         mesh = self._mesh.get(topic, {})
         subscribers = self._subscriptions.get(topic, set())
 
-        # Decay scores
+        # Decay scores — MUST precede the misbehaviour pass: decay(0.5) after +1 converges
+        # at invalid=2 (P4=-20) so the prune line is crossed on heartbeat 2; the other order
+        # converges at invalid=1 (P4=-10, never < threshold).
         self.scorer.decay(topic)
+        await self._misbehave(topic, mesh, subscribers, sim_time)
 
         for peer_id in list(subscribers):
-            # Skip fake peers (sybil/eclipse)
+            # Skip fake peers (sybil/eclipse) — they do no mesh maintenance of their own
             if peer_id.startswith(("sybil-", "eclipse-")):
                 continue
 
             peer_mesh = mesh.get(peer_id, set())
             neighbors = self._topology.get(peer_id, set()) & subscribers
 
-            # PRUNE: remove low-score peers first, then excess
-            to_prune = set()
+            # PRUNE: remove low-score peers first, then excess. prunee → reason
+            to_prune: dict[str, str] = {}
             for mp in list(peer_mesh):
                 score = self.scorer.compute_score(topic, mp, sim_time)
                 if score < SCORE_THRESHOLD_PRUNE:
-                    to_prune.add(mp)
+                    to_prune[mp] = "score"
 
             if len(peer_mesh) - len(to_prune) > D_HIGH:
                 # Still too many — prune lowest-scored excess
@@ -326,13 +330,15 @@ class GossipEngine:
                 remaining.sort(key=lambda x: x[1])
                 target_remove = len(peer_mesh) - len(to_prune) - D
                 for mp, _ in remaining[:target_remove]:
-                    to_prune.add(mp)
+                    to_prune[mp] = "overflow"
 
-            for prunee in to_prune:
+            for prunee, reason in to_prune.items():
                 peer_mesh.discard(prunee)
                 self.scorer.on_prune(topic, prunee)
                 await self._event_bus.emit(
-                    GossipPrune(at=sim_time, from_peer=peer_id, to_peer=prunee, topic=topic)
+                    GossipPrune(
+                        at=sim_time, from_peer=peer_id, to_peer=prunee, topic=topic, reason=reason
+                    )
                 )
 
             # GRAFT: if mesh too small, add highest-scored candidates
@@ -386,6 +392,34 @@ class GossipEngine:
 
         # Process IWANT: deliver requested messages
         await self._process_iwants(topic, mesh, sim_time)
+
+    async def _misbehave(
+        self, topic: str, mesh: dict, subscribers: set[str], sim_time: float
+    ) -> None:
+        """Sybil attackers spam every honest mesh they sit in, once per heartbeat.
+
+        One P4 penalty per attacker per heartbeat (the scorer is a single global tracker,
+        so a per-target penalty would prune a fanout-4 sybil in one beat instead of two).
+        Eclipse attackers stay silent on purpose: scoring only sees their P3 deficit
+        (capped at -0.25), which is why an eclipse needs the fault to clear.
+        """
+        from backend.events.types import GossipMessage
+
+        for attacker in [p for p in subscribers if p.startswith("sybil-")]:
+            self.scorer.on_invalid_message(topic, attacker)
+            for honest, peers in mesh.items():
+                if attacker in peers and not honest.startswith(("sybil-", "eclipse-")):
+                    self._spam_counter += 1
+                    await self._event_bus.emit(
+                        GossipMessage(
+                            at=sim_time,
+                            topic=topic,
+                            from_peer=attacker,
+                            to_peer=honest,
+                            msg_id=f"spam-{self._spam_counter}",
+                            hops=0,
+                        )
+                    )
 
     async def _process_iwants(self, topic: str, mesh: dict, sim_time: float) -> None:
         """Fulfill IWANT requests by delivering messages from peers who have them."""

@@ -96,4 +96,38 @@ SCENARIOS: dict[str, ScenarioDefinition] = {
         ],
         duration=60.0,
     ),
+    "demo_sybil_eclipse": ScenarioDefinition(
+        id="demo_sybil_eclipse",
+        name="Demo: Sybil → Eclipse (60s)",
+        description=(
+            "The Devcon 8 stage story, compressed. T+10s: 5 Sybils graft in and flood; "
+            "P4 scoring prunes them within two heartbeats. T+16s: peer-10 is eclipsed by "
+            "4 silent attackers that scoring cannot see. T+24s: faults clear, mesh heals."
+        ),
+        icon="🎬",
+        topology_type="random",
+        topology_params={"p": 0.2},
+        phases=[
+            ScenarioPhase(
+                at=10.0,
+                label="Sybil attack: 5 attackers graft in",
+                action="inject_sybil",
+                params={"n_attackers": 5, "target_topic": "lumina/blocks/1.0"},
+            ),
+            ScenarioPhase(
+                at=16.0,
+                label="Eclipse on peer-10",
+                action="inject_eclipse",
+                # ≥ D_LOW attackers, or peer-10 re-grafts honest neighbours next heartbeat
+                params={"target_peer_id": "peer-10", "n_attackers": 4},
+            ),
+            ScenarioPhase(
+                at=24.0,
+                label="Faults cleared — mesh healing",
+                action="clear_faults",
+                params={},
+            ),
+        ],
+        duration=60.0,
+    ),
 }
