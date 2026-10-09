@@ -90,6 +90,7 @@ async function fetchSnapshot() {
   store.nodeCount = snap.node_count
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
+  store.mesh = snap.gossip?.mesh ?? {}
   store.playing = snap.state === 'running'
 
   // Auto-pause when duration limit is reached
@@ -163,20 +164,10 @@ function handleWsEvents(events: AppEvent[]) {
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
     if (evt.event_type === 'GossipMessage' && evt.from_peer && evt.to_peer) {
-      // Sender-correct hop (spam from attackers, relays after feature 2)
+      // One particle per real hop, sender → receiver. The origin publish (no to_peer)
+      // draws nothing; its flood relays each carry their own event.
       const color = evt.from_peer.startsWith('sybil-') ? oklchToRgba(P.attacker, 220) : undefined
-      spawnParticle(evt.from_peer, evt.to_peer, color)
-    } else if (evt.event_type === 'GossipMessage' && evt.from_peer) {
-      const fromIdx = store.nodeIndex.get(evt.from_peer)
-      const fromNode = fromIdx !== undefined ? store.nodes[fromIdx] : undefined
-      if (fromNode) {
-        // Send particles to 2 random connected peers (subtle, not flooding)
-        const shuffled = fromNode.connected_peers.slice().sort(() => Math.random() - 0.5)
-        const peers = shuffled.slice(0, 2)
-        for (const peer of peers) {
-          spawnParticle(evt.from_peer!, peer)
-        }
-      }
+      spawnParticle(evt.from_peer, evt.to_peer, color, evt.dropped === true)
     }
 
     // Spawn particles for graft/prune (mesh changes)
@@ -307,6 +298,7 @@ function handleWsSnapshot(snap: any) {
   store.nodeCount = snap.node_count
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
+  store.mesh = snap.gossip?.mesh ?? {}
   store.playing = snap.state === 'running'
 
   // Always rebuild nodeIndex when nodes update

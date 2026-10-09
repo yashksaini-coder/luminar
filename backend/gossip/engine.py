@@ -52,11 +52,22 @@ class MessageTrace:
     delivered_to: set[str] = field(default_factory=set)
     first_delivery_peer: str | None = None
     fully_propagated_at: float | None = None
+    duplicates: int = 0  # arrivals at peers that had already seen the message
 
-    def add_hop(self, peer_id: str, received_at: float, relay_latency_ms: float, hop_index: int):
+    def add_hop(
+        self,
+        peer_id: str,
+        received_at: float,
+        relay_latency_ms: float,
+        hop_index: int,
+        from_peer: str | None = None,
+        via: str = "mesh",
+    ):
         self.hops.append(
             {
                 "peer": peer_id,
+                "from": from_peer,
+                "via": "origin" if hop_index == 0 and from_peer is None else via,
                 "time": received_at,
                 "latency_ms": relay_latency_ms,
                 "hop": hop_index,
@@ -70,10 +81,21 @@ class MessageTrace:
         return len(self.delivered_to) / max(total_nodes, 1)
 
     def propagation_latency_ms(self) -> float:
-        """Time from origin to last delivery in ms."""
+        """Mesh end-to-end: publish → last arrival over mesh/flood hops, in ms.
+
+        IWANT fulfilment hops are stamped at heartbeat granularity, so they are
+        excluded here and reported separately by propagation_incl_gossip_ms().
+        """
+        mesh_times = [h["time"] for h in self.hops if h["via"] != "iwant"]
+        if len(mesh_times) < 2:
+            return 0.0
+        return round((max(mesh_times) - self.created_at) * 1000.0, 3)
+
+    def propagation_incl_gossip_ms(self) -> float:
+        """Publish → last arrival by any route (mesh or IHAVE/IWANT pull), in ms."""
         if len(self.hops) < 2:
             return 0.0
-        return sum(h.get("latency_ms", 0) for h in self.hops[1:])
+        return round((max(h["time"] for h in self.hops) - self.created_at) * 1000.0, 3)
 
     def max_hop_depth(self) -> int:
         if not self.hops:
@@ -90,6 +112,8 @@ class MessageTrace:
             "delivered_count": len(self.delivered_to),
             "first_delivery_peer": self.first_delivery_peer,
             "propagation_latency_ms": round(self.propagation_latency_ms(), 1),
+            "propagation_incl_gossip_ms": round(self.propagation_incl_gossip_ms(), 1),
+            "duplicates": self.duplicates,
             "max_hops": self.max_hop_depth(),
         }
 
@@ -235,17 +259,31 @@ class GossipEngine:
 
         fi = self._fault_injector
 
-        # Check if target peer is failed
-        if fi and hasattr(fi, "is_peer_failed") and fi.is_peer_failed(to_peer):
-            return
-
-        # Check partition
-        if fi and hasattr(fi, "is_partitioned") and fi.is_partitioned(from_peer, to_peer):
+        # Fault checks: a blocked relay is reported as a dropped hop so the UI can show
+        # the particle fizzle instead of the message silently vanishing.
+        blocked = (fi and hasattr(fi, "is_peer_failed") and fi.is_peer_failed(to_peer)) or (
+            fi and hasattr(fi, "is_partitioned") and fi.is_partitioned(from_peer, to_peer)
+        )
+        if blocked:
+            await self._event_bus.emit(
+                GossipMessage(
+                    at=self._clock.time,
+                    topic=topic,
+                    from_peer=from_peer,
+                    to_peer=to_peer,
+                    msg_id=msg_id,
+                    hops=hop,
+                    dropped=True,
+                )
+            )
             return
 
         # Check dedup
         seen = self._seen.setdefault(to_peer, set())
         if msg_id in seen:
+            trace = self._traces.get(msg_id)
+            if trace is not None:
+                trace.duplicates += 1
             return
         seen.add(msg_id)
         # Bound seen set per peer to prevent unbounded growth
@@ -270,7 +308,7 @@ class GossipEngine:
         await trio.sleep(latency_ms / 1000.0 / max(self._clock.speed, 0.1))
 
         sim_time = self._clock.time
-        trace.add_hop(to_peer, sim_time, latency_ms, hop)
+        trace.add_hop(to_peer, sim_time, latency_ms, hop, from_peer=from_peer)
 
         # Scoring: first delivery credit + mesh delivery tracking
         if trace.first_delivery_peer == to_peer:
@@ -280,7 +318,14 @@ class GossipEngine:
             self.scorer.on_mesh_delivery(topic, to_peer)
 
         await self._event_bus.emit(
-            GossipMessage(at=sim_time, topic=topic, from_peer=to_peer, msg_id=msg_id, hops=hop)
+            GossipMessage(
+                at=sim_time,
+                topic=topic,
+                from_peer=from_peer,
+                to_peer=to_peer,
+                msg_id=msg_id,
+                hops=hop,
+            )
         )
 
         # Continue propagation ONLY to mesh peers (not flood after first hop)
@@ -439,12 +484,20 @@ class GossipEngine:
                         if trace and peer_id not in trace.delivered_to:
                             self._seen.setdefault(peer_id, set()).add(msg_id)
                             self._add_history(peer_id, msg_id)
-                            trace.add_hop(peer_id, sim_time, 0.0, trace.max_hop_depth() + 1)
+                            trace.add_hop(
+                                peer_id,
+                                sim_time,
+                                0.0,
+                                trace.max_hop_depth() + 1,
+                                from_peer=neighbor,
+                                via="iwant",
+                            )
                             await self._event_bus.emit(
                                 GossipMessage(
                                     at=sim_time,
                                     topic=topic,
-                                    from_peer=peer_id,
+                                    from_peer=neighbor,
+                                    to_peer=peer_id,
                                     msg_id=msg_id,
                                     hops=trace.max_hop_depth(),
                                 )
@@ -495,6 +548,8 @@ class GossipEngine:
                 "avg_delivery_ratio": 0,
                 "avg_propagation_ms": 0,
                 "avg_hops": 0,
+                "avg_duplicates": 0,
+                "recent_delivery_ratio": 0,
                 "delivery_ratios": [],
                 "latency_cdf": [],
                 "mesh_stability": {},
@@ -520,11 +575,14 @@ class GossipEngine:
                 idx = min(int(len(sorted_lat) * pct / 100), len(sorted_lat) - 1)
                 latency_cdf.append({"percentile": pct, "latency_ms": round(sorted_lat[idx], 1)})
 
-        # Delivery ratio distribution (last 20 messages)
+        # Delivery ratio distribution (last 20 messages). The windowed mean is what a
+        # 60 s reel can move; the lifetime mean above barely budges after thousands of msgs.
         recent_ratios = [
             {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(n), 3)}
             for t in sorted(traces, key=lambda t: t.created_at)[-20:]
         ]
+        recent_delivery_ratio = sum(r["ratio"] for r in recent_ratios) / max(len(recent_ratios), 1)
+        avg_duplicates = sum(t.duplicates for t in traces) / len(traces)
 
         # Mesh stability: avg degree per peer
         mesh = self._mesh.get(topic, {})
@@ -538,6 +596,8 @@ class GossipEngine:
             "avg_delivery_ratio": round(avg_ratio, 3),
             "avg_propagation_ms": round(avg_latency, 1),
             "avg_hops": round(avg_hops, 1),
+            "avg_duplicates": round(avg_duplicates, 2),
+            "recent_delivery_ratio": round(recent_delivery_ratio, 3),
             "delivery_ratios": recent_ratios,
             "latency_cdf": latency_cdf,
             "mesh_stability": {

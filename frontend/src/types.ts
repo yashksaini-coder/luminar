@@ -27,6 +27,7 @@ export interface AppEvent {
   fault_type?: string
   target?: string
   reason?: string
+  dropped?: boolean
   speed?: number
   state?: string
   [key: string]: unknown
@@ -39,6 +40,7 @@ export interface SimSnapshot {
   node_count: number
   event_count: number
   nodes: PeerNode[]
+  gossip?: { mesh?: Record<string, string[]> }
 }
 
 export interface MetricsSnapshot {

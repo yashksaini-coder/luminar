@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+MESH_MAP_MAX_NODES = 100
+
 
 class SimulationEngine:
     def __init__(
@@ -131,6 +133,13 @@ class SimulationEngine:
             "nodes": self.node_pool.get_all_status() + self._attacker_nodes(),
             "gossip": {
                 "recent_traces": self.node_pool.gossip.get_recent_traces(10),
-                "mesh_size": len(self.node_pool.gossip.get_mesh_state("lumina/blocks/1.0")),
+                "mesh_size": len(self.node_pool.gossip.get_mesh_state(DEFAULT_TOPIC)),
+                # ponytail: full mesh map every 500 ms is fine to 100 nodes (~600 ids);
+                # above that send nothing rather than 3K ids per frame on the 500 preset.
+                "mesh": (
+                    self.node_pool.gossip.get_mesh_state(DEFAULT_TOPIC)
+                    if self.node_pool.node_count <= MESH_MAP_MAX_NODES
+                    else {}
+                ),
             },
         }

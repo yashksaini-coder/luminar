@@ -16,6 +16,7 @@ export interface AppStore {
   edges: [string, string][]
   nodePositions: [number, number][]  // immutable after layout
   nodeIndex: Map<string, number>  // peer_id -> array index
+  mesh: Record<string, string[]>  // peer_id -> mesh peers (empty above 100 nodes)
 
   // Layout
   layoutMode: LayoutMode
@@ -57,6 +58,8 @@ export interface AppStore {
     avg_delivery_ratio: number
     avg_propagation_ms: number
     avg_hops: number
+    avg_duplicates?: number
+    recent_delivery_ratio?: number
     delivery_ratios: { msg_id: string; ratio: number }[]
     latency_cdf: { percentile: number; latency_ms: number }[]
     mesh_stability: { avg_degree: number; min_degree: number; max_degree: number }
@@ -75,6 +78,7 @@ export const store: AppStore = {
   edges: [],
   nodePositions: [],
   nodeIndex: new Map(),
+  mesh: {},
   layoutMode: 'force',
   playing: false,
   selectedNode: -1,

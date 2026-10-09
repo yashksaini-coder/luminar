@@ -226,6 +226,7 @@ class GossipMessage(BaseEvent):
     to_peer: str = ""  # receiver of this hop ("" for the origin publish)
     msg_id: str = ""
     hops: int = 0
+    dropped: bool = False  # relay blocked by a fault (failed peer / partition)
 
     @property
     def category(self) -> EventCategory:
