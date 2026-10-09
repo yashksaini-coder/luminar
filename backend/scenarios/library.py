@@ -4,10 +4,6 @@ from __future__ import annotations
 
 from .types import ScenarioDefinition, ScenarioPhase
 
-# The first 10 peers go into group_a, the rest into group_b for partition scenarios
-_GROUP_A = [f"peer-{i}" for i in range(10)]
-_GROUP_B = [f"peer-{i}" for i in range(10, 20)]
-
 SCENARIOS: dict[str, ScenarioDefinition] = {
     "free_play": ScenarioDefinition(
         id="free_play",
@@ -52,7 +48,7 @@ SCENARIOS: dict[str, ScenarioDefinition] = {
                 at=15.0,
                 label="Partitioning network — mesh splits",
                 action="inject_partition",
-                params={"group_a": _GROUP_A, "group_b": _GROUP_B},
+                params={"split": "half"},  # groups derived from the live pool at run time
             ),
             ScenarioPhase(
                 at=35.0,

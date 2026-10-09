@@ -2,6 +2,7 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
+import { loadReel, stopReel, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
@@ -233,21 +234,95 @@ function handleWsEvents(events: AppEvent[]) {
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
 }
 
+// ── Non-periodic WS frames: edges, scenario, gap ──
+function handleWsEdges(frame: { edges: [string, string][] }) {
+  store.edges = frame.edges
+  const edgeKey = frame.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
+  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  if (fullKey !== topoKey) {
+    topoKey = fullKey
+    recomputeLayout()
+  }
+}
+
+function handleWsScenario(frame: any) {
+  store.activeScenario = frame.active ? frame : null
+}
+
+function handleWsGap(frame: { dropped: number }) {
+  store.droppedEvents += frame.dropped
+}
+
+// ── Reels (recorded runs replayed client-side; backend not needed) ──
+let reelManifest: ReelMeta[] = []
+
+async function fetchReels() {
+  try {
+    const res = await fetch('/reels/manifest.json')
+    if (!res.ok) return
+    reelManifest = await res.json()
+  } catch { return }
+  const dd = document.getElementById('reel-dropdown')
+  if (!dd) return
+  while (dd.firstChild) dd.removeChild(dd.firstChild)
+  reelManifest.forEach((r, i) => {
+    const btn = document.createElement('button')
+    btn.className = 'dd-item'
+    btn.textContent = `${i + 1}  ${r.title}`
+    btn.title = r.blurb ?? ''
+    btn.addEventListener('click', () => { dd.style.display = 'none'; enterReel(r) })
+    dd.appendChild(btn)
+  })
+  const div = document.createElement('div'); div.className = 'dd-divider'; dd.appendChild(div)
+  const live = document.createElement('button')
+  live.className = 'dd-item'
+  live.textContent = '0  Back to live'
+  live.addEventListener('click', () => { dd.style.display = 'none'; exitReel() })
+  dd.appendChild(live)
+}
+
+async function enterReel(meta: ReelMeta) {
+  ws.disconnect()
+  topoKey = ''
+  store.playing = false
+  const ok = await loadReel(meta, () => { updatePlaybackUI(); renderLayers() })
+  if (!ok) { exitReel(); return }
+  updateConnectionStatus(false)
+  const url = new URL(location.href)
+  url.searchParams.set('reel', meta.name)
+  history.replaceState(null, '', url)
+}
+
+function exitReel() {
+  stopReel()
+  topoKey = ''
+  const url = new URL(location.href)
+  url.searchParams.delete('reel')
+  history.replaceState(null, '', url)
+  ws.connect()
+}
+
 // ── Dropdowns ──
 function initDropdowns() {
   const scenarioBtn = document.getElementById('scenario-btn')
   const scenarioDD = document.getElementById('scenario-dropdown')
   const faultBtn = document.getElementById('fault-btn')
   const faultDD = document.getElementById('fault-dropdown')
+  const reelBtn = document.getElementById('reel-btn')
+  const reelDD = document.getElementById('reel-dropdown')
+  const all = [scenarioDD, faultDD, reelDD]
+  const toggle = (dd: HTMLElement | null) => {
+    for (const other of all) if (other && other !== dd) other.style.display = 'none'
+    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none'
+  }
 
-  scenarioBtn?.addEventListener('click', () => {
-    if (scenarioDD) scenarioDD.style.display = scenarioDD.style.display === 'none' ? 'block' : 'none'
-    if (faultDD) faultDD.style.display = 'none'
-  })
-
-  faultBtn?.addEventListener('click', () => {
-    if (faultDD) faultDD.style.display = faultDD.style.display === 'none' ? 'block' : 'none'
-    if (scenarioDD) scenarioDD.style.display = 'none'
+  scenarioBtn?.addEventListener('click', () => toggle(scenarioDD))
+  faultBtn?.addEventListener('click', () => toggle(faultDD))
+  reelBtn?.addEventListener('click', () => toggle(reelDD))
+  document.addEventListener('luminar:reel', (e: Event) => {
+    const i = (e as CustomEvent<number>).detail
+    if (i < 0) exitReel()
+    else if (reelManifest[i]) enterReel(reelManifest[i])
   })
 
   faultDD?.querySelectorAll('[data-fault]').forEach(btn => {
@@ -416,6 +491,11 @@ function updateConnectionStatus(connected: boolean) {
   store.connected = connected
   const dot = document.getElementById('status-dot')
   const label = document.getElementById('status-label')
+  if (store.reel) {
+    if (dot) dot.className = 'dot-reel'
+    if (label) label.textContent = `REEL · ${store.reel.title}`
+    return
+  }
   if (dot) dot.className = connected ? 'dot-live' : 'dot-offline'
   if (label) label.textContent = connected ? 'LIVE' : 'OFFLINE'
 }
@@ -469,8 +549,7 @@ async function main() {
     new ResizeObserver(() => handleResize()).observe(mapContainer)
   }
 
-  // Connect WebSocket with multiplexed handlers (snapshot, metrics, analytics pushed by server)
-  ws.connect(
+  ws.bind(
     handleWsEvents,
     updateConnectionStatus,
     handleWsSnapshot,
@@ -478,10 +557,25 @@ async function main() {
     handleWsAnalytics,
     handleWsTelemetryStatus,
   )
+  ws.onFrame.edges = handleWsEdges
+  ws.onFrame.scenario = handleWsScenario
+  ws.onFrame.gap = handleWsGap
 
-  // Initial data fetch (one-time, then WS takes over)
-  await fetchSnapshot()
-  await fetchEdges()
+  await fetchReels()
+  const reelParam = new URLSearchParams(location.search).get('reel')
+  const reelMeta = reelParam ? reelManifest.find(r => r.name === reelParam) : undefined
+  if (reelMeta) {
+    // Offline path: no backend needed at all
+    await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })
+    updateConnectionStatus(false)
+  } else {
+    // Live: multiplexed WS (snapshot, metrics, analytics pushed by server)
+    ws.connect()
+
+    // Initial data fetch (one-time, then WS takes over)
+    await fetchSnapshot()
+    await fetchEdges()
+  }
   await fetchScenarios()
 
   // Milestone computation runs on a light timer (no HTTP calls)

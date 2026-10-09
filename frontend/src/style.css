@@ -116,6 +116,15 @@ html, body {
   background: var(--red);
 }
 
+.dot-reel {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  background: oklch(0.75 0.14 85);
+  box-shadow: 0 0 6px oklch(0.75 0.14 85 / 0.5);
+}
+
 .tb-sep {
   width: 1px;
   height: 20px;

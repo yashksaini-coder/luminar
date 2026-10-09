@@ -35,6 +35,11 @@ export interface AppStore {
 
   // Scenarios
   scenarios: ScenarioDefinition[]
+  activeScenario: { active: boolean; scenario: ScenarioDefinition | null; phase_idx?: number } | null
+
+  // Reel playback (recorded frame stream replayed client-side; null = live)
+  reel: { name: string; title: string; durationMs: number; durationSim?: number } | null
+  droppedEvents: number
 
   // Metrics
   stateDistribution: Record<string, number>
@@ -87,6 +92,9 @@ export const store: AppStore = {
   events: [],
   maxEvents: 2000,
   scenarios: [],
+  activeScenario: null,
+  reel: null,
+  droppedEvents: 0,
   stateDistribution: {},
   totalMessagesSent: 0,
   totalMessagesReceived: 0,

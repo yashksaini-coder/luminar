@@ -1,6 +1,7 @@
 import { store } from '../store'
 import * as api from '../api/client'
 import { formatTime } from '../format'
+import { pauseReel, playReel, seekReel, seekReelToSimTime, setReelSpeed } from '../api/replay'
 
 let timeline: HTMLInputElement
 let tlCurrent: HTMLElement
@@ -20,6 +21,7 @@ export function initPlayback() {
 
   // Reset
   document.getElementById('btn-reset')!.addEventListener('click', () => {
+    if (store.reel) { pauseReel(); seekReel(0); store.playing = false; updatePlaybackUI(); return }
     api.simReset()  // fire and forget
     store.simTime = 0
     store.simState = 'stopped'
@@ -42,6 +44,7 @@ export function initPlayback() {
   // Timeline scrub
   timeline.addEventListener('input', () => {
     const pct = Number(timeline.value) / Number(timeline.max)
+    if (store.reel) { seekReelToSimTime(pct * (store.reel.durationSim ?? 0)); return }
     const seekTime = pct * store.maxDuration
     api.simSeek(seekTime)
     store.simTime = seekTime
@@ -52,7 +55,8 @@ export function initPlayback() {
     btn.addEventListener('click', () => {
       const speed = parseFloat((btn as HTMLElement).dataset.speed ?? '1')
       store.simSpeed = speed
-      api.simSpeed(speed)  // fire and forget
+      if (store.reel) setReelSpeed(speed)
+      else api.simSpeed(speed)  // fire and forget
       // Update active state
       document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'))
       btn.classList.add('active')
@@ -61,6 +65,13 @@ export function initPlayback() {
 }
 
 export function togglePlay() {
+  if (store.reel) {
+    if (store.playing) pauseReel(); else playReel()
+    store.playing = !store.playing
+    store.simState = store.playing ? 'running' : 'paused'
+    updatePlaybackUI()
+    return
+  }
   if (store.playing) {
     api.simPause()  // fire and forget
     store.playing = false
@@ -83,13 +94,14 @@ export function updatePlaybackUI() {
     pauseIcon.style.display = 'none'
   }
 
-  // Time display
+  // Time display (a reel's total is its recorded sim length, not the duration preset)
+  const total = store.reel ? (store.reel.durationSim ?? 0) : store.maxDuration
   tlCurrent.textContent = formatTime(store.simTime)
-  tlTotal.textContent = formatTime(store.maxDuration)
+  tlTotal.textContent = formatTime(total)
 
   // Timeline position
   if (store.simTime > 0) {
-    const maxTime = Math.max(store.maxDuration, 1)  // prevent division by zero
+    const maxTime = Math.max(total, 1)  // prevent division by zero
     const pct = Math.min(1, store.simTime / maxTime) * Number(timeline.max)
     timeline.value = String(Math.floor(pct))
   }

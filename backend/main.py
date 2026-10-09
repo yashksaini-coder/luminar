@@ -22,6 +22,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
 from backend.metrics.collector import MetricsCollector
 from backend.scenarios.library import SCENARIOS
@@ -146,14 +147,37 @@ async def websocket_events(ws: WebSocket):
         await ws.close(code=1013)
         return
     await ws.accept()
-    logger.info("WS client connected")
+    # ?record=<name> appends every frame this client sees to recordings/<name>.jsonl (a reel)
+    recorder = ReelRecorder.open_if_valid(ws.query_params.get("record"))
+    logger.info("WS client connected%s", f" (recording {recorder.path})" if recorder else "")
+
+    async def send(frame: dict, *, text: bool = False) -> None:
+        if text:
+            await ws.send_text(orjson.dumps(frame).decode())
+        else:
+            await ws.send_bytes(orjson.dumps(frame))
+        if recorder:
+            recorder.write(frame)
 
     last_event_count = 0
     tick_counter = 0  # counts 50ms ticks
+    last_edges: object = None
+    last_scenario: object = None
+    # Live clients get the newest 200 events per tick (UI can't show more); a recording
+    # must be complete, so it takes the full delta and never silently drops.
+    event_cap = 1_000_000 if recorder else 200
 
     try:
         while True:
             tick_counter += 1
+
+            # ── Topology / scenario frames, on change (and once on connect) ──
+            if _initial_edges is not last_edges:
+                last_edges = _initial_edges
+                await send({"type": "edges", "edges": _initial_edges})
+            if scenario_runner._scenario is not last_scenario:
+                last_scenario = scenario_runner._scenario
+                await send({"type": "scenario", **scenario_runner.get_status()})
 
             # ── Events (every tick, 20Hz) ──
             current_count = engine.event_bus.event_count
@@ -163,43 +187,48 @@ async def websocket_events(ws: WebSocket):
                 delta = current_count - last_event_count
                 try:
                     snapshot = list(engine.event_bus.ring)
-                    new_events = snapshot[-min(delta, 200) :]
+                    new_events = snapshot[-min(delta, event_cap) :]
                 except RuntimeError:
                     new_events = []  # deque mutated during iteration
+                if delta > event_cap:
+                    await send({"type": "gap", "dropped": delta - event_cap})
                 for event in new_events:
-                    await ws.send_text(event.to_json().decode())
+                    await send(event.to_dict(), text=True)
                 last_event_count = current_count
 
             # ── Snapshot (every 10 ticks = 500ms) ──
             if tick_counter % 10 == 0:
                 snap = engine.get_snapshot()
                 snap["type"] = "snapshot"
+                # Nothing in the UI reads per-snapshot traces (/api/trace/* serves them) and
+                # they are ~60% of a reel's bytes, so the WS frame omits them.
+                snap["gossip"].pop("recent_traces", None)
                 telem = telemetry_manager.get_nodes_as_peer_dicts()
                 if telem:
                     snap["nodes"] = snap["nodes"] + telem
                     snap["node_count"] = len(snap["nodes"])
-                await ws.send_bytes(orjson.dumps(snap))
+                await send(snap)
 
             # ── Metrics + Analytics (every 40 ticks = 2s) ──
             if tick_counter % 40 == 0:
                 try:
                     metrics = metrics_collector.get_snapshot()
                     metrics["type"] = "metrics"
-                    await ws.send_bytes(orjson.dumps(metrics))
+                    await send(metrics)
                 except Exception:
                     pass  # metrics can fail during race conditions
 
                 try:
                     analytics = engine.node_pool.gossip.get_analytics("lumina/blocks/1.0")
                     analytics["type"] = "analytics"
-                    await ws.send_bytes(orjson.dumps(analytics))
+                    await send(analytics)
                 except Exception:
                     pass
 
                 try:
                     telem_status = telemetry_manager.get_status()
                     telem_status["type"] = "telemetry_status"
-                    await ws.send_bytes(orjson.dumps(telem_status))
+                    await send(telem_status)
                 except Exception:
                     pass
 
@@ -208,6 +237,10 @@ async def websocket_events(ws: WebSocket):
         logger.info("WS client disconnected")
     except Exception:
         logger.exception("WS handler error")
+    finally:
+        if recorder:
+            recorder.close()
+            logger.info("Reel %s: %d frames", recorder.path, recorder.frames)
 
 
 # --- Simulation Control ---
@@ -741,13 +774,15 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(
         topo_type=scenario.topology_type,
-        n_nodes=20,
+        n_nodes=engine.node_pool.node_count,  # not a hard-coded 20: the pool may be 50/100
         **scenario.topology_params,
     )
     graph = topology_manager.generate(topo_config)
     edges = topology_manager.graph_to_edges(graph)
     positions = topology_manager.graph_layout(graph)
     engine.wire_topology(edges, positions)
+    global _initial_edges
+    _initial_edges = edges  # so /api/topology/edges and the WS edges frame follow the launch
 
     # 4. Arm scenario runner (sets active scenario, resets phase index)
     scenario_runner.set_scenario(scenario)

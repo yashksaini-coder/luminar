@@ -61,3 +61,16 @@ def test_unknown_phase_is_logged_not_raised(fault_injector):
     runner = ScenarioRunner()
     phase = ScenarioPhase(at=0, label="x", action="nope")
     trio.run(runner._execute_phase, phase, fault_injector)
+
+
+async def test_partition_split_half_uses_pool_size(fault_injector):
+    """Scenario partitions derive their groups from the live pool, not peer-0..19."""
+    runner = ScenarioRunner()
+    runner.set_scenario(SCENARIOS["partition_test"])
+    phase = SCENARIOS["partition_test"].phases[0]
+    assert phase.params == {"split": "half"}
+    await runner._execute_phase(phase, fault_injector)
+    assert fault_injector.is_partitioned("peer-0", "peer-11")
+    assert fault_injector.is_partitioned("peer-5", "peer-6")
+    assert not fault_injector.is_partitioned("peer-0", "peer-5")
+    assert not fault_injector.is_partitioned("peer-6", "peer-11")

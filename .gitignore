@@ -45,3 +45,7 @@ htmlcov/
 
 # AI assistant config
 .claude/
+
+# Reel recordings (raw); shipped reels live in frontend/public/reels/
+recordings/
+!frontend/public/reels/*.jsonl
