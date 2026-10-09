@@ -9,6 +9,7 @@ NOT comparable across rows (toy constants vs mainnet thresholds) — same shape 
 
 from __future__ import annotations
 
+import time
 from collections import Counter
 from typing import TYPE_CHECKING
 
@@ -35,10 +36,25 @@ def _fmt_labels(labels: Labels) -> str:
 
 
 class GossipMetrics:
-    def __init__(self) -> None:
+    def __init__(self, topic: str = "lumina/blocks/1.0") -> None:
         self.counters: Counter[tuple[str, Labels]] = Counter()
         self.gauges: dict[tuple[str, Labels], float] = {}
         self.active_faults = 0
+        # Pre-register the counters a demo cares about at 0: Prometheus' rate() needs two
+        # samples of a series, so a counter born at 20 on the Sybil prune would show no spike.
+        for reason in ("BadScore", "Excess", "Prune"):
+            self.counters[("gossipsub_mesh_peer_churn_events", _lbl(hash=topic, reason=reason))] = 0
+        self.counters[
+            ("gossipsub_mesh_peer_inclusion_events", _lbl(hash=topic, reason="Random"))
+        ] = 0
+        for name in (
+            "gossipsub_topic_msg_published",
+            "gossipsub_topic_msg_recv_counts",
+            "gossipsub_topic_iwant_msgs",
+        ):
+            self.counters[(name, _lbl(hash=topic))] = 0
+        for name in ("luminar_invalid_messages_total", "luminar_dropped_hops_total"):
+            self.counters[(name, _lbl(topic=topic))] = 0
 
     # ── Sink (trio thread, O(1)) ──
 
@@ -73,7 +89,7 @@ class GossipMetrics:
                     "luminar_scenario_phase",
                     _lbl(scenario=e.scenario_id, label=e.label, action=e.action),
                 )
-            ] = float(e.at)
+            ] = time.time() * 1000  # wall ms: Grafana annotations use the value as the time
         elif et == "FaultInjected":
             self.active_faults += 1
             self.counters[("luminar_faults_injected_total", _lbl(type=e.fault_type))] += 1
@@ -98,7 +114,7 @@ class GossipMetrics:
         for (name, labels), value in sorted(self.counters.items()):
             line(name, labels, value, "counter")
         for (name, labels), value in sorted(self.gauges.items()):
-            line(name, labels, value, "gauge", "sim time at which the phase fired")
+            line(name, labels, value, "gauge", "wall-clock ms at which the phase fired")
         line("luminar_faults_active", _lbl(), self.active_faults, "gauge")
         line("luminar_telemetry_peers", _lbl(source="json"), telemetry_peers, "gauge")
 

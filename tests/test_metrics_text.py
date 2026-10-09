@@ -65,7 +65,14 @@ def test_lighthouse_label_scheme_and_gauges():
     assert 'gossipsub_topic_msg_published{hash="lumina/blocks/1.0"} 1' in lines
     assert 'gossipsub_topic_msg_recv_counts{hash="lumina/blocks/1.0"} 1' in lines
     assert 'luminar_invalid_messages_total{topic="lumina/blocks/1.0"} 1' in lines
-    assert 'luminar_scenario_phase{action="inject_sybil",label="Sybil",scenario="demo"} 10' in lines
+    phase = [
+        ln
+        for ln in lines
+        if ln.startswith(
+            'luminar_scenario_phase{action="inject_sybil",label="Sybil",scenario="demo"} '
+        )
+    ]
+    assert phase and float(phase[0].rsplit(" ", 1)[1]) > 1.7e12  # wall-clock ms
     assert 'luminar_telemetry_peers{source="json"} 2' in lines
     # Gauges computed at scrape with Lighthouse's MeshPeerLabel keys
     assert any(

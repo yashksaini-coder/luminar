@@ -2,7 +2,7 @@
  "uid": "luminar-gossipsub",
  "title": "Luminar GossipSub",
  "schemaVersion": 39,
- "version": 1,
+ "version": 2,
  "refresh": "5s",
  "time": {
   "from": "now-5m",
@@ -23,10 +23,11 @@
     },
     "enable": true,
     "iconColor": "orange",
-    "expr": "changes(luminar_scenario_phase{job=\"luminar\"}[10s]) > 0",
+    "expr": "luminar_scenario_phase{job=\"luminar\"}",
     "titleFormat": "{{label}}",
     "textFormat": "{{action}}",
-    "step": "5s"
+    "step": "5s",
+    "useValueForTime": true
    }
   ]
  },
@@ -135,7 +136,8 @@
     {
      "refId": "A",
      "expr": "sum by (le) (gossipsub_score_per_mesh_bucket{job=\"luminar\"})",
-     "legendFormat": "{{le}}"
+     "legendFormat": "{{le}}",
+     "format": "heatmap"
     }
    ],
    "fieldConfig": {
@@ -145,18 +147,24 @@
    "options": {
     "calculate": false,
     "yAxis": {
-     "unit": "short"
-    }
+     "unit": "short",
+     "reverse": false
+    },
+    "color": {
+     "scheme": "Oranges",
+     "mode": "scheme"
+    },
+    "cellGap": 1
    }
   },
   {
    "id": 5,
    "type": "timeseries",
-   "title": "Delivery ratio (windowed) and mesh end-to-end",
+   "title": "Delivery ratio (windowed, last 20 msgs)",
    "gridPos": {
     "x": 12,
     "y": 9,
-    "w": 12,
+    "w": 6,
     "h": 8
    },
    "datasource": {
@@ -167,17 +175,67 @@
     {
      "refId": "A",
      "expr": "luminar_recent_delivery_ratio{job=\"luminar\"}",
-     "legendFormat": "delivery (last 20)"
-    },
-    {
-     "refId": "B",
-     "expr": "luminar_propagation_ms{job=\"luminar\"} / 1000",
-     "legendFormat": "end-to-end s"
+     "legendFormat": "delivery"
     }
    ],
    "fieldConfig": {
-    "defaults": {},
+    "defaults": {
+     "unit": "percentunit",
+     "min": 0,
+     "max": 1
+    },
     "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "Mesh end-to-end propagation",
+   "gridPos": {
+    "x": 18,
+    "y": 9,
+    "w": 6,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "luminar_propagation_ms{job=\"luminar\"}",
+     "legendFormat": "mesh end-to-end"
+    },
+    {
+     "refId": "B",
+     "expr": "luminar_avg_hops{job=\"luminar\"}",
+     "legendFormat": "avg hops"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "avg hops"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "short"
+       },
+       {
+        "id": "custom.axisPlacement",
+        "value": "right"
+       }
+      ]
+     }
+    ]
    },
    "options": {}
   },
@@ -242,6 +300,8 @@
    "fieldConfig": {
     "defaults": {
      "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 80,
       "stacking": {
        "mode": "normal"
       }
