@@ -6,6 +6,14 @@
 >
 > **Recommended submission:** a 45-min hands-on **Workshop — "Break the mesh: a live GossipSub attack lab"** (attendees open the reel on their phones, then eclipse/Sybil a live mesh and watch peer scoring react). **Fallback:** a 5-min Lightning Talk ("Luminar: watching P2P attacks happen live"). Contacts: office@fossasia.org, Telegram @hpdang (forum topic 8950).
 
+> **Status (2026-10-09, branch `feat/devcon8`):** must tier shipped — F1 scoring that bites,
+> F2 honest propagation, F3 reels (three 50-node reels), F4 stage theme + hero, F5 OTel-out
+> (OTLP/JSON → Jaeger, Prometheus `/metrics`, compose stack + Grafana dashboard, smoke OK),
+> F6 phase narrator. 87 backend tests. Remaining: F7 share key/toast (reel/theme/hero URL
+> params are already live), F8 OTel-in, F9 Jaeger deep link, F10 eth-mainnet-mesh preset,
+> F11 booth mode, F12 Playwright smoke. Deferred deliberately: role-token refactor of the
+> duplicated colour tables; OTLP badge in the toolbar; gzip for reels.
+
 Verified against commit `a2d8a76` on 2026-10-09; external facts re-verified the same day by a second pass (see §11). All paths relative to `/home/yks/Projects/luminar`. Base proposal: **Stage-Demo First** (favoured by 2 of 3 judges), with grafts from the Ethereum-credibility, Observability and Lessons proposals and the fatal flaws the judges named removed. Effort estimates are full-day equivalents for one developer.
 
 Budget assumption: Devcon 8 is **3–6 Nov 2026, Jio World Centre, Mumbai** (verified: devcon.org, EF blog). From today that is 3.5 weeks. Assuming ~4 working days/week, that is **~14 build days + 1 week of recording and rehearsal**. The must tier below is **12.75 days** (up from 11.5 after the verifier pass; see §9 for how it fits). Everything else is conditional on a checkpoint on **Wed 22 Oct**.
