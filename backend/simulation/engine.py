@@ -6,6 +6,8 @@ Manages the clock, node pool, event bus, and coordinates startup/shutdown.
 from __future__ import annotations
 
 import logging
+import time
+import uuid
 from typing import TYPE_CHECKING
 
 import trio
@@ -40,6 +42,18 @@ class SimulationEngine:
             max_dht_queries=max_dht_queries,
         )
         self._nursery: trio.Nursery | None = None
+        self.run_id = ""
+        self.t0_wall_ns = 0
+        self.new_run()
+
+    def new_run(self) -> None:
+        """Re-anchor the run: new id (scopes OTel trace ids) and wall-clock origin for sim t=0.
+
+        Called on construction, reset() and scenario launch so two runs never share trace ids
+        in Jaeger even though msg counters restart at msg-1.
+        """
+        self.run_id = uuid.uuid4().hex[:12]
+        self.t0_wall_ns = time.time_ns()
 
     @property
     def state(self) -> str:
@@ -75,6 +89,7 @@ class SimulationEngine:
     async def reset(self) -> None:
         self.clock.reset()
         self.event_bus.clear()
+        self.new_run()
         await self.event_bus.emit(
             SimulationStateChanged(at=0.0, state="stopped", speed=self.clock.speed)
         )

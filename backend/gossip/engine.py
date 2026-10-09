@@ -325,6 +325,7 @@ class GossipEngine:
                 to_peer=to_peer,
                 msg_id=msg_id,
                 hops=hop,
+                latency_ms=round(latency_ms, 2),
             )
         )
 
@@ -463,6 +464,7 @@ class GossipEngine:
                             to_peer=honest,
                             msg_id=f"spam-{self._spam_counter}",
                             hops=0,
+                            via="spam",
                         )
                     )
 
@@ -500,6 +502,7 @@ class GossipEngine:
                                     to_peer=peer_id,
                                     msg_id=msg_id,
                                     hops=trace.max_hop_depth(),
+                                    via="iwant",
                                 )
                             )
                         wanted.discard(msg_id)

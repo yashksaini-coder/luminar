@@ -18,13 +18,16 @@ import orjson
 import trio
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
 from backend.metrics.collector import MetricsCollector
+from backend.otel.exporter import OtlpTraceExporter
+from backend.otel.ids import trace_id as otel_trace_id
+from backend.otel.metrics import GossipMetrics
 from backend.scenarios.library import SCENARIOS
 from backend.scenarios.runner import ScenarioRunner
 from backend.simulation.engine import SimulationEngine
@@ -42,6 +45,16 @@ metrics_collector: MetricsCollector | None = None
 topology_manager = TopologyManager()
 scenario_runner = ScenarioRunner()
 telemetry_manager = TelemetryManager()
+gossip_metrics = GossipMetrics()
+# OTel-out is opt-in: set OTEL_EXPORTER_OTLP_ENDPOINT (e.g. http://localhost:4318) to enable.
+_otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or os.environ.get(
+    "LUMINAR_OTLP_ENDPOINT"
+)
+otlp_exporter: OtlpTraceExporter | None = (
+    OtlpTraceExporter(_otlp_endpoint, int(os.environ.get("LUMINAR_OTLP_TRACE_PCT", "5")))
+    if _otlp_endpoint
+    else None
+)
 _trio_token: trio.lowlevel.TrioToken | None = None
 _initial_edges: list[tuple[str, str]] = []
 _sim_cancel_scope: trio.CancelScope | None = None
@@ -78,6 +91,10 @@ def _build_simulation(n_nodes: int) -> None:
     fault_injector = FaultInjector(engine.event_bus, engine.clock, engine.node_pool)
     metrics_collector = MetricsCollector(engine.event_bus, engine.node_pool)
     engine.node_pool.gossip._fault_injector = fault_injector
+    # Observability sinks live on the bus, so a reconfigure (fresh bus) must re-attach them
+    engine.event_bus.sinks.append(gossip_metrics.sink)
+    if otlp_exporter is not None:
+        otlp_exporter.attach(engine)
 
     # Scale edge probability so larger networks aren't fully connected
     p = max(0.08, min(0.4, 6.0 / n_nodes))
@@ -111,11 +128,16 @@ async def lifespan(app: FastAPI):
     _build_simulation(n_nodes)
     _start_sim_thread()
     telemetry_manager.start()
+    if otlp_exporter is not None:
+        otlp_exporter.start()
+        logger.info("OTLP trace export → %s", otlp_exporter.endpoint)
     logger.info("Luminar P2P ready — %d nodes, %d edges", n_nodes, len(_initial_edges))
 
     yield
 
     telemetry_manager.stop()
+    if otlp_exporter is not None:
+        otlp_exporter.stop()
     engine.clock.stop()
 
 
@@ -228,6 +250,9 @@ async def websocket_events(ws: WebSocket):
                 try:
                     telem_status = telemetry_manager.get_status()
                     telem_status["type"] = "telemetry_status"
+                    telem_status["otel"] = (
+                        otlp_exporter.status() if otlp_exporter else {"enabled": False}
+                    )
                     await send(telem_status)
                 except Exception:
                     pass
@@ -647,6 +672,20 @@ async def trace_recent(limit: int = 50):
     return {"traces": engine.node_pool.gossip.get_recent_traces(limit)}
 
 
+@app.get("/metrics", response_class=PlainTextResponse)
+async def prometheus_metrics():
+    """Prometheus text exposition (Lighthouse gossipsub metric names). Counters-only pre-boot."""
+    body = gossip_metrics.render(engine, telemetry_manager.get_status().get("peer_count", 0))
+    return PlainTextResponse(body, media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
+@app.get("/api/otel/status")
+async def otel_status():
+    if otlp_exporter is None:
+        return {"enabled": False, "hint": "set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318"}
+    return otlp_exporter.status()
+
+
 @app.get("/api/trace/{msg_id}")
 async def trace_detail(msg_id: str):
     if engine is None:
@@ -654,6 +693,8 @@ async def trace_detail(msg_id: str):
     trace = engine.node_pool.gossip.get_trace(msg_id)
     if trace is None:
         return {"error": "trace not found"}
+    trace["run_id"] = engine.run_id
+    trace["trace_id"] = otel_trace_id(engine.run_id, msg_id)  # same derivation as the exporter
     return trace
 
 
@@ -770,6 +811,7 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
+    engine.new_run()  # fresh trace-id scope for the exporter
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(

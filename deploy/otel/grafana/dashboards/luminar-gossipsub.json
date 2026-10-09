@@ -1,0 +1,321 @@
+{
+ "uid": "luminar-gossipsub",
+ "title": "Luminar GossipSub",
+ "schemaVersion": 39,
+ "version": 1,
+ "refresh": "5s",
+ "time": {
+  "from": "now-5m",
+  "to": "now"
+ },
+ "timezone": "browser",
+ "tags": [
+  "luminar",
+  "gossipsub"
+ ],
+ "annotations": {
+  "list": [
+   {
+    "name": "Scenario phases",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prom"
+    },
+    "enable": true,
+    "iconColor": "orange",
+    "expr": "changes(luminar_scenario_phase{job=\"luminar\"}[10s]) > 0",
+    "titleFormat": "{{label}}",
+    "textFormat": "{{action}}",
+    "step": "5s"
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Luminar simulation (toy constants \u2014 same names/shape as Lighthouse, not the same numbers)",
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 1
+   },
+   "collapsed": false
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Mesh peers per topic",
+   "gridPos": {
+    "x": 0,
+    "y": 1,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "gossipsub_mesh_peer_counts{job=\"luminar\"}",
+     "legendFormat": "{{topic_hash}} mean"
+    },
+    {
+     "refId": "B",
+     "expr": "luminar_mesh_peer_counts_min{job=\"luminar\"}",
+     "legendFormat": "min"
+    },
+    {
+     "refId": "C",
+     "expr": "luminar_mesh_peer_counts_max{job=\"luminar\"}",
+     "legendFormat": "max"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Churn by reason (Lighthouse ChurnLabel)",
+   "gridPos": {
+    "x": 12,
+    "y": 1,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (reason) (rate(gossipsub_mesh_peer_churn_events{job=\"luminar\"}[30s]))",
+     "legendFormat": "{{reason}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list"
+    }
+   }
+  },
+  {
+   "id": 4,
+   "type": "heatmap",
+   "title": "Score distribution \u2014 Luminar buckets (never overlay with a node's)",
+   "gridPos": {
+    "x": 0,
+    "y": 9,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (le) (gossipsub_score_per_mesh_bucket{job=\"luminar\"})",
+     "legendFormat": "{{le}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {
+    "calculate": false,
+    "yAxis": {
+     "unit": "short"
+    }
+   }
+  },
+  {
+   "id": 5,
+   "type": "timeseries",
+   "title": "Delivery ratio (windowed) and mesh end-to-end",
+   "gridPos": {
+    "x": 12,
+    "y": 9,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "luminar_recent_delivery_ratio{job=\"luminar\"}",
+     "legendFormat": "delivery (last 20)"
+    },
+    {
+     "refId": "B",
+     "expr": "luminar_propagation_ms{job=\"luminar\"} / 1000",
+     "legendFormat": "end-to-end s"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "Invalid / dropped / published per second",
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "rate(luminar_invalid_messages_total{job=\"luminar\"}[30s])",
+     "legendFormat": "invalid (spam)"
+    },
+    {
+     "refId": "B",
+     "expr": "rate(luminar_dropped_hops_total{job=\"luminar\"}[30s])",
+     "legendFormat": "dropped hops"
+    },
+    {
+     "refId": "C",
+     "expr": "rate(gossipsub_topic_msg_published{job=\"luminar\"}[30s])",
+     "legendFormat": "published"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Peers by score band",
+   "gridPos": {
+    "x": 12,
+    "y": 17,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "luminar_peers_by_score_band{job=\"luminar\"}",
+     "legendFormat": "{{band}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 8,
+   "type": "row",
+   "title": "Beacon node (job=\"beacon\", reported by the node \u2014 same queries, different job)",
+   "gridPos": {
+    "x": 0,
+    "y": 25,
+    "w": 24,
+    "h": 1
+   },
+   "collapsed": false
+  },
+  {
+   "id": 9,
+   "type": "timeseries",
+   "title": "Mesh peers per topic (node)",
+   "gridPos": {
+    "x": 0,
+    "y": 26,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "gossipsub_mesh_peer_counts{job=\"beacon\"}",
+     "legendFormat": "{{topic_hash}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "Churn by reason (node)",
+   "gridPos": {
+    "x": 12,
+    "y": 26,
+    "w": 12,
+    "h": 8
+   },
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (reason) (rate(gossipsub_mesh_peer_churn_events{job=\"beacon\"}[1m]))",
+     "legendFormat": "{{reason}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  }
+ ]
+}

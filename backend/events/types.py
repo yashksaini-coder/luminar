@@ -227,6 +227,8 @@ class GossipMessage(BaseEvent):
     msg_id: str = ""
     hops: int = 0
     dropped: bool = False  # relay blocked by a fault (failed peer / partition)
+    latency_ms: float = 0.0  # simulated wire latency of this hop
+    via: str = "mesh"  # "mesh" (flood/mesh relay) | "iwant" (gossip pull) | "spam" (attacker)
 
     @property
     def category(self) -> EventCategory:
