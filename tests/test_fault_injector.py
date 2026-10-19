@@ -351,7 +351,9 @@ async def test_snapshot_includes_attackers_as_nodes():
         assert isinstance(n["x"], float) and isinstance(n["gossip_score"], float)
     assert nodes["eclipse-0"]["connected_peers"] == ["peer-3"]
     assert nodes["eclipse-0"]["last_targets"] == ["peer-3"]
-    assert len(nodes["sybil-0"]["last_targets"]) == len(nodes["sybil-0"]["connected_peers"]) > 0
+    # victims at injection ⊇ current meshes (the eclipse above rewrote peer-3's mesh)
+    assert set(nodes["sybil-0"]["connected_peers"]) <= set(nodes["sybil-0"]["last_targets"])
+    assert len(nodes["sybil-0"]["last_targets"]) > 0
 
     await fi.clear_fault(fid)
     ids = {n["peer_id"] for n in engine.get_snapshot()["nodes"]}
