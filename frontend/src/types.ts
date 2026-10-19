@@ -1,4 +1,4 @@
-export type LayoutMode = 'force' | 'grid' | 'radial'
+export type LayoutMode = 'force' | 'grid' | 'radial' | 'geo'
 export type SimState = 'running' | 'paused' | 'stopped'
 export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed' | 'attacker'
 
@@ -8,6 +8,12 @@ export interface PeerNode {
   state: NodeState
   connected_peers: string[]
   last_targets?: string[]  // attackers: victims at injection time (stable after pruning)
+  is_real?: boolean        // a real network observer (mainnet feed / real-trace reel)
+  is_telemetry?: boolean   // a real peer reporting through /api/telemetry
+  client?: string
+  country?: string
+  city?: string
+  seen_ms?: number | null
   x: number
   y: number
   messages_sent: number

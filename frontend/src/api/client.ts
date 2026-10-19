@@ -89,6 +89,9 @@ export const faultClearAll = () =>
 export const faultActive = () =>
   get<{faults: ActiveFault[]}>('/api/fault/active')
 
+// Live network
+export const liveMainnet = (enabled: boolean) => post<{enabled: boolean}>('/api/live/mainnet', { enabled })
+
 // Scenarios
 export const scenariosList = () => get<{scenarios: ScenarioDefinition[]}>('/api/scenarios')
 export const scenarioLaunch = (id: string, speed = 1) =>

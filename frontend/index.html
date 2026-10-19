@@ -20,6 +20,7 @@
       <button id="telemetry-badge" class="tb-telem-badge" style="display:none" title="Toggle telemetry panel">
         <span class="tb-telem-dot"></span>TELEMETRY <span id="telem-count">0</span>
       </button>
+      <button id="mainnet-badge" class="tb-telem-badge" title="Live mainnet block arrivals at ~150 real observer nodes (ethPandaOps public data, ~2.5 min lag)"><span class="tb-telem-dot"></span>MAINNET</button>
       <span class="tb-sep"></span>
 
       <div class="lm-dd-group">
@@ -120,6 +121,7 @@
           <button class="mode-tab active" data-mode="force">Force</button>
           <button class="mode-tab" data-mode="grid">Grid</button>
           <button class="mode-tab" data-mode="radial">Radial</button>
+          <button class="mode-tab" data-mode="geo" title="Place nodes by latitude/longitude (real observers)">Geo</button>
         </div>
 
         <!-- Node legend (top-right) -->
@@ -137,6 +139,9 @@
           <div id="legend-rings"></div>
           <div id="settings-panel" style="display:none"></div>
         </div>
+
+        <!-- Provenance card: shown while real-network data is on the canvas -->
+        <div id="provenance" style="display:none"></div>
 
         <!-- Narrator: caption card + hero ticker -->
         <div id="caption" aria-live="polite">

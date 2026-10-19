@@ -164,9 +164,14 @@ export function renderLayers() {
   }
 
   const layers: any[] = []
+  // Geo layout shows the real world only: simulated peers have no coordinates, and drawing
+  // their topology over the observers would merge two provenances in one graph.
+  const geoOnly = store.layoutMode === 'geo' && nodes.some(nd => nd.is_real || nd.is_telemetry)
+  const hidden = (nd: { is_real?: boolean; is_telemetry?: boolean } | undefined) =>
+    geoOnly && !!nd && !nd.is_real && !nd.is_telemetry
   const posOf = (id: string): Pos | undefined => {
     const i = store.nodeIndex.get(id)
-    return i !== undefined ? nodePositions[i] : undefined
+    return i !== undefined && !hidden(nodes[i]) ? nodePositions[i] : undefined
   }
   const line = (id: string, data: Seg[], color: RGBA, width: number, minPx = 1) => new LineLayer({
     id,
@@ -246,7 +251,7 @@ export function renderLayers() {
 
   // 3. Pulse rings
   if (pulses.length > 0) {
-    const pulseData = pulses.map(p => ({
+    const pulseData = pulses.filter(p => !hidden(nodes[p.nodeIdx])).map(p => ({
       position: nodePositions[p.nodeIdx],
       color: withAlpha(p.color, 56 * (1 - (now - p.startTime) / PULSE_RING_DURATION_MS)),
     }))
@@ -271,7 +276,7 @@ export function renderLayers() {
       const ease = 1 - (1 - progress) * (1 - progress)
       const src = nodePositions[p.fromIdx]
       const tgt = nodePositions[p.toIdx]
-      if (!src || !tgt) return null
+      if (!src || !tgt || hidden(nodes[p.fromIdx]) || hidden(nodes[p.toIdx])) return null
       // Dropped hops stall at 60% of the path and fade out over the last 400ms; delivered ones ride to the target
       const t = p.fizzle ? Math.min(ease, FIZZLE_AT) : ease
       const alpha = p.fizzle
@@ -305,7 +310,7 @@ export function renderLayers() {
     ...nd,
     _pos: nodePositions[i] ?? [0, 0] as Pos,
     _idx: i,
-  }))
+  })).filter(d => !hidden(d))
   type NodeDatum = (typeof nodeData)[number]
 
   // 4a. Attacker halo — grafted attackers only; a pruned one is drawn hollow instead
@@ -361,7 +366,7 @@ export function renderLayers() {
   }))
 
   // 4b. Telemetry node rings — green breathing outline to distinguish real peers
-  const telemData = nodeData.filter((d: any) => d.is_telemetry)
+  const telemData = nodeData.filter((d: any) => d.is_telemetry || d.is_real)
   if (telemData.length > 0) {
     const breathe = 0.475 + 0.275 * Math.sin((2 * Math.PI * now) / 5600)  // .2 → .75
     layers.push(ring('telem-rings', {

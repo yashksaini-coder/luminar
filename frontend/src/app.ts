@@ -2,7 +2,7 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
-import { loadReel, stopReel, reelPlaying, type ReelMeta } from './api/replay'
+import { loadReel, stopReel, reelPlaying, seekReelToSimTime, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce, type LayoutEdge } from './map/layout'
@@ -14,7 +14,7 @@ import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
-import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker } from './ui/narrator'
+import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker, caption } from './ui/narrator'
 import { formatTime } from './format'
 import type { AppEvent } from './types'
 
@@ -198,6 +198,19 @@ function handleWsEvents(events: AppEvent[]) {
   }
   store.eventCount += events.length
   narratorOnEvents(events)
+
+  // Real-network arrivals: light the observer up now rather than at the next snapshot
+  for (const evt of events) {
+    if (evt.event_type !== 'BlockSeen' || !evt.peer_id) continue
+    const idx = store.nodeIndex.get(evt.peer_id)
+    if (idx === undefined) continue
+    if (evt.first) {
+      for (const n of store.nodes) if (n.is_real) n.state = 'idle'  // new block: reset the wave
+      caption(`slot ${evt.slot} · block ${String(evt.block_root).slice(0, 10)}… · first seen ${evt.seen_ms} ms (${evt.client || '?'}, ${evt.country || '?'})`)
+    }
+    store.nodes[idx].state = evt.first ? 'origin' : 'decoded'
+    store.nodes[idx].seen_ms = evt.seen_ms as number
+  }
 
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
@@ -520,6 +533,7 @@ function handleWsAnalytics(analytics: any) {
 
 // ── WebSocket-pushed telemetry status handler ──
 function handleWsTelemetryStatus(status: any) {
+  applyMainnetStatus(status?.mainnet)
   const badge = document.getElementById('telemetry-badge') as HTMLButtonElement | null
   if (!badge) return
   badge.style.display = status.active ? 'inline-flex' : 'none'
@@ -595,6 +609,72 @@ function handleResize() {
 }
 
 // ── Init ──
+// ── Live mainnet feed (ethPandaOps arrival data) ──
+let mainnetAutoLayout = false
+
+function applyMainnetStatus(m: any) {
+  const was = store.mainnet?.enabled ?? false
+  store.mainnet = m ?? null
+  const on = !!m?.enabled
+  document.getElementById('mainnet-badge')?.classList.toggle('active', on)
+  const prov = document.getElementById('provenance')
+  if (prov) {
+    prov.style.display = on ? 'block' : 'none'
+    if (on) {
+      prov.textContent = ''
+      const k = document.createElement('span'); k.className = 'prov-k'; k.textContent = store.reel ? 'RECORDED MAINNET' : 'LIVE MAINNET'
+      const v = document.createElement('span'); v.className = 'prov-v'
+      v.textContent = `slot ${m.slot ?? '…'} · ${store.reel ? 'recorded' : `T−${m.lag_s ?? 156}s`} · ${m.with_geo ?? m.observers ?? 0} observers · arrival at observer nodes, not mesh paths · data: ethPandaOps (CC BY 4.0)`
+      prov.append(k, v)
+    }
+  }
+  if (on && !was && !mainnetAutoLayout && store.layoutMode !== 'geo') {
+    mainnetAutoLayout = true
+    setLayoutMode('geo')
+  }
+  renderTicker()
+}
+
+function setLayoutMode(mode: 'force' | 'grid' | 'radial' | 'geo') {
+  document.querySelectorAll<HTMLButtonElement>('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode))
+  store.layoutMode = mode
+  topoKey = ''
+  recomputeLayout()
+}
+
+async function toggleMainnet() {
+  if (store.reel) { showFaultFlash('Press 0 to leave the reel first'); return }
+  const res = await api.liveMainnet(!(store.mainnet?.enabled))
+  if (!res) { showFaultFlash('Backend offline'); return }
+  applyMainnetStatus(res)
+}
+
+// ── URL moments: ?t= (paused sim seconds, reels only) and ?peer= ──
+function syncUrlMoment() {
+  const url = new URL(location.href)
+  const sel = store.selectedNode >= 0 ? store.nodes[store.selectedNode]?.peer_id : undefined
+  if (sel) url.searchParams.set('peer', sel); else url.searchParams.delete('peer')
+  if (store.reel && !store.playing) url.searchParams.set('t', store.simTime.toFixed(1)); else url.searchParams.delete('t')
+  if (url.href !== location.href) history.replaceState(null, '', url)
+}
+
+async function shareMoment() {
+  syncUrlMoment()
+  try { await navigator.clipboard.writeText(location.href); showFaultFlash('Link copied') }
+  catch { window.prompt('Copy this link', location.href) }
+}
+
+function applyUrlMoment() {
+  const q = new URLSearchParams(location.search)
+  const t = Number(q.get('t'))
+  if (store.reel && q.has('t') && Number.isFinite(t)) seekReelToSimTime(t)
+  const peer = q.get('peer')
+  if (peer) {
+    const idx = store.nodeIndex.get(peer)
+    if (idx !== undefined) { store.selectedNode = idx; document.dispatchEvent(new CustomEvent('luminar:nodeselect')); renderLayers() }
+  }
+}
+
 async function main() {
   // Initialize UI
   initStatsPanel()
@@ -608,6 +688,10 @@ async function main() {
 
   // Telemetry badge click → toggle panel
   document.getElementById('telemetry-badge')?.addEventListener('click', toggleTelemetryPanel)
+  document.getElementById('mainnet-badge')?.addEventListener('click', () => { void toggleMainnet() })
+  document.addEventListener('luminar:share', () => { void shareMoment() })
+  document.addEventListener('luminar:nodeselect', syncUrlMoment)
+  setInterval(syncUrlMoment, 1000)
 
   // Initialize renderer
   const deckCanvas = document.getElementById('deck-canvas') as HTMLCanvasElement
@@ -654,6 +738,7 @@ async function main() {
   const reelMeta = reelParam ? reelManifest.find(r => r.name === reelParam) : undefined
   // Offline path: no backend needed at all. A reel that fails to load falls back to live.
   if (reelMeta && await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })) {
+    applyUrlMoment()
     updateConnectionStatus(false)
   } else {
     // Live: multiplexed WS (snapshot, metrics, analytics pushed by server)

@@ -116,6 +116,7 @@ export function computeLayout(
   switch (mode) {
     case 'force': return { positions: [] }  // Force uses live sim, not static
     case 'grid': return layoutGrid(nodes)
+    case 'geo': return { positions: nodes.map(n => [n.x, n.y] as [number, number]) }  // producer-projected lat/lon
     case 'radial': return layoutRadial(nodes, _edges)
   }
 }

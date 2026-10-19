@@ -25,6 +25,7 @@ export const TYPE_CODES: Record<string, { code: string; color: string }> = {
   FaultCleared:           { code: 'fc', color: OK },
   PeerRecovered:          { code: 'pr', color: OK },
   NodeHealthSnapshot:     { code: 'hs', color: FG3 },
+  BlockSeen:              { code: 'bs', color: OK },
   ClockTick:              { code: 'ck', color: FG3 },
   SimulationStateChanged: { code: 'ss', color: FG3 },
   ScenarioPhaseFired:     { code: 'sp', color: FG },
@@ -37,7 +38,7 @@ export const isAttackerId = (id: string) => id.startsWith('sybil-') || id.starts
 
 const FILTER_GROUPS: [string, string][] = [
   ['Gossip', 'gossip'], ['Conn', 'connection'], ['Stream', 'stream'], ['DHT', 'dht'],
-  ['Fault', 'fault'], ['Health', 'health'], ['Clock', 'clock'], ['Sim', 'simulation'],
+  ['Fault', 'fault'], ['Health', 'health'], ['Clock', 'clock'], ['Sim', 'simulation'], ['Live', 'live'],
 ]
 const ALL_CATS = FILTER_GROUPS.map(g => g[1])
 const NET_TYPES = new Set(['FaultInjected', 'FaultCleared'])
@@ -153,6 +154,7 @@ function buildDetail(evt: AppEvent): string {
     case 'NodeHealthSnapshot': return `score=${typeof evt.score === 'number' ? evt.score.toFixed(2) : '?'}`
     case 'SimulationStateChanged': return evt.state ?? ''
     case 'ScenarioPhaseFired': return String(evt.label ?? '')
+    case 'BlockSeen': return `${evt.seen_ms} ms · ${evt.client || '?'}${evt.first ? ' · first' : ''}`
     default: return evt.msg_id ?? evt.topic ?? evt.fault_type ?? ''
   }
 }

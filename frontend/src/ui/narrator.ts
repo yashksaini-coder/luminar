@@ -136,6 +136,15 @@ export function renderTicker() {
     ['invalid', String(invalidMsgs), invalidMsgs > 0],
     ['T', '+' + formatTime(store.simTime)],
   ]
+  if (store.mainnet?.enabled) {
+    const m = store.mainnet
+    cells.splice(1, 4,
+      ['slot', String(m.slot ?? '—')],
+      ['first seen', m.first_ms != null ? `${m.first_ms} ms · ${m.first_client || '?'}` : '—'],
+      ['p50', m.p50_ms != null ? `${m.p50_ms} ms` : '—'],
+      ['observers', String(m.with_geo ?? m.observers ?? 0)],
+    )
+  }
   // Rebuild cheaply: 8 small spans
   while (tickerEl.firstChild) tickerEl.removeChild(tickerEl.firstChild)
   for (const [k, v, danger] of cells) {

@@ -28,6 +28,9 @@ export function initKeyboard() {
       case '0':
         document.dispatchEvent(new CustomEvent('luminar:reel', { detail: -1 }))  // back to live
         break
+      case 's':
+        document.dispatchEvent(new CustomEvent('luminar:share'))
+        break
       case 't':
         document.dispatchEvent(new CustomEvent('luminar:pref', { detail: 'stageTheme' }))
         break

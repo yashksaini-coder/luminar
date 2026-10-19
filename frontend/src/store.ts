@@ -39,6 +39,7 @@ export interface AppStore {
 
   // Reel playback (recorded frame stream replayed client-side; null = live)
   reel: { name: string; title: string; durationMs: number; durationSim?: number } | null
+  mainnet: { enabled: boolean; slot?: number; block_root?: string; observers?: number; with_geo?: number; first_ms?: number | null; p50_ms?: number | null; max_ms?: number | null; first_client?: string; first_country?: string; lag_s?: number } | null
   droppedEvents: number
 
   // Metrics
@@ -104,6 +105,7 @@ export const store: AppStore = {
   scenarios: [],
   activeScenario: null,
   reel: null,
+  mainnet: null,
   droppedEvents: 0,
   stateDistribution: {},
   totalMessagesSent: 0,
