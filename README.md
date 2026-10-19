@@ -89,10 +89,26 @@ WS   /ws/events                       Multiplexed event stream (20Hz)
 WS   /ws/events?record=<name>         Also record a reel (only with LUMINAR_ALLOW_RECORD=1)
 ```
 
+### Live mainnet block wave
+
+Click **MAINNET** in the toolbar (or start the backend with `LUMINAR_MAINNET_FEED=1`) and
+the map switches to the **Geo** layout and shows the real network: every 12 s the block of
+a slot that started ~2.5 min ago lights up ~150 real observer nodes in the order they saw
+it, with the first sighting, p50 and spread in the narrator and ticker. Data: ethPandaOps'
+public arrival data (Xatu, CC BY 4.0). It is arrival at observer nodes, not gossip mesh
+paths, and the API is undocumented infrastructure; the feed polls once per slot and
+degrades to "no data". An offline twin for the booth:
+
+```bash
+uv run python scripts/mainnet_to_reel.py --slots 8 --out mainnet-block-wave
+```
+
+writes a reel of eight real slots and registers it in the Reels menu.
+
 ### Reels (offline replay)
 
 A reel is a recorded WebSocket frame stream replayed client-side, so a demo works with
-no backend and no Wi-Fi. Open **Reels** in the toolbar, press `1`–`3`, or load one by URL:
+no backend and no Wi-Fi. Open **Reels** in the toolbar, press `1`–`3`, or load one by URL (add `&t=12.5&peer=sybil-0` to land on a paused moment; `s` copies the current one):
 `http://localhost:5173/?reel=sybil-eclipse`. `0` returns to live.
 
 Record a new one against a backend started with `LUMINAR_ALLOW_RECORD=1` (recording is off by

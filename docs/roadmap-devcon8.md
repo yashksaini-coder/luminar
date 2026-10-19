@@ -9,7 +9,9 @@
 > **Status (2026-10-09, branch `feat/devcon8`):** must tier shipped — F1 scoring that bites,
 > F2 honest propagation, F3 reels (three 50-node reels), F4 stage theme + hero, F5 OTel-out
 > (OTLP/JSON → Jaeger, Prometheus `/metrics`, compose stack + Grafana dashboard, smoke OK),
-> F6 phase narrator. 87 backend tests. Remaining: F7 share key/toast (reel/theme/hero URL
+> F6 phase narrator. 87 backend tests. 2026-10-19: redesign shipped; live mainnet block
+> wave (Geo layout, real-trace reel, provenance card), URL moments (`t`, `peer`, key `s`) and
+> the faithfulness table in docs/protocols.md added on `feat/live-network`. Remaining: F7 share key/toast (reel/theme/hero URL
 > params are already live), F8 OTel-in, F9 Jaeger deep link, F10 eth-mainnet-mesh preset,
 > F11 booth mode, F12 Playwright smoke. Deferred deliberately: role-token refactor of the
 > duplicated colour tables; OTLP badge in the toolbar; gzip for reels.

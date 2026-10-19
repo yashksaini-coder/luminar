@@ -435,3 +435,26 @@ When user seeks to time T:
 3. State is reconstructed from events (event sourcing)
 
 This enables full timeline scrubbing without snapshots or checkpoints.
+
+## How faithful is it?
+
+Luminar models the **same mechanism** as a beacon node's GossipSub v1.1 (mesh maintenance,
+flood publish, IHAVE/IWANT, P1–P4 peer scoring) with **toy constants**. The table says which
+rules are the spec's and which are simplified; never present the numbers as mainnet's.
+
+| Rule | Luminar | Lighthouse / spec | Status |
+|---|---|---|---|
+| Mesh degree D / D_low / D_high | 6 / 4 / 8 | 8 / 6 / 12 | toy constants (`backend/gossip/engine.py`) |
+| Heartbeat | 1 s | 0.7 s | toy constant |
+| Score thresholds (graft / prune) | −5 / −10 | gossip −4000, publish −8000, graylist −16000 | toy constants; same decision structure |
+| Score components | P1 time in mesh, P2 first deliveries, P3 mesh delivery deficit, P4 invalid messages | P1–P7 | P5 (app-specific), P6 (IP colocation), P7 (behaviour penalty) not modelled |
+| Invalid-message source | Sybil attackers spam once per heartbeat (P4) | signature / validation failures | modelled as a behaviour, not as validation |
+| Eclipse visibility to scoring | invisible except P3 deficit (floor −0.25) | same shape; thresholds differ | faithful to the mechanism |
+| Relay latency | uniform 5–50 ms per hop (+ injected latency) | measured, continent-dependent; mainnet block p50 ≈ 1.7 s from slot start | toy; calibration from ethPandaOps data is post-Devcon |
+| Flood publish | first hop to all topology neighbours | first hop to all peers (flood publish) | faithful |
+| IHAVE/IWANT | pulls fulfilled at heartbeat granularity | async RPC | simplified timing |
+| IDONTWANT (v1.2), PREAMBLE (proposed v1.4) | not modelled | Lighthouse ships IDONTWANT | gap |
+| Signatures, message validation | none; a message is trusted | real | not modelled |
+| Topology | 8 generators, 2–500 peers | discv5 + peer manager, ~500 conns per node | synthetic |
+| Determinism | wall-clock trio, unseeded | n/a | "reproducible recordings" (reels), never "identical runs" |
+| Real-network data | mainnet block arrivals at ~150 observer nodes (ethPandaOps, CC BY 4.0) | — | arrival at observers, not mesh paths; ~2.5 min lag |
