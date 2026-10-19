@@ -78,10 +78,29 @@ async def test_partition_blocks_relay(fault_injector, node_pool, event_bus):
         await trio.sleep(0.2)
 
     trace = gossip.get_trace(msg_id)
-    # peer-3,4,5 should NOT be in delivered
-    delivered = trace["hops"]
-    delivered_peers = {h["peer"] for h in delivered}
-    assert "peer-3" not in delivered_peers or fault_injector.is_partitioned("peer-1", "peer-3")
+    delivered_peers = {h["peer"] for h in trace["hops"]}
+    assert delivered_peers <= {"peer-0", "peer-1"}
+
+
+async def test_partition_holds_across_heartbeats(fault_injector, node_pool, clock):
+    """Heartbeat GRAFT and IHAVE/IWANT must not re-link or leak across a partition."""
+    gossip = node_pool.gossip
+    topic = "lumina/blocks/1.0"
+    group_a, group_b = ["peer-0", "peer-1"], ["peer-2", "peer-3", "peer-4", "peer-5"]
+    await fault_injector.inject_partition(group_a=group_a, group_b=group_b)
+
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", topic, nursery)
+        await trio.sleep(0.2)
+    for _ in range(3):
+        clock._time += 1.0
+        await gossip.heartbeat(topic)
+
+    mesh = gossip.get_mesh_state(topic)
+    assert not any(b in mesh[a] for a in group_a for b in group_b), mesh
+    assert not any(a in mesh[b] for b in group_b for a in group_a), mesh
+    delivered = {h["peer"] for h in gossip.get_trace(msg_id)["hops"]}
+    assert delivered <= set(group_a), delivered
 
 
 async def test_drop_peer_marks_failed(fault_injector, node_pool):

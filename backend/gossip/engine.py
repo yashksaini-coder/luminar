@@ -260,6 +260,21 @@ class GossipEngine:
 
         return msg_id
 
+    def _link_blocked(self, peer_a: str, peer_b: str) -> bool:
+        """True when a fault (dropped endpoint or partition) cuts the link between two peers.
+
+        Used by relay, heartbeat GRAFT/IHAVE and IWANT fulfilment alike, so a partition
+        cannot leak through the lazy gossip path. Duck-typed: tests pass partial injectors.
+        """
+        fi = self._fault_injector
+        if fi is None:
+            return False
+        failed = getattr(fi, "is_peer_failed", None)
+        if failed is not None and (failed(peer_a) or failed(peer_b)):
+            return True
+        partitioned = getattr(fi, "is_partitioned", None)
+        return partitioned is not None and partitioned(peer_a, peer_b)
+
     async def _relay_message(
         self,
         msg_id: str,
@@ -276,10 +291,7 @@ class GossipEngine:
 
         # Fault checks: a blocked relay is reported as a dropped hop so the UI can show
         # the particle fizzle instead of the message silently vanishing.
-        blocked = (fi and hasattr(fi, "is_peer_failed") and fi.is_peer_failed(to_peer)) or (
-            fi and hasattr(fi, "is_partitioned") and fi.is_partitioned(from_peer, to_peer)
-        )
-        if blocked:
+        if self._link_blocked(from_peer, to_peer):
             await self._event_bus.emit(
                 GossipMessage(
                     at=self._clock.time,
@@ -372,7 +384,12 @@ class GossipEngine:
                 continue
 
             peer_mesh = mesh.get(peer_id, set())
-            neighbors = self._topology.get(peer_id, set()) & subscribers
+            # A failed peer or a partition cuts the link for GRAFT and IHAVE too, not just relay
+            neighbors = {
+                n
+                for n in self._topology.get(peer_id, set()) & subscribers
+                if not self._link_blocked(peer_id, n)
+            }
 
             # PRUNE: remove low-score peers first, then excess. prunee → reason
             to_prune: dict[str, str] = {}
@@ -493,8 +510,10 @@ class GossipEngine:
 
             neighbors = self._topology.get(peer_id, set())
             for msg_id in list(wanted):
-                # Find a neighbor who has this message
+                # Find a neighbor who has this message and can still reach us
                 for neighbor in neighbors:
+                    if self._link_blocked(neighbor, peer_id):
+                        continue
                     if msg_id in self._seen.get(neighbor, set()):
                         # Deliver via IWANT fulfillment
                         trace = self._traces.get(msg_id)
