@@ -365,7 +365,7 @@ One socket. Events are text frames with no `type` field; everything else is a bi
 
 ### 8.3 REST calls the UI makes (`api/client.ts`)
 
-`get`/`post` prepend `VITE_API_URL` and return `null` on any failure (network error or non-2xx; they never reject). If `localStorage['luminar.token']` is set, `post` sends it as `X-Luminar-Token` and the WebSocket appends `?token=`; the backend only enforces it when `LUMINAR_ADMIN_TOKEN` is set (public deploys), in which case every mutating call without it gets 403. Static assets (`getStatic*`) are fetched from the frontend origin, never the API.
+`get`/`post` prepend `VITE_API_URL` and return `null` on any failure (network error or non-2xx; they never reject). If `localStorage['luminar.token']` is set, `post` sends it as `X-Luminar-Token` (the WebSocket never carries it: browsers cannot set WS headers and the UI never records or ingests); the backend only enforces it when `LUMINAR_ADMIN_TOKEN` is set (public deploys), in which case every mutating call without it gets 403. Static assets (`getStatic*`) are fetched from the frontend origin, never the API.
 
 | Call | When |
 |---|---|

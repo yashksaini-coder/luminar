@@ -153,9 +153,12 @@ def test_telemetry_ws_handshake_checks_token(sim, monkeypatch):
 
     monkeypatch.setattr(main, "_ADMIN_TOKEN", "s3cret")
     client = TestClient(main.app)  # no `with`: the lifespan must not start a trio thread
-    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/ws/telemetry?token=no"):
+    with (
+        pytest.raises(WebSocketDisconnect),
+        client.websocket_connect("/ws/telemetry", headers={"X-Luminar-Token": "no"}),
+    ):
         pass
-    with client.websocket_connect("/ws/telemetry?token=s3cret") as ws:
+    with client.websocket_connect("/ws/telemetry", headers={"X-Luminar-Token": "s3cret"}) as ws:
         ws.send_text('{"peer_id":"ws-peer"}')
         assert ws.receive_text() == '{"ok":true}'
     assert "ws-peer" in main.telemetry_manager._peers

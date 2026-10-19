@@ -163,8 +163,9 @@ def _token_ok(token: str | None) -> bool:
 
 
 def _ws_token_ok(ws: WebSocket) -> bool:
-    """Admin token for WebSocket handshakes: header or ?token= query param."""
-    return _token_ok(ws.headers.get("x-luminar-token") or ws.query_params.get("token"))
+    """Admin token for WebSocket handshakes: header only, so it never lands in URL/access logs.
+    Browsers cannot set WS headers, which is fine: the UI never records and never ingests."""
+    return _token_ok(ws.headers.get("x-luminar-token"))
 
 
 @app.middleware("http")
@@ -939,7 +940,7 @@ async def websocket_telemetry(ws: WebSocket):
 
     Peers send JSON payloads and receive {"ok": true} acknowledgements.
     """
-    if not _token_ok(ws.headers.get("x-luminar-token") or ws.query_params.get("token")):
+    if not _ws_token_ok(ws):
         await ws.close(code=1008)  # before accept() → HTTP 403 handshake
         return
     await ws.accept()
