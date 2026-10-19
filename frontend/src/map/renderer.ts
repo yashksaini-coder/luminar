@@ -131,7 +131,7 @@ export function renderLayers() {
 
   // Node radius scales with count; smaller in grid/radial for cleaner look
   const baseRadius = Math.max(3, Math.min(8, 200 / Math.sqrt(n))) * store.scale.node
-  const nodeRadius = store.layoutMode === 'force' ? baseRadius : baseRadius * 0.7
+  const nodeRadius = store.layoutMode === 'force' ? baseRadius : baseRadius * 0.5  // grid/radial: ~45% of the slot
   const radiusOf = (d: { state: string; _idx: number }) =>
     nodeRadius * (d._idx === selectedNode ? 1.5 : 1) * (d.state === 'attacker' ? 1.15 : 1)
   const la = store.layoutMode === 'force' ? 1 : 0.4   // grid/radial thin every edge layer
