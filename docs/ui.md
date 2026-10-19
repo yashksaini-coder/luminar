@@ -95,7 +95,7 @@ Ring semantics at a glance: white thick = selected; faint warm-white thin = peer
 | Mode | How it is built | Notes |
 |---|---|---|
 | Force (default) | Live d3-force: link strength 0.4 at `max(40, 400/√n)`, charge −800, weak centre, collide. Nodes seen before keep their positions; new ones seed on a circle. If fewer than 80% of nodes are reused, 80 synchronous warm-up ticks run first. | Grafted attackers get links to their victims so they sit next to them. A pruned attacker gets a *weak* tether (strength 0.2, distance 1.6×) to up to two of its `last_targets` (victims at injection time, `backend/simulation/engine.py:133`) so it parks beside the cluster instead of drifting off (`app.ts:65-73`, `map/layout.ts:69-70`). `fitView` 200 ms after start. |
-| Geo | Nodes at producer-projected lat/lon (`x = lon·2.5`, `y = −lat·2.5`) over Natural Earth 110m land outlines (public domain, `frontend/public/geo/land-110m.json`, 84 KB, loaded on first use; fit-to-view frames the whole world); simulated peers are hidden. | Used by the live mainnet feed and real-trace reels; selected automatically when the feed turns on. |
+| Geo | Nodes at producer-projected lat/lon (`x = lon·2.5`, `y = −lat·2.5`) over Natural Earth 110m land outlines (public domain, `frontend/public/geo/land-110m.json`, 84 KB, loaded on first use; fit-to-view frames the whole world); simulated peers are hidden. | Offered only while real observers are on the canvas (the tab is disabled otherwise); selected automatically once per feed-on or real reel; the previous layout is restored when the feed turns off or the reel is left; a scenario or fault click leaves Geo so the simulation is visible. |
 | Radial | Highest-degree node at centre, rings outward by degree, at least 6 per ring. | Degree counts attacker links. |
 
 Layout is recomputed only when the sorted node-id set, the edge set, or the mode changes (`topoKey`); state changes alone never relayout.
@@ -318,7 +318,7 @@ Keys are ignored while focus is in a `TEXTAREA`, `SELECT` or a non-range `INPUT`
 | `Space` | play / pause |
 | `f` | fit view |
 | `Escape` | deselect node, clear `highlightPeers`, close the inspector |
-| `1` `2` `3` | load reel 1/2/3 from the manifest (no-op if the manifest failed to load) |
+| `1` … `9` | load reel N from the manifest (no-op past the last reel) |
 | `0` | back to live |
 | `t` | toggle stage theme |
 | `h` | toggle hero layout |

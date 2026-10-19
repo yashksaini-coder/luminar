@@ -22,7 +22,7 @@ export function initKeyboard() {
         store.highlightPeers = []
         document.dispatchEvent(new CustomEvent('luminar:render'))
         break
-      case '1': case '2': case '3':
+      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
         document.dispatchEvent(new CustomEvent('luminar:reel', { detail: Number(e.key) - 1 }))
         break
       case '0':

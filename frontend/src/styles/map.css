@@ -27,3 +27,6 @@
 #mainnet-badge { display: inline-flex; }
 #mainnet-badge:not(.active) { color: var(--lm-fg3); border-color: var(--lm-border); background: transparent; }
 #mainnet-badge:not(.active) .tb-telem-dot { background: var(--lm-fg3); box-shadow: none; }
+
+/* Geo tab is offered only while real observers are on the canvas */
+.mode-tab:disabled { opacity: 0.4; cursor: not-allowed; }

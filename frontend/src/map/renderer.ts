@@ -203,7 +203,7 @@ export function renderLayers() {
   }
   // Geo layout shows the real world only: simulated peers have no coordinates, and drawing
   // their topology over the observers would merge two provenances in one graph.
-  const geoOnly = store.layoutMode === 'geo' && nodes.some(nd => nd.is_real || nd.is_telemetry)
+  const geoOnly = store.layoutMode === 'geo'
   const hidden = (nd: { is_real?: boolean; is_telemetry?: boolean } | undefined) =>
     geoOnly && !!nd && !nd.is_real && !nd.is_telemetry
   const posOf = (id: string): Pos | undefined => {

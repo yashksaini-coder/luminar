@@ -181,6 +181,7 @@ function buildScenarioDropdown() {
     btn.addEventListener('click', async () => {
       setDropdown(dropdown, false)
       if (reelGuard()) return
+      leaveGeoForSim()
       await api.scenarioLaunch(s.id, store.simSpeed)
       await fetchSnapshot()
       await fetchEdges()
@@ -394,6 +395,8 @@ async function enterReel(meta: ReelMeta) {
 function exitReel() {
   stopReel()
   syncReelChrome()
+  store.mainnet = null
+  applyMainnetStatus(null)  // a real reel's recorded status must not outlive it
   topoKey = ''
   const url = new URL(location.href)
   url.searchParams.delete('reel')
@@ -429,6 +432,7 @@ function initDropdowns() {
       const action = (btn as HTMLElement).dataset.fault!
       setDropdown(faultDD, false)
       if (reelGuard()) return
+      leaveGeoForSim()
 
       // Fire-and-forget — don't await, don't block UI
       switch (action) {
@@ -476,6 +480,7 @@ function handleWsSnapshot(snap: any) {
   }
   store.simTime = snap.time
   store.nodeCount = snap.node_count
+  store.observerCount = snap.observer_count ?? 0
   syncNodePreset(snap.node_count)
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
@@ -489,6 +494,12 @@ function handleWsSnapshot(snap: any) {
   for (let i = 0; i < store.nodes.length; i++) {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
+  // Geo availability follows the node set; the feed auto-selects Geo once observers exist
+  if (store.mainnet?.enabled && hasRealNodes() && !geoAutoDone) {
+    geoAutoDone = true
+    if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
+  }
+  updateGeoAvailability()
 
   // Auto-pause at duration limit (live only)
   if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
@@ -610,8 +621,6 @@ function handleResize() {
 
 // ── Init ──
 // ── Live mainnet feed (ethPandaOps arrival data) ──
-let mainnetAutoLayout = false
-
 function applyMainnetStatus(m: any) {
   const was = store.mainnet?.enabled ?? false
   store.mainnet = m ?? null
@@ -628,18 +637,53 @@ function applyMainnetStatus(m: any) {
       prov.append(k, v)
     }
   }
-  if (on && !was && !mainnetAutoLayout && store.layoutMode !== 'geo') {
-    mainnetAutoLayout = true
-    setLayoutMode('geo')
+  if (on && !was && hasRealNodes() && !geoAutoDone) {
+    geoAutoDone = true
+    if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
   }
+  if (!on && was) { layoutBeforeGeo = null; geoAutoDone = false; updateGeoAvailability() }
   renderTicker()
 }
 
 function setLayoutMode(mode: LayoutMode) {
+  if (mode === 'geo' && !hasRealNodes()) mode = 'force'  // Geo is for real observers only
   document.querySelectorAll<HTMLButtonElement>('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode))
   store.layoutMode = mode
   topoKey = ''
   recomputeLayout()
+}
+
+/** Real observers (mainnet feed, real-trace reel) are the only nodes with coordinates. */
+function hasRealNodes(): boolean {
+  return store.nodes.some(n => n.is_real)
+}
+
+let layoutBeforeGeo: LayoutMode | null = null
+let geoAutoDone = false  // the feed auto-selects Geo once per feed-on, never on later snapshots
+
+/** Called whenever the node set or the feed changes: Geo is offered only while real
+ *  observers exist, and leaving that state restores the layout the user had before. */
+function updateGeoAvailability() {
+  const real = hasRealNodes()
+  const tab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="geo"]')
+  if (tab) {
+    tab.disabled = !real
+    tab.title = real ? 'Place real observers by latitude/longitude' : 'Geo needs real observers (turn MAINNET on or open a real reel)'
+  }
+  if (!real && store.layoutMode === 'geo') {
+    const back = layoutBeforeGeo ?? 'force'
+    layoutBeforeGeo = null
+    setLayoutMode(back)
+  }
+}
+
+/** The simulation is invisible in Geo; a simulated action switches back so it can be seen. */
+function leaveGeoForSim() {
+  if (store.layoutMode !== 'geo') return
+  const back = layoutBeforeGeo ?? 'force'
+  layoutBeforeGeo = null
+  setLayoutMode(back)
+  showFaultFlash('Geo shows real observers only — switched to ' + back)
 }
 
 async function toggleMainnet() {
@@ -690,6 +734,7 @@ async function main() {
   document.getElementById('telemetry-badge')?.addEventListener('click', toggleTelemetryPanel)
   document.getElementById('mainnet-badge')?.addEventListener('click', () => { void toggleMainnet() })
   document.addEventListener('luminar:share', () => { void shareMoment() })
+  document.addEventListener('luminar:layout-picked', () => { layoutBeforeGeo = null })
   document.addEventListener('luminar:nodeselect', syncUrlMoment)
   setInterval(syncUrlMoment, 1000)
 

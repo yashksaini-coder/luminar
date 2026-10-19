@@ -285,8 +285,10 @@ async def websocket_events(ws: WebSocket):
                 telem = telemetry_manager.get_nodes_as_peer_dicts()
                 live = mainnet_feed.get_nodes_as_peer_dicts()
                 if telem or live:
+                    # node_count stays the simulated pool; real peers are counted apart
                     snap["nodes"] = snap["nodes"] + telem + live
-                    snap["node_count"] = len(snap["nodes"])
+                    snap["telemetry_count"] = len(telem)
+                    snap["observer_count"] = len(live)
                 await send(snap)
 
             # ── Metrics + Analytics (every 40 ticks = 2s) ──

@@ -7,13 +7,14 @@ export function initModeSwitcher(onLayoutChange: () => void) {
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const mode = tab.dataset.mode as LayoutMode
-      if (mode === store.layoutMode) return
+      if (mode === store.layoutMode || tab.disabled) return
 
       // Update active tab
       tabs.forEach(t => t.classList.remove('active'))
       tab.classList.add('active')
 
       store.layoutMode = mode
+      document.dispatchEvent(new CustomEvent('luminar:layout-picked'))
       onLayoutChange()
     })
   })

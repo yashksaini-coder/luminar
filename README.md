@@ -108,7 +108,7 @@ writes a reel of eight real slots and registers it in the Reels menu.
 ### Reels (offline replay)
 
 A reel is a recorded WebSocket frame stream replayed client-side, so a demo works with
-no backend and no Wi-Fi. Open **Reels** in the toolbar, press `1`–`3`, or load one by URL (add `&t=12.5&peer=sybil-0` to land on a paused moment; `s` copies the current one):
+no backend and no Wi-Fi. Open **Reels** in the toolbar, press `1`–`9`, or load one by URL (add `&t=12.5&peer=sybil-0` to land on a paused moment; `s` copies the current one):
 `http://localhost:5173/?reel=sybil-eclipse`. `0` returns to live.
 
 Record a new one against a backend started with `LUMINAR_ALLOW_RECORD=1` (recording is off by
