@@ -119,6 +119,7 @@ class SimulationEngine:
             return []
         mesh = gossip.get_mesh_state(DEFAULT_TOPIC)
         scores = gossip.get_scores(DEFAULT_TOPIC)
+        victims = fi.attacker_victims() if hasattr(fi, "attacker_victims") else {}
         out = []
         for i, aid in enumerate(ids):
             targets = sorted(p for p, peers in mesh.items() if is_honest(p) and aid in peers)
@@ -129,6 +130,7 @@ class SimulationEngine:
                     "index": 20000 + i,  # above telemetry's 10000+ range
                     "state": "attacker",
                     "connected_peers": targets,
+                    "last_targets": victims.get(aid, []),  # survives pruning; layout tether
                     "x": float(anchor.x + 12.0 if anchor else 0.0),
                     "y": float(anchor.y + 12.0 if anchor else 0.0),
                     "messages_sent": 0,

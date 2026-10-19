@@ -7,6 +7,7 @@ export interface PeerNode {
   index: number
   state: NodeState
   connected_peers: string[]
+  last_targets?: string[]  // attackers: victims at injection time (stable after pruning)
   x: number
   y: number
   messages_sent: number

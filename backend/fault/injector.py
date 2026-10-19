@@ -52,6 +52,13 @@ class FaultInjector:
     def get_active_faults(self) -> list[dict]:
         return list(self._active_faults.values())
 
+    def attacker_victims(self) -> dict[str, list[str]]:
+        """Attacker id → the honest peers it was injected against (stable after pruning)."""
+        out: dict[str, list[str]] = {}
+        for f in self._active_faults.values():
+            out.update(f.get("victims", {}))
+        return out
+
     def attacker_ids(self) -> list[str]:
         """Ids of every live sybil/eclipse attacker, in injection order."""
         ids: list[str] = []
@@ -214,6 +221,7 @@ class FaultInjector:
 
         # Inject sybil nodes into random honest peers' meshes
         honest_peers = [p for p in subscribers if is_honest(p)]
+        victims: dict[str, list[str]] = {}
         for sybil_id in sybil_ids:
             # Add sybil to gossip data structures
             self.gossip._seen[sybil_id] = {}
@@ -222,6 +230,7 @@ class FaultInjector:
 
             # Force sybil into D random honest peers' meshes
             targets = random.sample(honest_peers, min(len(honest_peers), D_SYBIL_FANOUT))
+            victims[sybil_id] = sorted(targets)
             for target_peer in targets:
                 mesh = topic_mesh.get(target_peer, set())
                 mesh.add(sybil_id)
@@ -234,6 +243,7 @@ class FaultInjector:
             "n_attackers": n_attackers,
             "target_topic": target_topic,
             "sybil_ids": sybil_ids,
+            "victims": victims,  # attacker id → honest peers it was grafted into (for layout)
         }
         self._active_faults[fault_id] = fault
 
@@ -289,6 +299,7 @@ class FaultInjector:
             "target": target_peer_id,
             "n_attackers": n_attackers,
             "attacker_ids": attacker_ids,
+            "victims": {aid: [target_peer_id] for aid in attacker_ids},
         }
         self._active_faults[fault_id] = fault
 

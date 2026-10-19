@@ -194,6 +194,7 @@ function drawScoreSparkline() {
 /** Row detail: what happened, next to who it happened with. */
 function rowDetail(evt: AppEvent): string {
   if (evt.event_type === 'GossipPrune') return evt.reason ?? ''
+  if (evt.event_type === 'GossipIHave' || evt.event_type === 'GossipIWant') return `${(evt.msg_ids as string[] | undefined)?.length ?? 0} ids`
   if (evt.event_type === 'GossipMessage') return evt.msg_id?.startsWith('spam-') ? 'spam' : (evt.msg_id ?? '')
   return ''
 }

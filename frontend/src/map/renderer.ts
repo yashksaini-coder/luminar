@@ -455,9 +455,7 @@ export function fitView() {
   if (positions.length === 0) return
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-  const honestOnly = store.layoutMode === 'force' && store.nodes.some(n => n.state !== 'attacker')
   for (let i = 0; i < positions.length; i++) {
-    if (honestOnly && store.nodes[i]?.state === 'attacker') continue  // attackers hang at the rim
     const [x, y] = positions[i]
     if (x < minX) minX = x; if (y < minY) minY = y
     if (x > maxX) maxX = x; if (y > maxY) maxY = y

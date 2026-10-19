@@ -53,8 +53,6 @@ function computeMilestones() {
   store.milestones = [...store.beats, ...ms]
 }
 
-const lastVictims = new Map<string, string[]>()  // attacker id → victims before it was pruned
-
 function recomputeLayout() {
   // Rebuild node index first (needed by both paths)
   store.nodeIndex.clear()
@@ -69,9 +67,8 @@ function recomputeLayout() {
   const attackerLinks: LayoutEdge[] = []
   for (const n of store.nodes) {
     if (n.state !== 'attacker') continue
-    if (n.connected_peers.length) lastVictims.set(n.peer_id, n.connected_peers.slice(0, 2))
     const weak = n.connected_peers.length === 0
-    for (const t of weak ? (lastVictims.get(n.peer_id) ?? []) : n.connected_peers) {
+    for (const t of weak ? (n.last_targets ?? []).slice(0, 2) : n.connected_peers) {
       attackerLinks.push(weak ? [n.peer_id, t, true] : [n.peer_id, t])
     }
   }
