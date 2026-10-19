@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --all-extras
+      - run: uv sync --locked --all-extras
       - run: uv run ruff check backend/ tests/
       - run: uv run ruff format --check backend/ tests/
 
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --all-extras
+      - run: uv sync --locked --all-extras
       - run: uv run pytest tests/ -v --tb=short
 
   frontend-build:

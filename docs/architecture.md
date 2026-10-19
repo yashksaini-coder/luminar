@@ -16,13 +16,26 @@ Luminar follows a **client-server architecture** with an event-sourced backend a
   <img src="../assets/data-flow.png" alt="Event Flow Diagram" width="800">
 </div>
 
+## 3.3 Threading Model
+
+- **asyncio** (uvicorn) runs the FastAPI app: REST handlers, the WebSocket fan-out, static files.
+- **trio** runs the simulation on one background **daemon thread** (`_start_sim_thread` in
+  `backend/main.py`). Handlers reach it through `trio.from_thread` and the trio token; the
+  thread is never joined.
+- **Startup** (`lifespan`): `_build_simulation(n)` → `_start_sim_thread()` →
+  `telemetry_manager.start()` → optional `otlp_exporter.start()`.
+- **Shutdown**: `telemetry_manager.stop()` → `otlp_exporter.stop()` → `engine.clock.stop()`.
+- `/api/sim/reconfigure` rebuilds the engine and spawns a fresh trio thread under a lock.
+
 ## 3.4 Communication Protocols
 
 ### REST API
 - **Purpose**: User-initiated actions (play, pause, inject fault, apply topology)
 - **Format**: JSON request/response
-- **Endpoints**: 30+ across 7 route groups
-- **Proxy**: Angular dev server proxies `/api/*` to `http://localhost:8000`
+- **Endpoints**: generated reference at `/docs` (Swagger UI)
+- **Dev proxy**: Vite (`frontend/vite.config.ts`) proxies `/api` and `/ws` to `http://localhost:8000`
+- **Production**: `backend/main.py` mounts the built `frontend/dist` as a SPA at `/`
+  (same origin, no proxy)
 
 ### WebSocket
 - **Purpose**: Real-time event streaming (backend → frontend)

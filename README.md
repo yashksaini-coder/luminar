@@ -41,7 +41,7 @@ Open **http://localhost:5173** — click Play and watch the network come alive.
 
 **Frontend** (`:5173`) — TypeScript · deck.gl (WebGL) · d3-force · Canvas 2D · Vite
 
-**Backend** (`:8000`) — Python 3.12 · FastAPI · Trio · py-libp2p · NetworkX
+**Backend** (`:8000`) — Python 3.12 · FastAPI · Trio · NetworkX
 
 | Backend Module | Purpose |
 |---------------|---------|
@@ -77,11 +77,16 @@ Open **http://localhost:5173** — click Play and watch the network come alive.
 Swagger UI at **http://localhost:8000/docs**. Key endpoints:
 
 ```
-POST /api/sim/play              Start simulation
-POST /api/sim/reconfigure       Change node count
-POST /api/fault/partition       Inject network partition
-GET  /api/gossip/analytics      Delivery ratios, latency CDF
-WS   /ws/events                 Multiplexed event stream (20Hz)
+POST /api/sim/play                    Start simulation
+POST /api/sim/reconfigure             Change node count
+POST /api/fault/partition             Inject network partition
+GET  /api/gossip/analytics            Delivery ratios, latency CDF
+GET  /api/scenarios                   List scripted scenarios
+POST /api/scenarios/{id}/launch       Launch one; GET /api/scenarios/active
+GET  /metrics                         Prometheus text (Lighthouse gossipsub_* names)
+GET  /api/otel/status                 OTLP trace-export status
+WS   /ws/events                       Multiplexed event stream (20Hz)
+WS   /ws/events?record=<name>         Also record a reel (only with LUMINAR_ALLOW_RECORD=1)
 ```
 
 ### Reels (offline replay)
@@ -106,7 +111,7 @@ Shipped reels live in `frontend/public/reels/` with their `manifest.json`.
 ```bash
 make install     # Install all dependencies
 make dev         # Start backend + frontend
-make test        # Run 62 backend tests
+make test        # Run backend tests
 make lint        # Ruff linter
 make typecheck   # TypeScript check
 make build       # Production frontend build
@@ -120,7 +125,6 @@ make clean       # Remove build artifacts
 |-----|---------|
 | [`docs/architecture.md`](docs/architecture.md) | System design, threading model, data flow |
 | [`docs/backend.md`](docs/backend.md) | Backend modules, simulation engine, event system |
-| [`docs/api.md`](docs/api.md) | REST + WebSocket API reference |
 | [`docs/protocols.md`](docs/protocols.md) | GossipSub v1.1, DHT, peer scoring algorithms |
 | [`docs/deployment.md`](docs/deployment.md) | Docker, environment variables, production setup |
 

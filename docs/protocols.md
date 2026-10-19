@@ -402,7 +402,7 @@ and sparse inter-cluster connections
 
 ```python
 class EventBus:
-    _ring: deque(maxlen=500_000)  # Fixed-size circular buffer
+    _ring: deque(maxlen=50_000)  # Fixed-size circular buffer (LUMINAR_RING_SIZE)
 
     def emit(event):
         _ring.append(event)  # O(1), auto-evicts oldest when full
