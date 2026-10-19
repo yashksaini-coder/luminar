@@ -435,8 +435,8 @@ class TopologyRequest(BaseModel):
     topo_type: str = "random"
     n_nodes: int = Field(20, ge=2, le=500)  # same ceiling as /api/sim/reconfigure
     p: float = Field(0.15, ge=0.0, le=1.0)
-    m: int = Field(3, ge=1)
-    n_clusters: int = Field(3, ge=1)  # 0 -> ZeroDivisionError in _clustered
+    m: int = Field(3, ge=1, le=500)
+    n_clusters: int = Field(3, ge=1, le=500)  # 0 -> ZeroDivisionError in _clustered
     intra_p: float = Field(0.3, ge=0.0, le=1.0)
     inter_p: float = Field(0.01, ge=0.0, le=1.0)
 
