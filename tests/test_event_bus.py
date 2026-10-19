@@ -65,3 +65,18 @@ async def test_dead_subscriber_cleanup(bus):
     # Should not raise
     await bus.emit(ClockTick(at=1.0))
     assert bus.event_count == 1
+
+
+async def test_events_since_tolerates_append_mid_read(bus):
+    """The trio thread appends while the asyncio thread reads: the read must snapshot first,
+    or the Python-level loop raises 'deque mutated during iteration'."""
+
+    class AppendsOnRead:
+        @property
+        def at(self) -> float:
+            bus.ring.append(ClockTick(at=99.0))  # another thread's emit, deterministically
+            return 1.0
+
+    bus.ring.append(AppendsOnRead())
+    assert len(bus.events_since(0.0)) == 1
+    assert len(bus.events_between(0.0, 100.0)) == 2  # first read appended one tick already

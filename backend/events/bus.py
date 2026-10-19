@@ -81,17 +81,18 @@ class EventBus:
 
     def events_since(self, t: float) -> list[BaseEvent]:
         """Return all buffered events with `at >= t`. Uses bisect for O(log n) lookup."""
-        ring = self._ring
+        # Atomic copy: list(deque) is a C loop, so the trio thread cannot append mid-iteration
+        # ("deque mutated during iteration") the way it can during a Python-level loop.
+        ring = list(self._ring)
         if not ring:
             return []
         # Binary search on the time-ordered ring buffer
         times = [e.at for e in ring]
-        idx = bisect.bisect_left(times, t)
-        return list(ring)[idx:]
+        return ring[bisect.bisect_left(times, t) :]
 
     def events_between(self, t_start: float, t_end: float) -> list[BaseEvent]:
         """Return buffered events in [t_start, t_end]."""
-        return [e for e in self._ring if t_start <= e.at <= t_end]
+        return [e for e in list(self._ring) if t_start <= e.at <= t_end]
 
     def clear(self) -> None:
         """Clear the ring buffer and reset count."""

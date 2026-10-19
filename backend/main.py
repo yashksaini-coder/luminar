@@ -16,11 +16,13 @@ from contextlib import asynccontextmanager
 
 import orjson
 import trio
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
@@ -60,6 +62,8 @@ _initial_edges: list[tuple[str, str]] = []
 _sim_cancel_scope: trio.CancelScope | None = None
 _sim_thread: threading.Thread | None = None
 _launch_gen = 0  # bumped on every scenario launch/clear so WS clients get a fresh scenario frame
+# One global lock: reconfigure is a whole-process teardown, so serialising it is the point
+_reconfigure_lock = asyncio.Lock()
 
 
 def _run_simulation_in_trio(
@@ -152,6 +156,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(_request, exc: RequestValidationError) -> Response:
+    """FastAPI's default 422 body is json.dumps'd and raises when the rejected input is
+    inf/nan (e.g. `"ms": 1e400`), turning the rejection into a 500; orjson emits null."""
+    body = orjson.dumps({"detail": jsonable_encoder(exc.errors())})
+    return Response(body, status_code=422, media_type="application/json")
 
 
 # --- WebSocket ---
@@ -295,12 +307,29 @@ async def sim_pause():
     return {"state": engine.state}
 
 
-@app.post("/api/sim/reset")
-async def sim_reset():
-    if engine is None:
-        raise HTTPException(status_code=503, detail="Simulation not initialized")
+async def _reset_run() -> None:
+    """Fresh run on the existing pool: clear faults, restart clock/bus/gossip, re-mesh at t=0.
+
+    clear_all runs on the trio thread (it emits FaultCleared and strips attacker ids from
+    meshes); the clock/bus reset afterwards so those events do not linger in the new run.
+    """
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
+    engine.node_pool.gossip.reset()
+    engine.node_pool.reset()
+    engine.node_pool.wire_topology(_initial_edges)  # re-graft every mesh member at t=0
+    engine.new_run()  # fresh trace-id scope for the exporter
+    if otlp_exporter is not None:
+        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
+
+
+@app.post("/api/sim/reset")
+async def sim_reset():
+    if engine is None or fault_injector is None:
+        raise HTTPException(status_code=503, detail="Simulation not initialized")
+    await _reset_run()
     return {"state": engine.state}
 
 
@@ -311,35 +340,36 @@ class ReconfigureRequest(BaseModel):
 @app.post("/api/sim/reconfigure")
 async def sim_reconfigure(req: ReconfigureRequest):
     """Tear down the current simulation and restart with a new node count."""
-    global _sim_thread, _sim_cancel_scope, _trio_token
+    global _sim_thread, _sim_cancel_scope, _trio_token, _launch_gen
 
     n = max(2, min(500, req.n_nodes))
     loop = asyncio.get_running_loop()
 
-    # Cancel the running trio nursery from a thread-pool worker
-    if _sim_cancel_scope is not None and _trio_token is not None:
-        try:
-            await loop.run_in_executor(
-                None,
-                lambda: trio.from_thread.run_sync(_sim_cancel_scope.cancel, trio_token=_trio_token),
-            )
-        except Exception as exc:
-            logger.warning("Error cancelling trio nursery: %s", exc)
+    async with _reconfigure_lock:
+        # Capture locally: the executor lambda must not read a global a later call replaced
+        scope, token, thread = _sim_cancel_scope, _trio_token, _sim_thread
+        if scope is not None and token is not None:
+            try:
+                await loop.run_in_executor(
+                    None, lambda: trio.from_thread.run_sync(scope.cancel, trio_token=token)
+                )
+            except Exception as exc:
+                logger.warning("Error cancelling trio nursery: %s", exc)
 
-    # Wait for the old thread to stop (max 5 s)
-    if _sim_thread and _sim_thread.is_alive():
-        _sim_thread.join(timeout=5)
+        # Wait for the old thread to stop (max 5 s) without blocking the asyncio loop
+        if thread and thread.is_alive():
+            await loop.run_in_executor(None, thread.join, 5)
+        _sim_cancel_scope = None
 
-    # Clear active scenario before rebuilding
-    scenario_runner.set_scenario(None)
-    global _launch_gen
-    _launch_gen += 1
+        # Clear active scenario before rebuilding
+        scenario_runner.set_scenario(None)
+        _launch_gen += 1
 
-    # Rebuild simulation with new node count and start fresh trio thread
-    _build_simulation(n)
-    _start_sim_thread()
-    logger.info("Reconfigured: %d nodes, %d edges", n, len(_initial_edges))
-    return {"n_nodes": n, "edge_count": len(_initial_edges)}
+        # Rebuild simulation with new node count and start fresh trio thread
+        _build_simulation(n)
+        _start_sim_thread()
+        logger.info("Reconfigured: %d nodes, %d edges", n, len(_initial_edges))
+        return {"n_nodes": n, "edge_count": len(_initial_edges)}
 
 
 class SpeedRequest(BaseModel):
@@ -403,12 +433,26 @@ async def topology_list():
 
 class TopologyRequest(BaseModel):
     topo_type: str = "random"
-    n_nodes: int = 20
-    p: float = 0.15
-    m: int = 3
-    n_clusters: int = 3
-    intra_p: float = 0.3
-    inter_p: float = 0.01
+    n_nodes: int = Field(20, ge=2, le=500)  # same ceiling as /api/sim/reconfigure
+    p: float = Field(0.15, ge=0.0, le=1.0)
+    m: int = Field(3, ge=1)
+    n_clusters: int = Field(3, ge=1)  # 0 -> ZeroDivisionError in _clustered
+    intra_p: float = Field(0.3, ge=0.0, le=1.0)
+    inter_p: float = Field(0.01, ge=0.0, le=1.0)
+
+
+def _topology_config(req: TopologyRequest) -> TopologyConfig:
+    if req.topo_type not in TopologyManager.SUPPORTED_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown topology: {req.topo_type}")
+    return TopologyConfig(**req.model_dump())
+
+
+def _build_topology(config: TopologyConfig, layout: bool):
+    """Worker-thread helper: networkx is seconds of CPU at 500 nodes; keep it off the loop."""
+    graph = topology_manager.generate(config)
+    edges = topology_manager.graph_to_edges(graph)
+    positions = topology_manager.graph_layout(graph) if layout else {}
+    return edges, positions, topology_manager.compute_metrics(graph)
 
 
 @app.post("/api/topology/apply")
@@ -416,11 +460,10 @@ async def topology_apply(req: TopologyRequest):
     global _initial_edges
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
-    config = TopologyConfig(**req.model_dump())
-    graph = topology_manager.generate(config)
-    edges = topology_manager.graph_to_edges(graph)
-    positions = topology_manager.graph_layout(graph)
-    metrics = topology_manager.compute_metrics(graph)
+    config = _topology_config(req)
+    config.n_nodes = engine.node_pool.node_count  # topology must match the live pool
+    loop = asyncio.get_running_loop()
+    edges, positions, metrics = await loop.run_in_executor(None, _build_topology, config, True)
 
     # Actually rewire the live simulation
     engine.wire_topology(edges, positions)
@@ -438,10 +481,9 @@ async def topology_apply(req: TopologyRequest):
 @app.post("/api/topology/preview")
 async def topology_preview(req: TopologyRequest):
     """Generate topology and return metrics without applying to the live simulation."""
-    config = TopologyConfig(**req.model_dump())
-    graph = topology_manager.generate(config)
-    edges = topology_manager.graph_to_edges(graph)
-    metrics = topology_manager.compute_metrics(graph)
+    config = _topology_config(req)
+    loop = asyncio.get_running_loop()
+    edges, _, metrics = await loop.run_in_executor(None, _build_topology, config, False)
     return {
         "node_count": config.n_nodes,
         "edge_count": len(edges),
@@ -497,10 +539,12 @@ def _run_trio_coro(async_fn, *args):
 
 
 class LatencyRequest(BaseModel):
+    # NaN here reaches trio.sleep(nan) in the relay task and kills the simulation thread
+    model_config = ConfigDict(allow_inf_nan=False)
     peer_a: str
     peer_b: str
-    ms: float
-    jitter_ms: float = 0.0
+    ms: float = Field(ge=0, le=60_000)
+    jitter_ms: float = Field(default=0.0, ge=0, le=60_000)
 
 
 @app.post("/api/fault/latency")
@@ -539,7 +583,7 @@ async def fault_partition(req: PartitionRequest):
 
 
 class SybilRequest(BaseModel):
-    n_attackers: int
+    n_attackers: int = Field(ge=1, le=50)
     target_topic: str = "lumina/blocks/1.0"
 
 
@@ -557,7 +601,7 @@ async def fault_sybil(req: SybilRequest):
 
 class EclipseRequest(BaseModel):
     target_peer_id: str
-    n_attackers: int
+    n_attackers: int = Field(ge=1, le=50)
 
 
 @app.post("/api/fault/eclipse")
@@ -725,9 +769,17 @@ async def export_events(format: str = "jsonl", since: float = 0.0):
     events = engine.event_bus.events_since(since)
 
     if format == "json":
-        data = orjson.dumps([e.to_dict() for e in events])
+        # Streamed like jsonl: a full 500k ring dumped to one list is ~500 MB peak RSS
+        def generate_json():
+            yield b"["
+            for i, event in enumerate(events):
+                if i:
+                    yield b","
+                yield event.to_json()
+            yield b"]"
+
         return StreamingResponse(
-            io.BytesIO(data),
+            generate_json(),
             media_type="application/json",
             headers={"Content-Disposition": "attachment; filename=luminar-events.json"},
         )
@@ -815,16 +867,9 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
 
-    # 1. Clear existing faults properly (removes attacker ids from meshes/subscriptions),
-    #    then reset the clock and bus so the FaultCleared events do not linger.
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
-    engine.clock.reset()
-    engine.event_bus.clear()
-    engine.node_pool.gossip.reset()  # wire_topology below re-subscribes and re-meshes
-    engine.new_run()  # fresh trace-id scope for the exporter
-    if otlp_exporter is not None:
-        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
+    # 1. Fresh run (faults cleared, clock/bus/gossip reset); wire_topology below re-meshes
+    #    again on the scenario topology.
+    await _reset_run()
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(
