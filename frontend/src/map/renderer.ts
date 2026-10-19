@@ -1,6 +1,7 @@
 import { Deck, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer, LineLayer } from '@deck.gl/layers'
 import { store } from '../store'
+import { shortName } from '../format'
 import { chrome, STATE_COLORS, nodeFillColor, oklchToRgba, P, PULSE_RING_DURATION_MS } from '../palette'
 import type { PeerNode } from '../types'
 
@@ -500,7 +501,7 @@ function updateTooltipContent(el: HTMLElement, node: PeerNode): void {
   const header = document.createElement('div')
   header.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:2px'
   const name = document.createElement('b')
-  name.textContent = `n${node.index}`
+  name.textContent = shortName(node)
   const nameDetail = document.createElement('span')
   nameDetail.style.cssText = 'color:var(--text3);font-size:10px'
   nameDetail.textContent = node.peer_id

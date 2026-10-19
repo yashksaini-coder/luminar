@@ -1,4 +1,5 @@
 import { store } from '../store'
+import { shortName } from '../format'
 import { STATE_CSS } from '../palette'
 import type { AppEvent } from '../types'
 
@@ -90,7 +91,7 @@ function refreshStats() {
   if (!node) return
 
   const nameEl = document.getElementById('pi-name')
-  if (nameEl) nameEl.textContent = `n${node.index}`
+  if (nameEl) nameEl.textContent = shortName(node)
 
   const idEl = document.getElementById('pi-peer-id')
   if (idEl) idEl.textContent = node.peer_id

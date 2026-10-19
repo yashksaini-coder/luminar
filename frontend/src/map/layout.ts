@@ -176,7 +176,8 @@ function layoutRadial(nodes: PeerNode[], edges: [string, string][]): LayoutResul
   while (placed < n) {
     const radius = baseRadius + (ring - 1) * ringGap
     const circumference = 2 * Math.PI * radius
-    const maxInRing = Math.max(6, Math.floor(circumference / (ringGap * 0.55)))
+    // One node diameter (~11 units at 50 nodes) plus a gap per slot; 0.55 overlapped circles
+    const maxInRing = Math.max(6, Math.floor(circumference / ringGap))
     const inThisRing = Math.min(maxInRing, n - placed)
 
     for (let i = 0; i < inThisRing; i++) {
