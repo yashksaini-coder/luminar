@@ -31,6 +31,7 @@ const TYPE_CODES: Record<string, { code: string; color: string }> = {
   // Clock/Sim
   'ClockTick':            { code: 'ck', color: 'var(--text3)' },
   'SimulationStateChanged': { code: 'ss', color: 'var(--text3)' },
+  'ScenarioPhaseFired':   { code: 'sp', color: 'oklch(0.75 0.14 85)' },
 }
 
 const DEFAULT_TYPE = { code: '??', color: 'var(--text3)' }
@@ -44,6 +45,7 @@ const FILTER_GROUPS: [string, string, string][] = [
   ['Fault',   'fault',      'oklch(0.65 0.20 25)'],
   ['Health',  'health',     'oklch(0.72 0.14 60)'],
   ['Clock',   'clock',      'var(--text3)'],
+  ['Sim',     'simulation', 'oklch(0.75 0.14 85)'],
 ]
 
 let listEl: HTMLElement
@@ -152,8 +154,9 @@ function buildDetail(evt: AppEvent): string {
     case 'GossipMessage':
       return evt.msg_id ?? ''
     case 'GossipGraft':
-    case 'GossipPrune':
       return evt.to_peer ? `peer=${evt.to_peer.replace('peer-', '')}` : ''
+    case 'GossipPrune':
+      return `${evt.to_peer ? 'peer=' + evt.to_peer.replace('peer-', '') : ''} ${evt.reason ?? ''}`.trim()
     case 'GossipIHave':
     case 'GossipIWant':
       return evt.from_peer ? `peer=${evt.from_peer.replace('peer-', '')}` : ''
@@ -182,6 +185,8 @@ function buildDetail(evt: AppEvent): string {
       return `score=${typeof score === 'number' ? score.toFixed(1) : '?'}`
     case 'SimulationStateChanged':
       return evt.state ?? ''
+    case 'ScenarioPhaseFired':
+      return String(evt.label ?? '')
     default:
       return evt.msg_id ?? evt.topic ?? evt.fault_type ?? ''
   }

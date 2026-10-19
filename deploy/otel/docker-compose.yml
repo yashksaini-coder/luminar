@@ -1,0 +1,36 @@
+# Laptop-only observability stack for the Devcon demo. Never deployed to Render.
+#   make otel-up      → Jaeger :16686, Prometheus :9090, Grafana :3000 (anonymous admin)
+#   run Luminar with  OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 make backend
+#   make otel-smoke   → round-trips one message trace through Jaeger
+#
+# Host networking (Linux): the containers share the laptop's network namespace, so
+# Prometheus scrapes localhost:8000 and nothing depends on host.docker.internal, which
+# nftables/ufw setups routinely drop. On macOS/Windows Docker Desktop, replace
+# network_mode with the port mappings and set the Prometheus target to host.docker.internal.
+#
+# Security: Grafana runs with anonymous Admin and no login, so Grafana and Prometheus are
+# bound to 127.0.0.1 only. Jaeger's stock config listens on all interfaces; keep the
+# laptop firewall on at the venue (or run `jaeger --config` with localhost endpoints).
+services:
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.22.0
+    network_mode: host          # UI 16686, OTLP/HTTP 4318 (protobuf or JSON)
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    network_mode: host          # 9090, loopback only
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=127.0.0.1:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  grafana:
+    image: grafana/grafana:12.1.1
+    network_mode: host          # 3000, loopback only
+    environment:
+      - GF_SERVER_HTTP_ADDR=127.0.0.1
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

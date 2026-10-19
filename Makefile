@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt
+.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -49,6 +49,17 @@ check: lint test typecheck build ## Run all checks (lint + test + types + build)
 
 docker: ## Run with Docker Compose
 	docker compose up --build
+
+# ── Observability (laptop only) ────────────────────────
+
+otel-up: ## Start Jaeger + Prometheus + Grafana (deploy/otel); run backend with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+	docker compose -f deploy/otel/docker-compose.yml up -d
+
+otel-down: ## Stop the observability stack
+	docker compose -f deploy/otel/docker-compose.yml down
+
+otel-smoke: ## Round-trip one message trace Luminar → OTLP/JSON → Jaeger
+	uv run python scripts/otel_smoke.py
 
 # ── Cleanup ────────────────────────────────────────────
 

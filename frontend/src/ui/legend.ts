@@ -27,6 +27,7 @@ export function initLegend() {
     ['joining', 'Joining'],
     ['failed', 'Failed'],
     ['error', 'Error'],
+    ['attacker', 'Attacker'],
   ]
 
   for (const [state, label] of states) {
@@ -64,6 +65,13 @@ function buildSettingsPanel(panel: HTMLElement) {
   addSection(panel, 'Display', [
     createToggle('Node labels', store.showLabels, v => { store.showLabels = v }),
     createToggle('Edge lines', store.showEdges, v => { store.showEdges = v }),
+  ], true)
+
+  const pref = (key: 'stageTheme' | 'hero') => () =>
+    document.dispatchEvent(new CustomEvent('luminar:pref', { detail: key }))
+  addSection(panel, 'Stage', [
+    createToggle('Stage theme (t)', store.stageTheme, pref('stageTheme')),
+    createToggle('Hero layout (h)', store.hero, pref('hero')),
   ], true)
 }
 

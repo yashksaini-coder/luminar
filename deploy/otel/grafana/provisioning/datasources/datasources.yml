@@ -1,0 +1,11 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prom
+    url: http://localhost:9090
+    isDefault: true
+  - name: Jaeger
+    type: jaeger
+    uid: jaeger
+    url: http://localhost:16686

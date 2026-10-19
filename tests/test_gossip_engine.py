@@ -162,3 +162,103 @@ def test_set_topology():
     assert "c" in g._topology["b"]
     assert "b" in g._topology["c"]
     assert "a" not in g._topology.get("c", set())
+
+
+# ── Honest propagation (Devcon 8 roadmap §3.2) ──
+
+
+async def test_relay_events_are_sender_correct(gossip, event_bus):
+    """Relay events name the real sender and receiver; the origin publish has no receiver."""
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.1)
+
+    msgs = [e for e in event_bus.ring if e.event_type == "GossipMessage" and e.msg_id == msg_id]
+    origin = [e for e in msgs if e.hops == 0]
+    relays = [e for e in msgs if e.hops > 0]
+    assert len(origin) == 1 and origin[0].from_peer == "peer-0" and origin[0].to_peer == ""
+    assert relays
+    for e in relays:
+        assert e.from_peer != e.to_peer and e.to_peer != ""
+        assert e.dropped is False
+    # Flood publish: first hops come from the origin
+    assert {e.from_peer for e in relays if e.hops == 1} == {"peer-0"}
+
+
+async def test_trace_hops_record_sender_and_path(gossip):
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.1)
+
+    hops = gossip.get_trace(msg_id)["hops"]
+    assert hops[0]["from"] is None and hops[0]["via"] == "origin"
+    for h in hops[1:]:
+        assert h["from"] in {"peer-0", "peer-1", "peer-2"} and h["via"] == "mesh"
+
+
+def test_propagation_latency_is_end_to_end_not_sum():
+    """End-to-end = last mesh arrival − publish time; IWANT pulls do not inflate it."""
+    from backend.gossip.engine import MessageTrace
+
+    t = MessageTrace(msg_id="m", topic="t", origin="a", created_at=1.0)
+    t.add_hop("a", 1.0, 0.0, 0)
+    t.add_hop("b", 1.020, 20.0, 1, from_peer="a")
+    t.add_hop("c", 1.030, 10.0, 2, from_peer="b")
+    t.add_hop("d", 1.025, 25.0, 1, from_peer="a")
+    t.add_hop("e", 2.0, 0.0, 3, from_peer="c", via="iwant")
+    assert t.propagation_latency_ms() == 30.0  # not 55 (sum) and not 1000 (iwant)
+    assert t.propagation_incl_gossip_ms() == 1000.0
+    d = t.to_dict()
+    assert d["propagation_latency_ms"] == 30.0 and d["propagation_incl_gossip_ms"] == 1000.0
+    assert d["duplicates"] == 0
+
+
+async def test_duplicates_are_counted(gossip):
+    """In a triangle every peer hears each message twice; the second arrival is a duplicate."""
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.2)
+
+    trace = gossip.get_trace(msg_id)
+    assert trace["delivered_count"] == 3
+    assert trace["duplicates"] >= 1
+    analytics = gossip.get_analytics("test-topic")
+    assert analytics["avg_duplicates"] >= 1
+    assert 0 < analytics["recent_delivery_ratio"] <= 1
+
+
+async def test_dropped_hop_emits_dropped_event(event_bus, clock):
+    """A relay blocked by a fault is reported as a dropped hop instead of vanishing."""
+
+    class FailPeer2:
+        def is_peer_failed(self, peer_id):
+            return peer_id == "peer-2"
+
+    g = GossipEngine(event_bus, clock, fault_injector=FailPeer2())
+    g.set_topology([("peer-0", "peer-1"), ("peer-0", "peer-2")])
+    g.subscribe_all(["peer-0", "peer-1", "peer-2"], "t")
+    async with trio.open_nursery() as nursery:
+        msg_id = await g.publish("peer-0", "t", nursery)
+        await trio.sleep(0.1)
+
+    dropped = [
+        e
+        for e in event_bus.ring
+        if e.event_type == "GossipMessage" and e.msg_id == msg_id and e.dropped
+    ]
+    assert len(dropped) == 1 and dropped[0].to_peer == "peer-2" and dropped[0].from_peer == "peer-0"
+    assert "peer-2" not in {h["peer"] for h in g.get_trace(msg_id)["hops"]}
+
+
+def test_snapshot_carries_mesh_map_up_to_100_nodes():
+    from backend.simulation.engine import SimulationEngine
+
+    small = SimulationEngine(n_nodes=6)
+    small.wire_topology([(f"peer-{i}", f"peer-{(i + 1) % 6}") for i in range(6)], {})
+    mesh = small.get_snapshot()["gossip"]["mesh"]
+    assert set(mesh) == {f"peer-{i}" for i in range(6)}
+    assert all(isinstance(v, list) for v in mesh.values())
+
+    big = SimulationEngine(n_nodes=101)
+    big.wire_topology([(f"peer-{i}", f"peer-{(i + 1) % 101}") for i in range(101)], {})
+    assert big.get_snapshot()["gossip"]["mesh"] == {}

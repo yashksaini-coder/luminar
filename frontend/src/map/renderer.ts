@@ -1,7 +1,7 @@
 import { Deck, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer, LineLayer } from '@deck.gl/layers'
 import { store } from '../store'
-import { chrome, STATE_COLORS, oklchToRgba, P, PULSE_RING_DURATION_MS } from '../palette'
+import { chrome, STATE_COLORS, nodeFillColor, oklchToRgba, P, PULSE_RING_DURATION_MS } from '../palette'
 import type { PeerNode } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,15 +25,18 @@ interface Particle {
   startTime: number
   color: [number, number, number, number]
   lifetime: number  // ms
+  fizzle: boolean   // dropped hop: travel to 60% then fade out
 }
 
 const particles: Particle[] = []
 const PARTICLE_LIFETIME_MS = 1200
 const PARTICLE_TRAVEL_MS = 800
+const PARTICLE_CAP = 600
+const FIZZLE_AT = 0.6
 
-export function spawnParticle(fromPeerId: string, toPeerId: string, color?: [number, number, number, number]) {
+export function spawnParticle(fromPeerId: string, toPeerId: string, color?: [number, number, number, number], fizzle = false) {
   if (!store.particlesEnabled) return
-  if (particles.length > 300) return  // cap
+  if (particles.length > PARTICLE_CAP) return  // cap
   const fromIdx = store.nodeIndex.get(fromPeerId)
   const toIdx = store.nodeIndex.get(toPeerId)
   if (fromIdx === undefined || toIdx === undefined) return
@@ -43,9 +46,21 @@ export function spawnParticle(fromPeerId: string, toPeerId: string, color?: [num
     fromIdx,
     toIdx,
     startTime: performance.now(),
-    color: color ?? oklchToRgba(P.receiving, 180),
+    color: fizzle ? oklchToRgba(P.error, 200) : color ?? oklchToRgba(P.receiving, 180),
     lifetime: PARTICLE_LIFETIME_MS,
+    fizzle,
   })
+}
+
+/** Point on a quadratic bezier bowed to the left of travel, so A→B and B→A don't overlap. */
+function bezierPoint(src: [number, number], tgt: [number, number], t: number): [number, number] {
+  const dx = tgt[0] - src[0], dy = tgt[1] - src[1]
+  const len = Math.hypot(dx, dy) || 1
+  const bow = Math.min(18, len * 0.12)
+  const cx = (src[0] + tgt[0]) / 2 - (dy / len) * bow
+  const cy = (src[1] + tgt[1]) / 2 + (dx / len) * bow
+  const u = 1 - t
+  return [u * u * src[0] + 2 * u * t * cx + t * t * tgt[0], u * u * src[1] + 2 * u * t * cy + t * t * tgt[1]]
 }
 
 export function initRenderer(canvas: HTMLCanvasElement, tooltip: HTMLElement) {
@@ -89,13 +104,13 @@ export function renderLayers() {
   if (n === 0 || nodePositions.length === 0) { deck.setProps({ layers: [] }); return }
 
   // Node radius scales with count; smaller in grid/radial for cleaner look
-  const baseRadius = Math.max(3, Math.min(8, 200 / Math.sqrt(n)))
+  const baseRadius = Math.max(3, Math.min(8, 200 / Math.sqrt(n))) * store.scale.node
   const nodeRadius = store.layoutMode === 'force' ? baseRadius : baseRadius * 0.7
   const now = performance.now()
 
   // Cap arrays to prevent memory issues during high throughput
   if (pulses.length > 200) pulses.splice(0, pulses.length - 200)
-  if (particles.length > 300) particles.splice(0, particles.length - 300)
+  if (particles.length > PARTICLE_CAP) particles.splice(0, particles.length - PARTICLE_CAP)
 
   // Detect state changes for pulse animation
   if (prevStates.length === n) {
@@ -135,7 +150,7 @@ export function renderLayers() {
 
   // 1. Topology edges (all modes — lighter in grid/radial for cleaner look)
   if (store.showEdges && edgeData.length > 0) {
-    const edgeAlpha = store.layoutMode === 'force' ? 200 : 80
+    const edgeAlpha = Math.min(255, (store.layoutMode === 'force' ? 200 : 80) * store.scale.edgeAlpha)
     layers.push(new LineLayer({
       id: 'edges',
       data: edgeData,
@@ -146,6 +161,36 @@ export function renderLayers() {
       widthMinPixels: 1,
       pickable: false,
     }))
+  }
+
+  // 1b. Mesh overlay — the live GossipSub mesh, brighter than the topology beneath it
+  if (store.showEdges) {
+    const seen = new Set<string>()
+    const meshData: { source: [number, number]; target: [number, number] }[] = []
+    for (const [a, peers] of Object.entries(store.mesh)) {
+      const ai = store.nodeIndex.get(a)
+      if (ai === undefined || !nodePositions[ai]) continue
+      for (const b of peers) {
+        const key = a < b ? `${a}|${b}` : `${b}|${a}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        const bi = store.nodeIndex.get(b)
+        if (bi === undefined || !nodePositions[bi]) continue
+        meshData.push({ source: nodePositions[ai], target: nodePositions[bi] })
+      }
+    }
+    if (meshData.length > 0) {
+      layers.push(new LineLayer({
+        id: 'mesh-edges',
+        data: meshData,
+        getSourcePosition: (d: { source: [number, number] }) => d.source,
+        getTargetPosition: (d: { target: [number, number] }) => d.target,
+        getColor: oklchToRgba(P.accent, store.layoutMode === 'force' ? 110 : 60),
+        getWidth: 1.5,
+        widthMinPixels: 1,
+        pickable: false,
+      }))
+    }
   }
 
   // 2. Hover highlight edges (all modes)
@@ -229,14 +274,15 @@ export function renderLayers() {
       const src = store.nodePositions[p.fromIdx]
       const tgt = store.nodePositions[p.toIdx]
       if (!src || !tgt) return null
-      const alpha = Math.floor(180 * (1 - progress * 0.5))
+      // Dropped hops stall at 60% of the path and fade; delivered ones ride to the target
+      const t = p.fizzle ? Math.min(ease, FIZZLE_AT) : ease
+      const alpha = p.fizzle
+        ? Math.floor(200 * Math.max(0, 1 - age / p.lifetime))
+        : Math.floor(180 * (1 - progress * 0.5))
       return {
-        position: [
-          src[0] + (tgt[0] - src[0]) * ease,
-          src[1] + (tgt[1] - src[1]) * ease,
-        ] as [number, number],
+        position: bezierPoint(src, tgt, t),
         color: [p.color[0], p.color[1], p.color[2], alpha] as [number, number, number, number],
-        radius: nodeRadius * 0.4,  // Small dots like netviz arc particles
+        radius: nodeRadius * (p.fizzle ? 0.5 : 0.4) * store.scale.particle,
       }
     }).filter(Boolean)
 
@@ -267,7 +313,7 @@ export function renderLayers() {
     getPosition: (d: any) => d._pos,
     getRadius: (d: any) =>
       d._idx === selectedNode ? nodeRadius * 1.5 : nodeRadius,
-    getFillColor: (d: PeerNode) => STATE_COLORS[d.state] ?? STATE_COLORS.idle,
+    getFillColor: (d: PeerNode) => nodeFillColor(d),
     radiusUnits: 'common' as const,
     antialiasing: true,
     pickable: true,
@@ -296,7 +342,7 @@ export function renderLayers() {
       renderLayers()
     },
     updateTriggers: {
-      getFillColor: [nodes.map(nd => nd.state).join(',')],
+      getFillColor: [nodes.map(nd => nd.state + (nd.state === 'attacker' ? nd.connected_peers.length : '')).join(',')],
       getRadius: [selectedNode],
       getPosition: [nodePositions],
     },
@@ -406,6 +452,12 @@ export function startAnimationLoop() {
 
 function stopAnimationLoop() {
   cancelAnimationFrame(animationFrame)
+}
+
+/** Current deck view state (debug / e2e). */
+export function getViewState(): unknown {
+  const vm = (deck as any)?.viewManager
+  return vm?.getViewports?.()[0] ? { ...vm.getViewports()[0] } : null
 }
 
 export function fitView() {

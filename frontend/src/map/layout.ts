@@ -78,11 +78,16 @@ export function startLiveForce(
       }
     })
 
-  // Warm up with a quick burst so initial layout isn't chaotic
-  liveSim.alpha(1)
-  for (let i = 0; i < 80; i++) liveSim.tick()
-  // Then let it continue running live
-  liveSim.alpha(0.3).restart()
+  // Warm up with a quick burst so initial layout isn't chaotic — unless most nodes
+  // already had positions (attackers appearing), in which case just nudge gently.
+  const reused = liveNodes.filter(fn => oldMap.has(fn.id)).length
+  if (reused < n * 0.8) {
+    liveSim.alpha(1)
+    for (let i = 0; i < 80; i++) liveSim.tick()
+    liveSim.alpha(0.3).restart()
+  } else {
+    liveSim.alpha(0.15).restart()
+  }
 }
 
 /** Stop the live simulation */

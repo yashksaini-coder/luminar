@@ -24,6 +24,24 @@ async function post<T>(path: string, body?: unknown): Promise<T | null> {
   } catch { return null }
 }
 
+/** Static assets bundled with the frontend (reels, manifests): served by the frontend
+ *  origin, never by the API, so VITE_API_URL is deliberately NOT prepended. */
+export async function getStatic<T>(path: string): Promise<T | null> {
+  try {
+    const res = await fetch(path)
+    if (!res.ok) return null
+    return await res.json()
+  } catch { return null }
+}
+
+export async function getStaticText(path: string): Promise<string | null> {
+  try {
+    const res = await fetch(path)
+    if (!res.ok) return null
+    return await res.text()
+  } catch { return null }
+}
+
 // Simulation
 export const simSnapshot = () => get<SimSnapshot>('/api/sim/snapshot')
 export const simPlay = () => post<{state: string}>('/api/sim/play')

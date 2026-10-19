@@ -18,12 +18,16 @@ import orjson
 import trio
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
 from backend.metrics.collector import MetricsCollector
+from backend.otel.exporter import OtlpTraceExporter
+from backend.otel.ids import trace_id as otel_trace_id
+from backend.otel.metrics import GossipMetrics
 from backend.scenarios.library import SCENARIOS
 from backend.scenarios.runner import ScenarioRunner
 from backend.simulation.engine import SimulationEngine
@@ -41,10 +45,21 @@ metrics_collector: MetricsCollector | None = None
 topology_manager = TopologyManager()
 scenario_runner = ScenarioRunner()
 telemetry_manager = TelemetryManager()
+gossip_metrics = GossipMetrics()
+# OTel-out is opt-in: set OTEL_EXPORTER_OTLP_ENDPOINT (e.g. http://localhost:4318) to enable.
+_otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or os.environ.get(
+    "LUMINAR_OTLP_ENDPOINT"
+)
+otlp_exporter: OtlpTraceExporter | None = (
+    OtlpTraceExporter(_otlp_endpoint, int(os.environ.get("LUMINAR_OTLP_TRACE_PCT", "5")))
+    if _otlp_endpoint
+    else None
+)
 _trio_token: trio.lowlevel.TrioToken | None = None
 _initial_edges: list[tuple[str, str]] = []
 _sim_cancel_scope: trio.CancelScope | None = None
 _sim_thread: threading.Thread | None = None
+_launch_gen = 0  # bumped on every scenario launch/clear so WS clients get a fresh scenario frame
 
 
 def _run_simulation_in_trio(
@@ -77,6 +92,11 @@ def _build_simulation(n_nodes: int) -> None:
     fault_injector = FaultInjector(engine.event_bus, engine.clock, engine.node_pool)
     metrics_collector = MetricsCollector(engine.event_bus, engine.node_pool)
     engine.node_pool.gossip._fault_injector = fault_injector
+    # Observability sinks live on the bus, so a reconfigure (fresh bus) must re-attach them
+    engine.event_bus.sinks.append(gossip_metrics.sink)
+    gossip_metrics.active_faults = 0  # the old injector's faults vanish without FaultCleared
+    if otlp_exporter is not None:
+        otlp_exporter.attach(engine)
 
     # Scale edge probability so larger networks aren't fully connected
     p = max(0.08, min(0.4, 6.0 / n_nodes))
@@ -110,11 +130,16 @@ async def lifespan(app: FastAPI):
     _build_simulation(n_nodes)
     _start_sim_thread()
     telemetry_manager.start()
+    if otlp_exporter is not None:
+        otlp_exporter.start()
+        logger.info("OTLP trace export → %s", otlp_exporter.endpoint)
     logger.info("Luminar P2P ready — %d nodes, %d edges", n_nodes, len(_initial_edges))
 
     yield
 
     telemetry_manager.stop()
+    if otlp_exporter is not None:
+        otlp_exporter.stop()
     engine.clock.stop()
 
 
@@ -146,58 +171,97 @@ async def websocket_events(ws: WebSocket):
         await ws.close(code=1013)
         return
     await ws.accept()
-    logger.info("WS client connected")
+    # ?record=<name> appends every frame this client sees to recordings/<name>.jsonl (a reel)
+    # Recording writes unbounded files to disk, so it is off unless LUMINAR_ALLOW_RECORD=1
+    # (never set it on a public deploy).
+    recorder = (
+        ReelRecorder.open_if_valid(ws.query_params.get("record"))
+        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1"
+        else None
+    )
+    logger.info("WS client connected%s", f" (recording {recorder.path})" if recorder else "")
+
+    async def send(frame: dict, *, text: bool = False) -> None:
+        if text:
+            await ws.send_text(orjson.dumps(frame).decode())
+        else:
+            await ws.send_bytes(orjson.dumps(frame))
+        if recorder:
+            recorder.write(frame)
 
     last_event_count = 0
     tick_counter = 0  # counts 50ms ticks
+    last_edges: object = None
+    last_launch_gen = -1  # always behind _launch_gen on connect → first frame is unconditional
+    # Live clients get the newest 200 events per tick (UI can't show more); a recording
+    # must be complete, so it takes the full delta and never silently drops.
+    event_cap = 1_000_000 if recorder else 200
 
     try:
         while True:
             tick_counter += 1
 
+            # ── Topology / scenario frames, on change (and once on connect) ──
+            if _initial_edges is not last_edges:
+                last_edges = _initial_edges
+                await send({"type": "edges", "edges": _initial_edges})
+            if _launch_gen != last_launch_gen:
+                last_launch_gen = _launch_gen
+                await send({"type": "scenario", **scenario_runner.get_status()})
+
             # ── Events (every tick, 20Hz) ──
             current_count = engine.event_bus.event_count
+            if current_count < last_event_count:
+                last_event_count = 0  # bus was cleared (reset / scenario launch) — resync
             if current_count > last_event_count:
                 delta = current_count - last_event_count
                 try:
                     snapshot = list(engine.event_bus.ring)
-                    new_events = snapshot[-min(delta, 200) :]
+                    new_events = snapshot[-min(delta, event_cap) :]
                 except RuntimeError:
                     new_events = []  # deque mutated during iteration
+                if delta > event_cap:
+                    await send({"type": "gap", "dropped": delta - event_cap})
                 for event in new_events:
-                    await ws.send_text(event.to_json().decode())
+                    await send(event.to_dict(), text=True)
                 last_event_count = current_count
 
             # ── Snapshot (every 10 ticks = 500ms) ──
             if tick_counter % 10 == 0:
                 snap = engine.get_snapshot()
                 snap["type"] = "snapshot"
+                # Nothing in the UI reads per-snapshot traces (/api/trace/* serves them) and
+                # they are ~60% of a reel's bytes, so the WS frame omits them.
+                snap["gossip"].pop("recent_traces", None)
                 telem = telemetry_manager.get_nodes_as_peer_dicts()
                 if telem:
                     snap["nodes"] = snap["nodes"] + telem
                     snap["node_count"] = len(snap["nodes"])
-                await ws.send_bytes(orjson.dumps(snap))
+                await send(snap)
 
             # ── Metrics + Analytics (every 40 ticks = 2s) ──
             if tick_counter % 40 == 0:
                 try:
                     metrics = metrics_collector.get_snapshot()
                     metrics["type"] = "metrics"
-                    await ws.send_bytes(orjson.dumps(metrics))
+                    await send(metrics)
                 except Exception:
                     pass  # metrics can fail during race conditions
 
                 try:
                     analytics = engine.node_pool.gossip.get_analytics("lumina/blocks/1.0")
                     analytics["type"] = "analytics"
-                    await ws.send_bytes(orjson.dumps(analytics))
+                    await send(analytics)
                 except Exception:
                     pass
 
                 try:
                     telem_status = telemetry_manager.get_status()
                     telem_status["type"] = "telemetry_status"
-                    await ws.send_bytes(orjson.dumps(telem_status))
+                    telem_status["otel"] = (
+                        otlp_exporter.status() if otlp_exporter else {"enabled": False}
+                    )
+                    await send(telem_status)
                 except Exception:
                     pass
 
@@ -206,6 +270,10 @@ async def websocket_events(ws: WebSocket):
         logger.info("WS client disconnected")
     except Exception:
         logger.exception("WS handler error")
+    finally:
+        if recorder:
+            recorder.close()
+            logger.info("Reel %s: %d frames", recorder.path, recorder.frames)
 
 
 # --- Simulation Control ---
@@ -264,6 +332,8 @@ async def sim_reconfigure(req: ReconfigureRequest):
 
     # Clear active scenario before rebuilding
     scenario_runner.set_scenario(None)
+    global _launch_gen
+    _launch_gen += 1
 
     # Rebuild simulation with new node count and start fresh trio thread
     _build_simulation(n)
@@ -612,6 +682,20 @@ async def trace_recent(limit: int = 50):
     return {"traces": engine.node_pool.gossip.get_recent_traces(limit)}
 
 
+@app.get("/metrics", response_class=PlainTextResponse)
+async def prometheus_metrics():
+    """Prometheus text exposition (Lighthouse gossipsub metric names). Counters-only pre-boot."""
+    body = gossip_metrics.render(engine, telemetry_manager.get_status().get("peer_count", 0))
+    return PlainTextResponse(body, media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
+@app.get("/api/otel/status")
+async def otel_status():
+    if otlp_exporter is None:
+        return {"enabled": False, "hint": "set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318"}
+    return otlp_exporter.status()
+
+
 @app.get("/api/trace/{msg_id}")
 async def trace_detail(msg_id: str):
     if engine is None:
@@ -619,6 +703,8 @@ async def trace_detail(msg_id: str):
     trace = engine.node_pool.gossip.get_trace(msg_id)
     if trace is None:
         return {"error": "trace not found"}
+    trace["run_id"] = engine.run_id
+    trace["trace_id"] = otel_trace_id(engine.run_id, msg_id)  # same derivation as the exporter
     return trace
 
 
@@ -729,26 +815,33 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
 
-    # 1. Reset simulation clock and events
+    # 1. Clear existing faults properly (removes attacker ids from meshes/subscriptions),
+    #    then reset the clock and bus so the FaultCleared events do not linger.
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
-
-    # 2. Clear any existing faults directly (no event emission needed — we reset the bus too)
-    fault_injector._active_faults.clear()
+    engine.new_run()  # fresh trace-id scope for the exporter
+    if otlp_exporter is not None:
+        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(
         topo_type=scenario.topology_type,
-        n_nodes=20,
+        n_nodes=engine.node_pool.node_count,  # not a hard-coded 20: the pool may be 50/100
         **scenario.topology_params,
     )
     graph = topology_manager.generate(topo_config)
     edges = topology_manager.graph_to_edges(graph)
     positions = topology_manager.graph_layout(graph)
     engine.wire_topology(edges, positions)
+    global _initial_edges
+    _initial_edges = edges  # so /api/topology/edges and the WS edges frame follow the launch
 
     # 4. Arm scenario runner (sets active scenario, resets phase index)
     scenario_runner.set_scenario(scenario)
+    global _launch_gen
+    _launch_gen += 1
 
     # 5. Set speed and start playback
     engine.clock.speed = max(0.1, min(100.0, req.speed))

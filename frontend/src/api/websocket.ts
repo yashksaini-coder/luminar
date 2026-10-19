@@ -6,6 +6,7 @@ export type SnapshotCallback = (snap: any) => void
 export type MetricsCallback = (metrics: any) => void
 export type AnalyticsCallback = (analytics: any) => void
 export type TelemetryStatusCallback = (status: any) => void
+export type FrameCallback = (frame: any) => void
 
 const BATCH_MS = 50
 const MAX_RECONNECT = 10_000
@@ -23,8 +24,11 @@ class WSManager {
   private onAnalytics: AnalyticsCallback | null = null
   private onTelemetryStatus: TelemetryStatusCallback | null = null
   private closed = false
+  /** Frames that are not events and not periodic: edges, scenario, gap */
+  onFrame: Record<string, FrameCallback> = {}
 
-  connect(
+  /** Register frame handlers. Needed by both the live socket and the offline reel player. */
+  bind(
     onBatch: EventCallback,
     onStatus: StatusCallback,
     onSnapshot?: SnapshotCallback,
@@ -38,6 +42,10 @@ class WSManager {
     this.onMetrics = onMetrics ?? null
     this.onAnalytics = onAnalytics ?? null
     this.onTelemetryStatus = onTelemetryStatus ?? null
+  }
+
+  /** Open the live socket using the handlers from bind(). */
+  connect() {
     this.closed = false
     this.open()
   }
@@ -89,22 +97,28 @@ class WSManager {
 
   private parseMessage(text: string) {
     try {
-      const msg = JSON.parse(text)
-      if (msg.type === 'snapshot') {
-        this.onSnapshot?.(msg)
-      } else if (msg.type === 'metrics') {
-        this.onMetrics?.(msg)
-      } else if (msg.type === 'analytics') {
-        this.onAnalytics?.(msg)
-      } else if (msg.type === 'telemetry_status') {
-        this.onTelemetryStatus?.(msg)
-      } else {
-        this.batch.push(msg as AppEvent)
-      }
+      this.dispatch(JSON.parse(text))
     } catch { /* ignore malformed */ }
   }
 
-  private flush() {
+  /** Route one decoded frame. Public so the reel player can feed recorded frames. */
+  dispatch(msg: any) {
+    if (msg.type === 'snapshot') {
+      this.onSnapshot?.(msg)
+    } else if (msg.type === 'metrics') {
+      this.onMetrics?.(msg)
+    } else if (msg.type === 'analytics') {
+      this.onAnalytics?.(msg)
+    } else if (msg.type === 'telemetry_status') {
+      this.onTelemetryStatus?.(msg)
+    } else if (msg.type && this.onFrame[msg.type]) {
+      this.onFrame[msg.type](msg)
+    } else if (!msg.type) {
+      this.batch.push(msg as AppEvent)
+    }
+  }
+
+  flush() {
     if (this.batch.length === 0) return
     const b = this.batch
     this.batch = []

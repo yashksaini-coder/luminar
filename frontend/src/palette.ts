@@ -35,6 +35,7 @@ export const P = {
   hover:     c(0.75, 0.14, 190),      // Teal
   routing:   c(0.60, 0.12, 270),      // Indigo
   joining:   c(0.75, 0.14, 85),       // Amber
+  attacker:  c(0.62, 0.24, 15),       // Hot red — sybil / eclipse nodes
 }
 
 // Convert OKLCH to CSS string
@@ -62,6 +63,13 @@ export const STATE_COLORS: Record<string, [number, number, number, number]> = {
   error: oklchToRgba(P.error),
   failed: oklchToRgba(P.error),
   joining: oklchToRgba(P.joining),
+  attacker: oklchToRgba(P.attacker),
+}
+
+/** Fill colour for a node; an attacker pruned from every honest mesh goes grey. */
+export function nodeFillColor(node: { state: string; connected_peers: string[] }): [number, number, number, number] {
+  if (node.state === 'attacker' && node.connected_peers.length === 0) return chrome.idle.rgba
+  return STATE_COLORS[node.state] ?? STATE_COLORS.idle
 }
 
 // Node state to CSS
@@ -73,6 +81,7 @@ export const STATE_CSS: Record<string, string> = {
   error: oklchCss(P.error),
   failed: oklchCss(P.error),
   joining: oklchCss(P.joining),
+  attacker: oklchCss(P.attacker),
 }
 
 export const PULSE_RING_DURATION_MS = 800

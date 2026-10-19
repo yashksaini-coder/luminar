@@ -93,8 +93,10 @@ export function updateStatsPanel() {
     const ga = store.gossipAnalytics
     const deliveryEl = findValue('gossip-delivery')
     if (deliveryEl) {
-      if (ga.avg_delivery_ratio != null) {
-        const pct = ga.avg_delivery_ratio * 100
+      // Windowed (last 20 msgs) when available: the lifetime mean can't move in a 60s run
+      const ratio = ga.recent_delivery_ratio ?? ga.avg_delivery_ratio
+      if (ratio != null) {
+        const pct = ratio * 100
         deliveryEl.textContent = pct.toFixed(1) + '%'
         // Color based on threshold
         if (pct > 80) deliveryEl.style.color = 'var(--green)'

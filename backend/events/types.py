@@ -192,6 +192,7 @@ class GossipPrune(BaseEvent):
     from_peer: str = ""
     to_peer: str = ""
     topic: str = ""
+    reason: str = "overflow"  # "overflow" (mesh > D_HIGH) | "score" (below prune threshold)
 
     @property
     def category(self) -> EventCategory:
@@ -222,8 +223,12 @@ class GossipIWant(BaseEvent):
 class GossipMessage(BaseEvent):
     topic: str = ""
     from_peer: str = ""
+    to_peer: str = ""  # receiver of this hop ("" for the origin publish)
     msg_id: str = ""
     hops: int = 0
+    dropped: bool = False  # relay blocked by a fault (failed peer / partition)
+    latency_ms: float = 0.0  # simulated wire latency of this hop
+    via: str = "mesh"  # "mesh" (flood/mesh relay) | "iwant" (gossip pull) | "spam" (attacker)
 
     @property
     def category(self) -> EventCategory:
@@ -286,6 +291,20 @@ class NodeHealthSnapshot(BaseEvent):
 class SimulationStateChanged(BaseEvent):
     state: str = ""  # "running", "paused", "stopped", "recording"
     speed: float = 1.0
+
+    @property
+    def category(self) -> EventCategory:
+        return EventCategory.SIMULATION
+
+
+@dataclass(slots=True, frozen=True)
+class ScenarioPhaseFired(BaseEvent):
+    """A scenario phase reached its trigger time (emitted before the action runs)."""
+
+    scenario_id: str = ""
+    phase_idx: int = 0
+    label: str = ""
+    action: str = ""
 
     @property
     def category(self) -> EventCategory:

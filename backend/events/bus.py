@@ -10,6 +10,7 @@ import bisect
 import contextlib
 import logging
 from collections import deque
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import trio
@@ -28,6 +29,10 @@ class EventBus:
         self._subscribers: list[trio.MemorySendChannel] = []
         self._ring: deque[BaseEvent] = deque(maxlen=ring_size)
         self._event_count: int = 0
+        # Synchronous observers (OTel exporter, Prometheus counters). Called on the trio
+        # thread inside emit(); they must be O(1) and never raise into the simulation.
+        self.sinks: list[Callable[[BaseEvent], None]] = []
+        self.sink_errors: int = 0
 
     @property
     def event_count(self) -> int:
@@ -52,6 +57,14 @@ class EventBus:
         """Broadcast event to all subscribers and append to ring buffer."""
         self._ring.append(event)
         self._event_count += 1
+
+        for sink in self.sinks:
+            try:
+                sink(event)
+            except Exception:
+                self.sink_errors += 1
+                if self.sink_errors <= 3:
+                    logger.exception("Event sink raised (suppressed)")
 
         dead: list[trio.MemorySendChannel] = []
         for ch in self._subscribers:

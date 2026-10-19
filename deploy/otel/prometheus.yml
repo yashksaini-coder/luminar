@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: luminar
+    static_configs:
+      - targets: ["localhost:8000"]
+  # A real beacon node on the same laptop (Lighthouse: --metrics, default :5054) lands on the
+  # dashboard's second row with the same queries. Uncomment and point at it.
+  # - job_name: beacon
+  #   static_configs:
+  #     - targets: ["localhost:5054"]

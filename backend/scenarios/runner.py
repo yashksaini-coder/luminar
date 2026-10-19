@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 
 import trio
 
+from backend.events.types import ScenarioPhaseFired
+
 from .types import ScenarioDefinition, ScenarioPhase
 
 if TYPE_CHECKING:
@@ -101,12 +103,29 @@ class ScenarioRunner:
         action = phase.action
         params = phase.params
 
+        scenario = self._scenario
+        if scenario is not None:
+            await fault_injector._event_bus.emit(
+                ScenarioPhaseFired(
+                    at=fault_injector._clock.time,
+                    scenario_id=scenario.id,
+                    phase_idx=max(scenario.phases.index(phase), 0)
+                    if phase in scenario.phases
+                    else 0,
+                    label=phase.label,
+                    action=action,
+                )
+            )
+
         try:
             match action:
                 case "inject_partition":
-                    fault_id = await fault_injector.inject_partition(
-                        params["group_a"], params["group_b"]
-                    )
+                    if params.get("split") == "half":
+                        ids = list(fault_injector._node_pool._nodes)
+                        group_a, group_b = ids[: len(ids) // 2], ids[len(ids) // 2 :]
+                    else:
+                        group_a, group_b = params["group_a"], params["group_b"]
+                    fault_id = await fault_injector.inject_partition(group_a, group_b)
                     self._fault_ids.append(fault_id)
 
                 case "inject_sybil":

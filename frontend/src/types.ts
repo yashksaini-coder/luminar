@@ -1,6 +1,6 @@
 export type LayoutMode = 'force' | 'grid' | 'radial'
 export type SimState = 'running' | 'paused' | 'stopped'
-export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed'
+export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed' | 'attacker'
 
 export interface PeerNode {
   peer_id: string
@@ -27,6 +27,7 @@ export interface AppEvent {
   fault_type?: string
   target?: string
   reason?: string
+  dropped?: boolean
   speed?: number
   state?: string
   [key: string]: unknown
@@ -39,6 +40,7 @@ export interface SimSnapshot {
   node_count: number
   event_count: number
   nodes: PeerNode[]
+  gossip?: { mesh?: Record<string, string[]> }
 }
 
 export interface MetricsSnapshot {

@@ -16,6 +16,7 @@ export interface AppStore {
   edges: [string, string][]
   nodePositions: [number, number][]  // immutable after layout
   nodeIndex: Map<string, number>  // peer_id -> array index
+  mesh: Record<string, string[]>  // peer_id -> mesh peers (empty above 100 nodes)
 
   // Layout
   layoutMode: LayoutMode
@@ -34,6 +35,11 @@ export interface AppStore {
 
   // Scenarios
   scenarios: ScenarioDefinition[]
+  activeScenario: { active: boolean; scenario: ScenarioDefinition | null; phase_idx?: number } | null
+
+  // Reel playback (recorded frame stream replayed client-side; null = live)
+  reel: { name: string; title: string; durationMs: number; durationSim?: number } | null
+  droppedEvents: number
 
   // Metrics
   stateDistribution: Record<string, number>
@@ -50,6 +56,9 @@ export interface AppStore {
   particlesEnabled: boolean
   showLabels: boolean
   showEdges: boolean
+  stageTheme: boolean
+  hero: boolean
+  scale: { node: number; particle: number; edgeAlpha: number }  // stage theme bumps these
 
   // Gossip analytics
   gossipAnalytics: {
@@ -57,11 +66,14 @@ export interface AppStore {
     avg_delivery_ratio: number
     avg_propagation_ms: number
     avg_hops: number
+    avg_duplicates?: number
+    recent_delivery_ratio?: number
     delivery_ratios: { msg_id: string; ratio: number }[]
     latency_cdf: { percentile: number; latency_ms: number }[]
     mesh_stability: { avg_degree: number; min_degree: number; max_degree: number }
   } | null
   milestones: { label: string; time: number; color: string }[]
+  beats: { label: string; time: number; color: string }[]  // narrator-derived, merged into milestones
 }
 
 export const store: AppStore = {
@@ -75,6 +87,7 @@ export const store: AppStore = {
   edges: [],
   nodePositions: [],
   nodeIndex: new Map(),
+  mesh: {},
   layoutMode: 'force',
   playing: false,
   selectedNode: -1,
@@ -83,6 +96,9 @@ export const store: AppStore = {
   events: [],
   maxEvents: 2000,
   scenarios: [],
+  activeScenario: null,
+  reel: null,
+  droppedEvents: 0,
   stateDistribution: {},
   totalMessagesSent: 0,
   totalMessagesReceived: 0,
@@ -92,7 +108,11 @@ export const store: AppStore = {
   particlesEnabled: true,
   showLabels: true,
   showEdges: true,
+  stageTheme: false,
+  hero: false,
+  scale: { node: 1, particle: 1, edgeAlpha: 1 },
   maxDuration: 300,  // default 5 minutes
   gossipAnalytics: null,
   milestones: [],
+  beats: [],
 }

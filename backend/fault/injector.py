@@ -15,7 +15,7 @@ import random
 import uuid
 from typing import TYPE_CHECKING
 
-from backend.events.types import FaultCleared, FaultInjected, PeerRecovered
+from backend.events.types import FaultCleared, FaultInjected, GossipGraft, PeerRecovered
 
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
@@ -50,6 +50,27 @@ class FaultInjector:
 
     def get_active_faults(self) -> list[dict]:
         return list(self._active_faults.values())
+
+    def attacker_ids(self) -> list[str]:
+        """Ids of every live sybil/eclipse attacker, in injection order."""
+        ids: list[str] = []
+        for f in self._active_faults.values():
+            ids.extend(f.get("sybil_ids", []))
+            ids.extend(f.get("attacker_ids", []))
+        return ids
+
+    def _next_attacker_ids(self, prefix: str, n: int) -> list[str]:
+        """Deterministic ids (`sybil-0..n`), continuing past any live fault of the same kind."""
+        live = [i for i in self.attacker_ids() if i.startswith(prefix)]
+        base = max((int(i.rsplit("-", 1)[1]) for i in live), default=-1) + 1
+        return [f"{prefix}{base + i}" for i in range(n)]
+
+    async def _graft_attacker(self, topic: str, target: str, attacker: str) -> None:
+        """Register an attacker in `target`'s mesh with the scorer and make the GRAFT visible."""
+        self.gossip.scorer.on_graft(topic, attacker, self._clock.time)
+        await self._event_bus.emit(
+            GossipGraft(at=self._clock.time, from_peer=target, to_peer=attacker, topic=topic)
+        )
 
     def get_latency(self, peer_a: str, peer_b: str) -> float:
         """Return extra latency (ms) between two peers from active faults."""
@@ -175,7 +196,7 @@ class FaultInjector:
         degrading propagation reliability.
         """
         fault_id = f"fault-{uuid.uuid4().hex[:8]}"
-        sybil_ids = [f"sybil-{fault_id}-{i}" for i in range(n_attackers)]
+        sybil_ids = self._next_attacker_ids("sybil-", n_attackers)
 
         topic_mesh = self.gossip._mesh.get(target_topic, {})
         subscribers = self.gossip._subscriptions.get(target_topic, set())
@@ -194,6 +215,7 @@ class FaultInjector:
                 mesh = topic_mesh.get(target_peer, set())
                 mesh.add(sybil_id)
                 topic_mesh[target_peer] = mesh
+                await self._graft_attacker(target_topic, target_peer, sybil_id)
 
         fault = {
             "id": fault_id,
@@ -227,7 +249,7 @@ class FaultInjector:
         effectively isolating it from honest traffic.
         """
         fault_id = f"fault-{uuid.uuid4().hex[:8]}"
-        attacker_ids = [f"eclipse-{fault_id}-{i}" for i in range(n_attackers)]
+        attacker_ids = self._next_attacker_ids("eclipse-", n_attackers)
 
         # Replace the target's mesh in all topics with attacker nodes
         for topic, topic_mesh in self.gossip._mesh.items():
@@ -249,6 +271,7 @@ class FaultInjector:
                 self.gossip._seen[aid] = set()
                 subscribers.add(aid)
                 topic_mesh[aid] = {target_peer_id}  # Attackers only connect to target
+                await self._graft_attacker(topic, target_peer_id, aid)
 
             topic_mesh[target_peer_id] = set(attacker_ids)
 

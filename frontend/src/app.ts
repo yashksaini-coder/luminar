@@ -2,7 +2,8 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
-import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop } from './map/renderer'
+import { loadReel, stopReel, reelPlaying, type ReelMeta } from './api/replay'
+import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
@@ -13,6 +14,7 @@ import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
+import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker } from './ui/narrator'
 import { formatTime } from './format'
 import { oklchToRgba, P } from './palette'
 import type { AppEvent } from './types'
@@ -43,7 +45,7 @@ function computeMilestones() {
   if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
   if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'oklch(0.72 0.12 230)' })
 
-  store.milestones = ms
+  store.milestones = [...store.beats, ...ms]
 }
 
 function recomputeLayout() {
@@ -53,10 +55,19 @@ function recomputeLayout() {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
 
+  // Attackers are not in the topology edge list; link them to the meshes they sit in
+  // so the force layout places them next to their targets.
+  const attackerLinks: [string, string][] = []
+  for (const n of store.nodes) {
+    if (n.state === 'attacker') for (const t of n.connected_peers) attackerLinks.push([n.peer_id, t])
+  }
+  const layoutEdges = attackerLinks.length ? [...store.edges, ...attackerLinks] : store.edges
+
   if (store.layoutMode === 'force') {
-    // Live d3-force simulation with Obsidian-like interactive physics
-    stopLiveForce()
-    startLiveForce(store.nodes, store.edges, (positions) => {
+    // Live d3-force simulation with Obsidian-like interactive physics.
+    // startLiveForce restarts in place and reuses positions for nodes it already knows;
+    // calling stopLiveForce() first would wipe that memory and re-seed the whole graph.
+    startLiveForce(store.nodes, layoutEdges, (positions) => {
       store.nodePositions = positions
       renderLayers()
     })
@@ -65,12 +76,15 @@ function recomputeLayout() {
   } else {
     // Static layouts (grid, radial) — compute once, no physics
     stopLiveForce()
-    const result = computeLayout(store.layoutMode, store.nodes, store.edges)
+    const result = computeLayout(store.layoutMode, store.nodes, layoutEdges)
     store.nodePositions = result.positions
     renderLayers()
     requestAnimationFrame(() => fitView())
   }
 }
+
+// Debug / e2e handle (read-only use): window.__luminar.store, .fitView, .viewState()
+;(window as any).__luminar = { store, fitView, viewState: getViewState }
 
 async function fetchSnapshot() {
   const snap = await api.simSnapshot()
@@ -82,6 +96,7 @@ async function fetchSnapshot() {
   store.nodeCount = snap.node_count
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
+  store.mesh = snap.gossip?.mesh ?? {}
   store.playing = snap.state === 'running'
 
   // Auto-pause when duration limit is reached
@@ -151,20 +166,15 @@ function handleWsEvents(events: AppEvent[]) {
     store.events = store.events.slice(-store.maxEvents)
   }
   store.eventCount += events.length
+  narratorOnEvents(events)
 
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
-    if (evt.event_type === 'GossipMessage' && evt.from_peer) {
-      const fromIdx = store.nodeIndex.get(evt.from_peer)
-      const fromNode = fromIdx !== undefined ? store.nodes[fromIdx] : undefined
-      if (fromNode) {
-        // Send particles to 2 random connected peers (subtle, not flooding)
-        const shuffled = fromNode.connected_peers.slice().sort(() => Math.random() - 0.5)
-        const peers = shuffled.slice(0, 2)
-        for (const peer of peers) {
-          spawnParticle(evt.from_peer!, peer)
-        }
-      }
+    if (evt.event_type === 'GossipMessage' && evt.from_peer && evt.to_peer) {
+      // One particle per real hop, sender → receiver. The origin publish (no to_peer)
+      // draws nothing; its flood relays each carry their own event.
+      const color = evt.from_peer.startsWith('sybil-') ? oklchToRgba(P.attacker, 220) : undefined
+      spawnParticle(evt.from_peer, evt.to_peer, color, evt.dropped === true)
     }
 
     // Spawn particles for graft/prune (mesh changes)
@@ -176,12 +186,13 @@ function handleWsEvents(events: AppEvent[]) {
     }
 
     // Spawn particles for DHT queries
-    if (evt.event_type === 'DHTQueryStarted' && evt.peer_id) {
-      const dhtIdx = store.nodeIndex.get(evt.peer_id)
+    const initiator = evt.initiator as string | undefined
+    if (evt.event_type === 'DHTQueryStarted' && initiator) {
+      const dhtIdx = store.nodeIndex.get(initiator)
       const node = dhtIdx !== undefined ? store.nodes[dhtIdx] : undefined
       if (node && node.connected_peers.length > 0) {
         const target = node.connected_peers[Math.floor(Math.random() * node.connected_peers.length)]
-        spawnParticle(evt.peer_id, target, oklchToRgba(P.routing, 200))
+        spawnParticle(initiator, target, oklchToRgba(P.routing, 200))
       }
     }
 
@@ -225,21 +236,131 @@ function handleWsEvents(events: AppEvent[]) {
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
 }
 
+// ── Non-periodic WS frames: edges, scenario, gap ──
+function handleWsEdges(frame: { edges: [string, string][] }) {
+  store.edges = frame.edges
+  const edgeKey = frame.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
+  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  if (fullKey !== topoKey) {
+    topoKey = fullKey
+    recomputeLayout()
+  }
+}
+
+function handleWsScenario(frame: any) {
+  store.activeScenario = frame.active ? frame : null
+  narratorOnScenario()
+}
+
+// ── Presentation prefs: stage theme + hero layout (keys t/h, legend, URL, localStorage) ──
+function applyPrefs() {
+  if (store.stageTheme) document.documentElement.setAttribute('data-theme', 'stage')
+  else document.documentElement.removeAttribute('data-theme')
+  document.getElementById('app')!.classList.toggle('hero', store.hero)
+  store.scale = store.stageTheme
+    ? { node: 1.4, particle: 1.8, edgeAlpha: 1.6 }
+    : { node: 1, particle: 1, edgeAlpha: 1 }
+  const url = new URL(location.href)
+  store.stageTheme ? url.searchParams.set('theme', 'stage') : url.searchParams.delete('theme')
+  store.hero ? url.searchParams.set('hero', '1') : url.searchParams.delete('hero')
+  history.replaceState(null, '', url)
+  try { localStorage.setItem('luminar.prefs', JSON.stringify({ stageTheme: store.stageTheme, hero: store.hero })) } catch { /* private mode */ }
+  handleResize()
+  renderBands()
+  renderTicker()
+  renderLayers()
+}
+
+function loadPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('luminar.prefs') ?? '{}')
+    store.stageTheme = !!saved.stageTheme
+    store.hero = !!saved.hero
+  } catch { /* ignore */ }
+  const q = new URLSearchParams(location.search)
+  if (q.has('theme')) store.stageTheme = q.get('theme') === 'stage'
+  if (q.has('hero')) store.hero = q.get('hero') === '1'
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) store.particlesEnabled = false
+  document.addEventListener('luminar:pref', (e: Event) => {
+    const key = (e as CustomEvent<'stageTheme' | 'hero'>).detail
+    store[key] = !store[key]
+    applyPrefs()
+  })
+  applyPrefs()
+}
+
+function handleWsGap(frame: { dropped: number }) {
+  store.droppedEvents += frame.dropped
+}
+
+// ── Reels (recorded runs replayed client-side; backend not needed) ──
+let reelManifest: ReelMeta[] = []
+
+async function fetchReels() {
+  const manifest = await api.getStatic<ReelMeta[]>('/reels/manifest.json')
+  if (!manifest) return
+  reelManifest = manifest
+  const dd = document.getElementById('reel-dropdown')
+  if (!dd) return
+  while (dd.firstChild) dd.removeChild(dd.firstChild)
+  reelManifest.forEach((r, i) => {
+    const btn = document.createElement('button')
+    btn.className = 'dd-item'
+    btn.textContent = `${i + 1}  ${r.title}`
+    btn.title = r.blurb ?? ''
+    btn.addEventListener('click', () => { dd.style.display = 'none'; enterReel(r) })
+    dd.appendChild(btn)
+  })
+  const div = document.createElement('div'); div.className = 'dd-divider'; dd.appendChild(div)
+  const live = document.createElement('button')
+  live.className = 'dd-item'
+  live.textContent = '0  Back to live'
+  live.addEventListener('click', () => { dd.style.display = 'none'; exitReel() })
+  dd.appendChild(live)
+}
+
+async function enterReel(meta: ReelMeta) {
+  ws.disconnect()
+  topoKey = ''
+  store.playing = false
+  const ok = await loadReel(meta, () => { updatePlaybackUI(); renderLayers() })
+  if (!ok) { exitReel(); return }
+  updateConnectionStatus(false)
+  const url = new URL(location.href)
+  url.searchParams.set('reel', meta.name)
+  history.replaceState(null, '', url)
+}
+
+function exitReel() {
+  stopReel()
+  topoKey = ''
+  const url = new URL(location.href)
+  url.searchParams.delete('reel')
+  history.replaceState(null, '', url)
+  ws.connect()
+}
+
 // ── Dropdowns ──
 function initDropdowns() {
   const scenarioBtn = document.getElementById('scenario-btn')
   const scenarioDD = document.getElementById('scenario-dropdown')
   const faultBtn = document.getElementById('fault-btn')
   const faultDD = document.getElementById('fault-dropdown')
+  const reelBtn = document.getElementById('reel-btn')
+  const reelDD = document.getElementById('reel-dropdown')
+  const all = [scenarioDD, faultDD, reelDD]
+  const toggle = (dd: HTMLElement | null) => {
+    for (const other of all) if (other && other !== dd) other.style.display = 'none'
+    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none'
+  }
 
-  scenarioBtn?.addEventListener('click', () => {
-    if (scenarioDD) scenarioDD.style.display = scenarioDD.style.display === 'none' ? 'block' : 'none'
-    if (faultDD) faultDD.style.display = 'none'
-  })
-
-  faultBtn?.addEventListener('click', () => {
-    if (faultDD) faultDD.style.display = faultDD.style.display === 'none' ? 'block' : 'none'
-    if (scenarioDD) scenarioDD.style.display = 'none'
+  scenarioBtn?.addEventListener('click', () => toggle(scenarioDD))
+  faultBtn?.addEventListener('click', () => toggle(faultDD))
+  reelBtn?.addEventListener('click', () => toggle(reelDD))
+  document.addEventListener('luminar:reel', (e: Event) => {
+    const i = (e as CustomEvent<number>).detail
+    if (i < 0) exitReel()
+    else if (reelManifest[i]) enterReel(reelManifest[i])
   })
 
   faultDD?.querySelectorAll('[data-fault]').forEach(btn => {
@@ -294,7 +415,10 @@ function handleWsSnapshot(snap: any) {
   store.nodeCount = snap.node_count
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
-  store.playing = snap.state === 'running'
+  store.mesh = snap.gossip?.mesh ?? {}
+  // In reel mode the recorded state says nothing about the player; a seek replays a
+  // 'running' snapshot while paused and would invert the play/pause toggle.
+  store.playing = store.reel ? reelPlaying() : snap.state === 'running'
 
   // Always rebuild nodeIndex when nodes update
   store.nodeIndex.clear()
@@ -302,8 +426,8 @@ function handleWsSnapshot(snap: any) {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
 
-  // Auto-pause at duration limit
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
+  // Auto-pause at duration limit (live only)
+  if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
     api.simPause()
     store.playing = false
     store.simState = 'paused'
@@ -341,6 +465,7 @@ function handleWsMetrics(m: any) {
 function handleWsAnalytics(analytics: any) {
   store.gossipAnalytics = analytics
   updateStatsPanel()
+  narratorOnAnalytics()
 }
 
 // ── WebSocket-pushed telemetry status handler ──
@@ -407,6 +532,11 @@ function updateConnectionStatus(connected: boolean) {
   store.connected = connected
   const dot = document.getElementById('status-dot')
   const label = document.getElementById('status-label')
+  if (store.reel) {
+    if (dot) dot.className = 'dot-reel'
+    if (label) label.textContent = `REEL · ${store.reel.title}`
+    return
+  }
   if (dot) dot.className = connected ? 'dot-live' : 'dot-offline'
   if (label) label.textContent = connected ? 'LIVE' : 'OFFLINE'
 }
@@ -460,8 +590,9 @@ async function main() {
     new ResizeObserver(() => handleResize()).observe(mapContainer)
   }
 
-  // Connect WebSocket with multiplexed handlers (snapshot, metrics, analytics pushed by server)
-  ws.connect(
+  initNarrator()
+  loadPrefs()
+  ws.bind(
     handleWsEvents,
     updateConnectionStatus,
     handleWsSnapshot,
@@ -469,10 +600,25 @@ async function main() {
     handleWsAnalytics,
     handleWsTelemetryStatus,
   )
+  ws.onFrame.edges = handleWsEdges
+  ws.onFrame.scenario = handleWsScenario
+  ws.onFrame.gap = handleWsGap
 
-  // Initial data fetch (one-time, then WS takes over)
-  await fetchSnapshot()
-  await fetchEdges()
+  await fetchReels()
+  const reelParam = new URLSearchParams(location.search).get('reel')
+  const reelMeta = reelParam ? reelManifest.find(r => r.name === reelParam) : undefined
+  if (reelMeta) {
+    // Offline path: no backend needed at all
+    await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })
+    updateConnectionStatus(false)
+  } else {
+    // Live: multiplexed WS (snapshot, metrics, analytics pushed by server)
+    ws.connect()
+
+    // Initial data fetch (one-time, then WS takes over)
+    await fetchSnapshot()
+    await fetchEdges()
+  }
   await fetchScenarios()
 
   // Milestone computation runs on a light timer (no HTTP calls)
