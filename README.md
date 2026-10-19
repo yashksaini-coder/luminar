@@ -22,7 +22,7 @@ Luminar simulates **py-libp2p peers** running GossipSub v1.1, DHT, and stream pr
 - **GossipSub v1.1** — P1-P4 peer scoring, mesh management (GRAFT/PRUNE), IHAVE/IWANT, message traces
 - **Fault injection** — Partition, Sybil, Eclipse, Drop — watch degradation and recovery
 - **Live analytics** — Delivery CDF, gossip metrics, peer scores, millisecond event log
-- **Interactive layouts** — Force (d3-force with Obsidian-like physics), Grid, Radial
+- **Interactive layouts** — Force (d3-force with Obsidian-like physics), Radial, Geo (world map for real observers)
 - **Single WebSocket** — Events, snapshots, metrics, analytics multiplexed at 20Hz
 
 ## Quick Start
@@ -60,7 +60,7 @@ Open **http://localhost:5173** — click Play and watch the network come alive.
 | **Speed** | 0.5x · 1x · 2x · 3x · 5x · 10x |
 | **Duration** | 1m · 2m · 5m · 10m (auto-pause) |
 | **Nodes** | 20 · 50 · 100 · 200 · 500 |
-| **Layout** | Force · Grid · Radial |
+| **Layout** | Force · Radial · Geo |
 | **Keyboard** | `Space` play/pause · `f` fit view · `Esc` deselect |
 
 ### Fault Injection

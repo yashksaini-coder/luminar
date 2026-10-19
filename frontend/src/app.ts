@@ -16,7 +16,7 @@ import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
 import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker, caption } from './ui/narrator'
 import { formatTime } from './format'
-import type { AppEvent } from './types'
+import type { AppEvent, LayoutMode } from './types'
 
 // ── Topology fingerprint ──
 let topoKey = ''
@@ -635,7 +635,7 @@ function applyMainnetStatus(m: any) {
   renderTicker()
 }
 
-function setLayoutMode(mode: 'force' | 'grid' | 'radial' | 'geo') {
+function setLayoutMode(mode: LayoutMode) {
   document.querySelectorAll<HTMLButtonElement>('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode))
   store.layoutMode = mode
   topoKey = ''

@@ -1,4 +1,4 @@
-export type LayoutMode = 'force' | 'grid' | 'radial' | 'geo'
+export type LayoutMode = 'force' | 'radial' | 'geo'
 export type SimState = 'running' | 'paused' | 'stopped'
 export type NodeState = 'idle' | 'origin' | 'receiving' | 'decoded' | 'error' | 'joining' | 'failed' | 'attacker'
 

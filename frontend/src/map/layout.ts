@@ -22,6 +22,9 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 }
 
 /** Edge list entry: [source, target, weak?] */
+/** Degrees → canvas units for the Geo layout; must match backend/live/mainnet.py GEO_SCALE. */
+export const GEO_SCALE = 2.5
+
 export type LayoutEdge = [string, string] | [string, string, true]
 
 let liveSim: Simulation<ForceNode, ForceLink> | null = null
@@ -106,7 +109,7 @@ export function isLiveForceActive(): boolean {
   return liveSim !== null
 }
 
-// ── Static layout computation (for Grid and Radial modes) ────────────
+// ── Static layout computation (Radial and Geo modes) ─────────────────
 
 export function computeLayout(
   mode: LayoutMode,
@@ -115,44 +118,10 @@ export function computeLayout(
 ): LayoutResult {
   switch (mode) {
     case 'force': return { positions: [] }  // Force uses live sim, not static
-    case 'grid': return layoutGrid(nodes)
-    case 'geo': return { positions: nodes.map(n => [n.x, n.y] as [number, number]) }  // producer-projected lat/lon
+    // Producers project y down (y = −lat·2.5); the orthographic view's y points up, so flip once here
+    case 'geo': return { positions: nodes.map(n => [n.x, -n.y] as [number, number]) }
     case 'radial': return layoutRadial(nodes, _edges)
   }
-}
-
-// ── Grid layout ───────────────────────────────────────────────────────
-function layoutGrid(nodes: PeerNode[]): LayoutResult {
-  const n = nodes.length
-  if (n === 0) return { positions: [] }
-
-  const stateOrder: Record<string, number> = {
-    origin: 0, receiving: 1, decoded: 2, joining: 3,
-    idle: 4, failed: 5, error: 6,
-  }
-  const sorted = nodes.map((nd, i) => ({ idx: i, order: stateOrder[nd.state] ?? 4 }))
-    .sort((a, b) => a.order - b.order || a.idx - b.idx)
-
-  const spacing = Math.max(14, Math.min(28, 600 / Math.sqrt(n)))
-  const cols = Math.ceil(Math.sqrt(n * 1.3))
-  const rowH = spacing * 0.866
-
-  const positions: [number, number][] = new Array(n)
-  const totalW = (cols - 1) * spacing
-  const totalRows = Math.ceil(n / cols)
-  const totalH = (totalRows - 1) * rowH
-
-  for (let rank = 0; rank < sorted.length; rank++) {
-    const row = Math.floor(rank / cols)
-    const col = rank % cols
-    const stagger = (row % 2 === 1) ? spacing * 0.5 : 0
-    positions[sorted[rank].idx] = [
-      col * spacing + stagger - totalW / 2,
-      row * rowH - totalH / 2,
-    ]
-  }
-
-  return { positions }
 }
 
 // ── Radial layout ─────────────────────────────────────────────────────

@@ -1,5 +1,7 @@
 import { Deck, OrthographicView } from '@deck.gl/core'
-import { ScatterplotLayer, LineLayer, TextLayer } from '@deck.gl/layers'
+import { ScatterplotLayer, LineLayer, TextLayer, PolygonLayer } from '@deck.gl/layers'
+import { getStatic } from '../api/client'
+import { GEO_SCALE } from './layout'
 import { store } from '../store'
 import { shortName } from '../format'
 import {
@@ -121,6 +123,23 @@ const ring = (id: string, extra: Record<string, unknown>) => new ScatterplotLaye
 
 const withAlpha = (c: RGBA, a: number): RGBA => [c[0], c[1], c[2], Math.max(0, Math.min(255, Math.round(a)))]
 
+// ── World land outlines for the Geo layout (Natural Earth 110m, public domain), loaded once ──
+type Ring = [number, number][]
+let landPolygons: Ring[] | null = null
+let landLoading = false
+const WORLD_BOUNDS = { minX: -180 * GEO_SCALE, maxX: 180 * GEO_SCALE, minY: -58 * GEO_SCALE, maxY: 84 * GEO_SCALE }  // y up; Antarctica cropped
+
+function ensureLand() {
+  if (landPolygons || landLoading) return
+  landLoading = true
+  getStatic<{ features: { geometry: { type: string; coordinates: number[][][] } }[] }>('/geo/land-110m.json')
+    .then(fc => {
+      landPolygons = (fc?.features ?? []).map(f => f.geometry.coordinates[0].map(([lon, lat]) => [lon * GEO_SCALE, lat * GEO_SCALE] as [number, number]))
+      renderLayers()
+    })
+    .finally(() => { landLoading = false })
+}
+
 export function renderLayers() {
   if (!deck) return
   refreshPalette()
@@ -164,6 +183,24 @@ export function renderLayers() {
   }
 
   const layers: any[] = []
+
+  // 0. World map under everything in the Geo layout
+  if (store.layoutMode === 'geo') {
+    ensureLand()
+    if (landPolygons) {
+      layers.push(new PolygonLayer({
+        id: 'world-land',
+        data: landPolygons,
+        getPolygon: (d: Ring) => d,
+        filled: true,
+        stroked: true,
+        getFillColor: [242, 242, 239, 12],
+        getLineColor: [242, 242, 239, 40],
+        lineWidthMinPixels: 1,
+        pickable: false,
+      }))
+    }
+  }
   // Geo layout shows the real world only: simulated peers have no coordinates, and drawing
   // their topology over the observers would merge two provenances in one graph.
   const geoOnly = store.layoutMode === 'geo' && nodes.some(nd => nd.is_real || nd.is_telemetry)
@@ -460,10 +497,14 @@ export function fitView() {
   if (positions.length === 0) return
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-  for (let i = 0; i < positions.length; i++) {
-    const [x, y] = positions[i]
-    if (x < minX) minX = x; if (y < minY) minY = y
-    if (x > maxX) maxX = x; if (y > maxY) maxY = y
+  if (store.layoutMode === 'geo') {
+    ({ minX, minY, maxX, maxY } = WORLD_BOUNDS)  // the whole map, not just where the nodes are
+  } else {
+    for (let i = 0; i < positions.length; i++) {
+      const [x, y] = positions[i]
+      if (x < minX) minX = x; if (y < minY) minY = y
+      if (x > maxX) maxX = x; if (y > maxY) maxY = y
+    }
   }
 
   const pad = 80
