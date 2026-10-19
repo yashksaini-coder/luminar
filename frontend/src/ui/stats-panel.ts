@@ -119,7 +119,7 @@ export function updateStatsPanel() {
     }
     const meshEl = findValue('gossip-mesh-size')
     if (meshEl) {
-      meshEl.textContent = ga.mesh_stability
+      meshEl.textContent = ga.mesh_stability?.avg_degree != null
         ? String(Math.round(ga.mesh_stability.avg_degree)) : '\u2014'
     }
 
@@ -133,7 +133,7 @@ export function updateStatsPanel() {
 
   // Update milestones
   const msSection = document.getElementById('milestones-section')
-  if (msSection && store.milestones.length > 0) {
+  if (msSection) {
     // Clear existing items (keep title h3)
     while (msSection.children.length > 1) msSection.removeChild(msSection.lastChild!)
     for (const ms of store.milestones) {

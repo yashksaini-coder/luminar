@@ -66,6 +66,12 @@ export function initPeerInspector() {
     openDrawer()
     refreshStats()
   })
+
+  // Every deselect path (Escape, Reset, event-row toggle-off) ends in luminar:render;
+  // close here so no caller has to know about the drawer.
+  document.addEventListener('luminar:render', () => {
+    if (store.selectedNode < 0 && drawerEl?.classList.contains('open')) closeDrawer()
+  })
 }
 
 function openDrawer() {
@@ -131,6 +137,7 @@ function refreshStats() {
         const i = store.nodeIndex.get(peerId)
         if (i !== undefined) {
           store.selectedNode = i
+          store.highlightPeers = []
           // TODO(human): after selecting the new node, also pan the map camera to it
           document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
           document.dispatchEvent(new CustomEvent('luminar:render'))

@@ -69,10 +69,11 @@ function buildSettingsPanel(panel: HTMLElement) {
 
   const pref = (key: 'stageTheme' | 'hero') => () =>
     document.dispatchEvent(new CustomEvent('luminar:pref', { detail: key }))
-  addSection(panel, 'Stage', [
-    createToggle('Stage theme (t)', store.stageTheme, pref('stageTheme')),
-    createToggle('Hero layout (h)', store.hero, pref('hero')),
-  ], true)
+  const stageT = createToggle('Stage theme (t)', store.stageTheme, pref('stageTheme'))
+  const heroT = createToggle('Hero layout (h)', store.hero, pref('hero'))
+  addSection(panel, 'Stage', [stageT, heroT], true)
+  // Keys t/h flip the store without touching the checkbox; follow the store after each apply.
+  document.addEventListener('luminar:prefs-applied', () => { stageT.set(store.stageTheme); heroT.set(store.hero) })
 }
 
 function addSection(parent: HTMLElement, title: string, items: HTMLElement[], separator = false) {
@@ -88,8 +89,10 @@ function addSection(parent: HTMLElement, title: string, items: HTMLElement[], se
   parent.appendChild(section)
 }
 
-function createToggle(label: string, initialValue: boolean, onChange: (val: boolean) => void): HTMLElement {
-  const wrap = document.createElement('label')
+type Toggle = HTMLLabelElement & { set: (v: boolean) => void }
+
+function createToggle(label: string, initialValue: boolean, onChange: (val: boolean) => void): Toggle {
+  const wrap = document.createElement('label') as Toggle
   wrap.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;font-size:10px;color:var(--text2);padding:3px 0;user-select:none'
 
   // Track element (the pill-shaped background)
@@ -115,11 +118,13 @@ function createToggle(label: string, initialValue: boolean, onChange: (val: bool
   input.checked = initialValue
   input.style.cssText = 'position:absolute;opacity:0;width:0;height:0;pointer-events:none'
 
-  input.addEventListener('change', () => {
-    onChange(input.checked)
-    track.style.background = input.checked ? 'oklch(0.72 0.14 210)' : 'var(--border)'
-    thumb.style.left = input.checked ? '13px' : '1px'
-  })
+  const set = (v: boolean) => {
+    input.checked = v
+    track.style.background = v ? 'oklch(0.72 0.14 210)' : 'var(--border)'
+    thumb.style.left = v ? '13px' : '1px'
+  }
+  input.addEventListener('change', () => { onChange(input.checked); set(input.checked) })
+  wrap.set = set
 
   // Click on track toggles
   track.addEventListener('click', (e) => {

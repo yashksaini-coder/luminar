@@ -2,6 +2,7 @@ import { store } from '../store'
 import * as api from '../api/client'
 import { formatTime } from '../format'
 import { pauseReel, playReel, seekReelToSimTime, setReelSpeed } from '../api/replay'
+import { narratorOnScenario } from './narrator'
 
 let timeline: HTMLInputElement
 let tlCurrent: HTMLElement
@@ -32,6 +33,7 @@ export function initPlayback() {
     store.highlightPeers = []
     store.selectedNode = -1
     store.milestones = []
+    narratorOnScenario()  // narrator latches/beats/ticker only reset on a scenario frame otherwise
     // Reset timeline slider to 0
     timeline.value = '0'
     updatePlaybackUI()

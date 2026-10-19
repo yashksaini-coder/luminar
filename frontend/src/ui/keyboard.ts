@@ -3,8 +3,10 @@ import { store } from '../store'
 
 export function initKeyboard() {
   document.addEventListener('keydown', (e: KeyboardEvent) => {
-    const tag = (e.target as HTMLElement).tagName
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return
+    const t = e.target as HTMLElement
+    // The timeline range slider keeps focus after a scrub; it is not a text field.
+    if (t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range')) return
+    if (e.ctrlKey || e.metaKey || e.altKey) return  // browser chords (Ctrl+1, Cmd+H, ...) are not app keys
 
     switch (e.key) {
       case ' ':
@@ -17,6 +19,7 @@ export function initKeyboard() {
         break
       case 'Escape':
         store.selectedNode = -1
+        store.highlightPeers = []
         document.dispatchEvent(new CustomEvent('luminar:render'))
         break
       case '1': case '2': case '3':

@@ -17,7 +17,6 @@ interface Pulse {
 }
 const pulses: Pulse[] = []
 let prevStates: string[] = []
-let _nodeClickHandled = false
 
 // Particle tracking (gossip message animations)
 interface Particle {
@@ -67,26 +66,22 @@ function bezierPoint(src: [number, number], tgt: [number, number], t: number): [
 export function initRenderer(canvas: HTMLCanvasElement, tooltip: HTMLElement) {
   tooltipEl = tooltip
 
-  // Background click to deselect
-  canvas.addEventListener('click', () => {
-    // Delay check — deck.gl onClick fires synchronously before this
-    setTimeout(() => {
-      if (!_nodeClickHandled && store.selectedNode >= 0) {
-        store.selectedNode = -1
-        store.highlightPeers = []
-        if (tooltipEl) tooltipEl.style.display = 'none'
-        renderLayers()
-      }
-      _nodeClickHandled = false
-    }, 0)
-  })
-
   deck = new Deck({
     canvas,
     views: new OrthographicView({ flipY: false }) as any,
     initialViewState: { target: [0, 0, 0], zoom: 0 } as any,
     controller: true,
     layers: [],
+    // Background click to deselect. Deck's root onClick is a tap recognizer (a pan never
+    // fires it, unlike a native click) and runs after the nodes layer's onClick.
+    onClick: (info: any) => {
+      if (info.picked || store.selectedNode < 0) return
+      store.selectedNode = -1
+      store.highlightPeers = []
+      if (tooltipEl) tooltipEl.style.display = 'none'
+      document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
+      renderLayers()
+    },
     getCursor: ({ isHovering }: { isHovering: boolean }) => isHovering ? 'pointer' : 'grab',
     width: canvas.parentElement!.clientWidth,
     height: canvas.parentElement!.clientHeight,
@@ -320,9 +315,9 @@ export function renderLayers() {
     pickable: true,
     onClick: (info: any) => {
       if (info.object) {
-        _nodeClickHandled = true
         const idx = info.object._idx
         store.selectedNode = store.selectedNode === idx ? -1 : idx
+        store.highlightPeers = []  // an event-row highlight belongs to the previous selection
         document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
         renderLayers()
       }

@@ -21,6 +21,12 @@ import type { AppEvent } from './types'
 
 // ── Topology fingerprint ──
 let topoKey = ''
+/** One key format for every site, so an edges frame followed by a same-topology snapshot recomputes once. */
+function currentTopoKey(): string {
+  const ids = store.nodes.map(n => n.peer_id).sort().join(',')
+  const edges = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
+  return `${ids}|${edges}|${store.layoutMode}`
+}
 
 // ── Milestone computation ──
 function computeMilestones() {
@@ -61,7 +67,10 @@ function recomputeLayout() {
   for (const n of store.nodes) {
     if (n.state === 'attacker') for (const t of n.connected_peers) attackerLinks.push([n.peer_id, t])
   }
-  const layoutEdges = attackerLinks.length ? [...store.edges, ...attackerLinks] : store.edges
+  // Drop edges whose endpoints are not in store.nodes: a reel's 50-node edges frame lands
+  // before its snapshot, and d3 forceLink throws on an unknown id.
+  const layoutEdges = [...store.edges, ...attackerLinks]
+    .filter(([s, t]) => store.nodeIndex.has(s) && store.nodeIndex.has(t))
 
   if (store.layoutMode === 'force') {
     // Live d3-force simulation with Obsidian-like interactive physics.
@@ -106,8 +115,7 @@ async function fetchSnapshot() {
     store.simState = 'paused'
   }
 
-  const nodeIds = snap.nodes.map(n => n.peer_id).sort().join(',')
-  const newTopoKey = `${nodeIds}|${store.layoutMode}`
+  const newTopoKey = currentTopoKey()
 
   if (newTopoKey !== topoKey) {
     topoKey = newTopoKey
@@ -124,8 +132,7 @@ async function fetchEdges() {
   if (!result) return
   store.edges = result.edges
 
-  const edgeKey = result.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  const fullKey = currentTopoKey()
   if (fullKey !== topoKey) {
     topoKey = fullKey
     recomputeLayout()
@@ -211,7 +218,7 @@ function handleWsEvents(events: AppEvent[]) {
       }
     }
 
-    if (evt.event_type === 'SimulationStateChanged') {
+    if (evt.event_type === 'SimulationStateChanged' && !store.reel) {
       if (evt.state) store.simState = evt.state as any
       if (evt.speed) store.simSpeed = evt.speed
       store.playing = store.simState === 'running'
@@ -239,8 +246,7 @@ function handleWsEvents(events: AppEvent[]) {
 // ── Non-periodic WS frames: edges, scenario, gap ──
 function handleWsEdges(frame: { edges: [string, string][] }) {
   store.edges = frame.edges
-  const edgeKey = frame.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  const fullKey = currentTopoKey()
   if (fullKey !== topoKey) {
     topoKey = fullKey
     recomputeLayout()
@@ -269,6 +275,7 @@ function applyPrefs() {
   renderBands()
   renderTicker()
   renderLayers()
+  document.dispatchEvent(new CustomEvent('luminar:prefs-applied'))
 }
 
 function loadPrefs() {
@@ -402,16 +409,17 @@ function initDropdowns() {
   })
 
   document.addEventListener('click', (e) => {
-    if (scenarioDD && !(e.target as HTMLElement).closest('#scenario-picker')) scenarioDD.style.display = 'none'
-    if (faultDD && !(e.target as HTMLElement).closest('#fault-picker')) faultDD.style.display = 'none'
+    if (!(e.target as HTMLElement).closest('.dd-wrap')) for (const dd of all) if (dd) dd.style.display = 'none'
   })
 }
 
 // ── WebSocket-pushed snapshot handler (replaces HTTP polling) ──
 function handleWsSnapshot(snap: any) {
-  store.simState = snap.state
+  if (!store.reel) {  // a reel's recorded state/speed describe the recording, not the player
+    store.simState = snap.state
+    store.simSpeed = snap.speed
+  }
   store.simTime = snap.time
-  store.simSpeed = snap.speed
   store.nodeCount = snap.node_count
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
@@ -434,8 +442,7 @@ function handleWsSnapshot(snap: any) {
   }
 
   // Check topology change
-  const nodeIds = snap.nodes.map((n: any) => n.peer_id).sort().join(',')
-  const newTopoKey = `${nodeIds}|${store.layoutMode}`
+  const newTopoKey = currentTopoKey()
   if (newTopoKey !== topoKey) {
     topoKey = newTopoKey
     recomputeLayout()
@@ -557,7 +564,6 @@ async function main() {
   initPeerInspector()
   initTelemetryPanel()
   initPlayback()
-  initLegend()
   initKeyboard()
   initDropdowns()
   initPresets()
@@ -592,6 +598,7 @@ async function main() {
 
   initNarrator()
   loadPrefs()
+  initLegend()  // after loadPrefs: the settings toggles are built from the restored prefs
   ws.bind(
     handleWsEvents,
     updateConnectionStatus,

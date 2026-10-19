@@ -64,15 +64,21 @@ class WSManager {
     const wsUrl = apiUrl
       ? apiUrl.replace(/^https/, 'wss').replace(/^http/, 'ws') + '/ws/events'
       : `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/events`
-    this.socket = new WebSocket(wsUrl)
+    // Single-socket invariant: connect() while a socket is connecting/open is a no-op,
+    // and handlers of a superseded socket must not touch shared timer/status/reconnect.
+    if (this.socket && this.socket.readyState <= WebSocket.OPEN) return
+    const sock = new WebSocket(wsUrl)
+    this.socket = sock
 
-    this.socket.onopen = () => {
+    sock.onopen = () => {
+      if (sock !== this.socket) return
       this.reconnectDelay = 1000
       this.onStatus?.(true)
       this.timer = setInterval(() => this.flush(), BATCH_MS)
     }
 
-    this.socket.onmessage = (e: MessageEvent) => {
+    sock.onmessage = (e: MessageEvent) => {
+      if (sock !== this.socket) return
       if (typeof e.data === 'string') {
         // Text frame — regular event
         this.parseMessage(e.data)
@@ -85,14 +91,15 @@ class WSManager {
       }
     }
 
-    this.socket.onclose = () => {
+    sock.onclose = () => {
+      if (sock !== this.socket) return
       this.onStatus?.(false)
       if (this.timer) { clearInterval(this.timer); this.timer = null }
       this.flush()
       if (!this.closed) this.scheduleReconnect()
     }
 
-    this.socket.onerror = () => { /* onclose fires after onerror */ }
+    sock.onerror = () => { /* onclose fires after onerror */ }
   }
 
   private parseMessage(text: string) {
