@@ -28,6 +28,7 @@ export function initPlayback() {
   document.getElementById('btn-reset')!.addEventListener('click', () => {
     // t=0 holds only the edges frame; the first snapshot is what repaints the map
     if (store.reel) { pauseReel(); seekReelToSimTime(0); store.playing = false; updatePlaybackUI(); return }
+    document.dispatchEvent(new CustomEvent('luminar:sim-action'))  // leaves Geo so the reset is visible
     api.simReset()  // fire and forget
     store.simTime = 0
     store.simState = 'stopped'

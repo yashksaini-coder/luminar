@@ -22,6 +22,14 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 }
 
 /** Edge list entry: [source, target, weak?] */
+/** One provenance per view: Geo draws real observers only; Force and Radial draw the
+ *  simulation only. Shared by the renderer, fitView and the layouts so hidden nodes never
+ *  take part in physics, ring packing or the fit either. */
+export function isNodeVisible(mode: LayoutMode, nd: { is_real?: boolean } | undefined): boolean {
+  if (!nd) return false
+  return mode === 'geo' ? !!nd.is_real : !nd.is_real
+}
+
 /** Degrees → canvas units for the Geo layout; must match backend/live/mainnet.py GEO_SCALE. */
 export const GEO_SCALE = 2.5
 
@@ -30,11 +38,10 @@ export type LayoutEdge = [string, string] | [string, string, true]
 let liveSim: Simulation<ForceNode, ForceLink> | null = null
 let liveNodes: ForceNode[] = []
 let onTickCallback: ((positions: [number, number][]) => void) | null = null
-let currentNodeCount = 0
 
 /** Start or restart the live force simulation. Call once on topology change. */
 export function startLiveForce(
-  nodes: PeerNode[],
+  allNodes: PeerNode[],
   edges: LayoutEdge[],
   onTick: (positions: [number, number][]) => void,
 ) {
@@ -42,8 +49,12 @@ export function startLiveForce(
   if (liveSim) liveSim.stop()
   onTickCallback = onTick
 
+  // Only nodes drawn in Force take part: hidden ones get no charge, no slot, no centroid
+  // weight, and are reported at the origin so the positions array stays index-aligned.
+  const visibleIdx = allNodes.map((nd, i) => (isNodeVisible('force', nd) ? i : -1)).filter(i => i >= 0)
+  const nodes = visibleIdx.map(i => allNodes[i])
   const n = nodes.length
-  if (n === 0) { onTick([]); return }
+  if (n === 0) { onTick(allNodes.map(() => [0, 0])); return }
 
   const baseDist = Math.max(40, 400 / Math.sqrt(n))
   const initRadius = Math.min(300, n * 6)
@@ -62,9 +73,18 @@ export function startLiveForce(
       fy: existing?.fy,
     }
   })
-  currentNodeCount = n
 
-  const links: ForceLink[] = edges.map(([s, t, weak]) => ({ source: s, target: t, weak: weak === true }))
+  const visibleIds = new Set(nodes.map(nd => nd.peer_id))
+  const links: ForceLink[] = edges
+    .filter(([s, t]) => visibleIds.has(s) && visibleIds.has(t))
+    .map(([s, t, weak]) => ({ source: s, target: t, weak: weak === true }))
+
+  const emit = () => {
+    if (!onTickCallback) return
+    const full: [number, number][] = allNodes.map(() => [0, 0])
+    liveNodes.forEach((fn, k) => { full[visibleIdx[k]] = [fn.x, fn.y] })
+    onTickCallback(full)
+  }
 
   liveSim = forceSimulation<ForceNode, ForceLink>(liveNodes)
     .force('link', forceLink<ForceNode, ForceLink>(links)
@@ -79,11 +99,7 @@ export function startLiveForce(
     .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
     .alphaDecay(0.01)        // Slow decay — keeps nodes slightly alive
     .velocityDecay(0.35)     // Springy feel like Obsidian
-    .on('tick', () => {
-      if (onTickCallback) {
-        onTickCallback(liveNodes.map(fn => [fn.x, fn.y]))
-      }
-    })
+    .on('tick', emit)
 
   // Warm up with a quick burst so initial layout isn't chaotic — unless most nodes
   // already had positions (attackers appearing), in which case just nudge gently.
@@ -125,9 +141,11 @@ export function computeLayout(
 }
 
 // ── Radial layout ─────────────────────────────────────────────────────
-function layoutRadial(nodes: PeerNode[], edges: LayoutEdge[]): LayoutResult {
+function layoutRadial(allNodes: PeerNode[], edges: LayoutEdge[]): LayoutResult {
+  const visibleIdx = allNodes.map((nd, i) => (isNodeVisible('radial', nd) ? i : -1)).filter(i => i >= 0)
+  const nodes = visibleIdx.map(i => allNodes[i])
   const n = nodes.length
-  if (n === 0) return { positions: [] }
+  if (n === 0) return { positions: allNodes.map(() => [0, 0] as [number, number]) }
 
   const degree = new Map<string, number>()
   for (const nd of nodes) degree.set(nd.peer_id, 0)
@@ -165,5 +183,7 @@ function layoutRadial(nodes: PeerNode[], edges: LayoutEdge[]): LayoutResult {
     ring++
   }
 
-  return { positions }
+  const full: [number, number][] = allNodes.map(() => [0, 0])
+  visibleIdx.forEach((orig, k) => { full[orig] = positions[k] })
+  return { positions: full }
 }

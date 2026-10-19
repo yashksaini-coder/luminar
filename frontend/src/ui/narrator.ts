@@ -136,7 +136,7 @@ export function renderTicker() {
     ['invalid', String(invalidMsgs), invalidMsgs > 0],
     ['T', '+' + formatTime(store.simTime)],
   ]
-  if (store.mainnet?.enabled) {
+  if (store.mainnet?.enabled && store.layoutMode === 'geo') {
     const m = store.mainnet
     cells.splice(1, 4,
       ['slot', String(m.slot ?? '—')],

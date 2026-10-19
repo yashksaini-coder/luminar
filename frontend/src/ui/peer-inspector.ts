@@ -1,4 +1,5 @@
 import { store } from '../store'
+import { isNodeVisible } from '../map/layout'
 import { shortName } from '../format'
 import { cssVar, setupCanvas } from '../charts/sparkline'
 import { TYPE_CODES, DEFAULT_TYPE, shortId } from './events-panel'
@@ -99,7 +100,7 @@ function peerChip(peerId: string, pruned: boolean): HTMLElement {
   chip.title = peerId
   if (!pruned) chip.addEventListener('click', () => {
     const i = store.nodeIndex.get(peerId)
-    if (i === undefined) return
+    if (i === undefined || !isNodeVisible(store.layoutMode, store.nodes[i])) return
     store.selectedNode = i
     store.highlightPeers = []
     document.dispatchEvent(new CustomEvent('luminar:nodeselect'))

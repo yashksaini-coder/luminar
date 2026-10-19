@@ -14,7 +14,6 @@ export function initModeSwitcher(onLayoutChange: () => void) {
       tab.classList.add('active')
 
       store.layoutMode = mode
-      document.dispatchEvent(new CustomEvent('luminar:layout-picked'))
       onLayoutChange()
     })
   })

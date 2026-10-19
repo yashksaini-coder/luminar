@@ -1,4 +1,5 @@
 import { store } from '../store'
+import { isNodeVisible } from '../map/layout'
 import type { AppEvent } from '../types'
 
 // ── 2-letter type codes; colour = consequence (System §3d): red only for failures,
@@ -171,6 +172,7 @@ export function appendEvents(events: AppEvent[]) {
     entry.addEventListener('click', () => {
       const idx = peerId ? store.nodeIndex.get(peerId) : undefined
       if (idx !== undefined) {
+        if (!isNodeVisible(store.layoutMode, store.nodes[idx])) return  // not drawn in this view
         store.selectedNode = store.selectedNode === idx ? -1 : idx
         select(store.selectedNode >= 0 ? entry : null)
       }

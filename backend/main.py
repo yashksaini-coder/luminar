@@ -282,13 +282,7 @@ async def websocket_events(ws: WebSocket):
                 # Nothing in the UI reads per-snapshot traces (/api/trace/* serves them) and
                 # they are ~60% of a reel's bytes, so the WS frame omits them.
                 snap["gossip"].pop("recent_traces", None)
-                telem = telemetry_manager.get_nodes_as_peer_dicts()
-                live = mainnet_feed.get_nodes_as_peer_dicts()
-                if telem or live:
-                    # node_count stays the simulated pool; real peers are counted apart
-                    snap["nodes"] = snap["nodes"] + telem + live
-                    snap["telemetry_count"] = len(telem)
-                    snap["observer_count"] = len(live)
+                _merge_real_peers(snap)
                 await send(snap)
 
             # ── Metrics + Analytics (every 40 ticks = 2s) ──
@@ -437,11 +431,22 @@ async def sim_seek(req: SeekRequest):
     return {"time": engine.clock.time}
 
 
+def _merge_real_peers(snap: dict) -> dict:
+    """Append telemetry peers and mainnet observers; node_count stays the simulated pool."""
+    telem = telemetry_manager.get_nodes_as_peer_dicts()
+    live = mainnet_feed.get_nodes_as_peer_dicts()
+    if telem or live:
+        snap["nodes"] = snap["nodes"] + telem + live
+        snap["telemetry_count"] = len(telem)
+        snap["observer_count"] = len(live)
+    return snap
+
+
 @app.get("/api/sim/snapshot")
 async def sim_snapshot():
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
-    return engine.get_snapshot()
+    return _merge_real_peers(engine.get_snapshot())
 
 
 # --- Nodes ---

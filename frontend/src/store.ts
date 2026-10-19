@@ -9,7 +9,6 @@ export interface AppStore {
   simTime: number
   simSpeed: number
   nodeCount: number
-  observerCount: number
   eventCount: number
 
   // Nodes and edges
@@ -90,7 +89,6 @@ export const store: AppStore = {
   simTime: 0,
   simSpeed: 1,
   nodeCount: 0,
-  observerCount: 0,
   eventCount: 0,
   nodes: [],
   edges: [],

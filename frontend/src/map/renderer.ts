@@ -1,7 +1,7 @@
 import { Deck, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer, LineLayer, TextLayer, PolygonLayer } from '@deck.gl/layers'
 import { getStatic } from '../api/client'
-import { GEO_SCALE } from './layout'
+import { GEO_SCALE, isNodeVisible } from './layout'
 import { store } from '../store'
 import { shortName } from '../format'
 import {
@@ -144,7 +144,8 @@ export function renderLayers() {
   if (!deck) return
   refreshPalette()
 
-  const { nodes, edges, nodePositions, selectedNode, hoveredNode } = store
+  const { nodes, edges, nodePositions, hoveredNode } = store
+  const selectedNode = isNodeVisible(store.layoutMode, nodes[store.selectedNode]) ? store.selectedNode : -1
   const n = nodes.length
   if (n === 0 || nodePositions.length === 0) { deck.setProps({ layers: [] }); return }
 
@@ -203,9 +204,7 @@ export function renderLayers() {
   }
   // Geo layout shows the real world only: simulated peers have no coordinates, and drawing
   // their topology over the observers would merge two provenances in one graph.
-  const geoOnly = store.layoutMode === 'geo'
-  const hidden = (nd: { is_real?: boolean; is_telemetry?: boolean } | undefined) =>
-    geoOnly && !!nd && !nd.is_real && !nd.is_telemetry
+  const hidden = (nd: { is_real?: boolean } | undefined) => !isNodeVisible(store.layoutMode, nd)
   const posOf = (id: string): Pos | undefined => {
     const i = store.nodeIndex.get(id)
     return i !== undefined && !hidden(nodes[i]) ? nodePositions[i] : undefined
@@ -501,12 +500,14 @@ export function fitView() {
     ({ minX, minY, maxX, maxY } = WORLD_BOUNDS)  // the whole map, not just where the nodes are
   } else {
     for (let i = 0; i < positions.length; i++) {
+      if (!isNodeVisible(store.layoutMode, store.nodes[i])) continue  // hidden nodes must not stretch the fit
       const [x, y] = positions[i]
       if (x < minX) minX = x; if (y < minY) minY = y
       if (x > maxX) maxX = x; if (y > maxY) maxY = y
     }
   }
 
+  if (minX === Infinity) return  // nothing visible in this view (e.g. Force on a real-only reel)
   const pad = 80
   const dx = maxX - minX || 1
   const dy = maxY - minY || 1
