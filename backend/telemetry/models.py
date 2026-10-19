@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
@@ -10,15 +11,18 @@ from pydantic import BaseModel, Field
 class GeoLocation(BaseModel):
     lat: float = 0.0
     lon: float = 0.0
-    city: str = ""
+    city: str = Field("", max_length=128)
 
 
 class TelemetryPayload(BaseModel):
-    peer_id: str  # required — unique node identifier
-    node_name: str = ""
-    network: str = "mainnet"
-    client_version: str = ""
-    connected_peers: list[str] = Field(default_factory=list)
+    # Every string is re-sent in each 500 ms snapshot frame, so all are length-bounded
+    peer_id: str = Field(max_length=128)  # required — unique node identifier
+    node_name: str = Field("", max_length=128)
+    network: str = Field("mainnet", max_length=64)
+    client_version: str = Field("", max_length=128)
+    connected_peers: list[Annotated[str, Field(max_length=128)]] = Field(
+        default_factory=list, max_length=256
+    )
     best_block: int = 0
     finalized_block: int = 0
     cpu: float = 0.0
@@ -30,4 +34,5 @@ class TelemetryPayload(BaseModel):
     location: GeoLocation | None = None
     timestamp: float = Field(default_factory=time.time)
 
-    model_config = {"extra": "allow"}  # forward-compatible: ignore unknown fields
+    # "ignore", not "allow": model_dump() must match TelemetryPeer's fields exactly
+    model_config = {"extra": "ignore"}

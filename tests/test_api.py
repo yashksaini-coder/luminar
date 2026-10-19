@@ -127,3 +127,35 @@ def test_concurrent_reconfigure_is_fast_and_leaves_one_thread(sim):
         main._sim_thread.join(timeout=5)
         main._trio_token = main._sim_cancel_scope = None
     assert not _sim_threads()
+
+
+def test_import_endpoint_is_gone(sim):
+    # 405 when frontend/dist is mounted at "/" (StaticFiles rejects POST), 404 otherwise
+    assert req("POST", "/api/import/events", json={"events": []}).status_code in (404, 405)
+
+
+def test_admin_gate_open_when_token_unset(sim, monkeypatch):
+    monkeypatch.setattr(main, "_ADMIN_TOKEN", "")
+    assert req("POST", "/api/sim/pause").status_code == 200
+
+
+def test_admin_gate_guards_mutations_only(sim, monkeypatch):
+    monkeypatch.setattr(main, "_ADMIN_TOKEN", "s3cret")
+    assert req("POST", "/api/sim/pause").status_code == 403
+    assert req("POST", "/api/sim/pause", headers={"X-Luminar-Token": "wrong"}).status_code == 403
+    assert req("POST", "/api/sim/pause", headers={"X-Luminar-Token": "s3cret"}).status_code == 200
+    assert req("GET", "/api/sim/snapshot").status_code == 200  # reads stay open
+
+
+def test_telemetry_ws_handshake_checks_token(sim, monkeypatch):
+    from fastapi.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+
+    monkeypatch.setattr(main, "_ADMIN_TOKEN", "s3cret")
+    client = TestClient(main.app)  # no `with`: the lifespan must not start a trio thread
+    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/ws/telemetry?token=no"):
+        pass
+    with client.websocket_connect("/ws/telemetry?token=s3cret") as ws:
+        ws.send_text('{"peer_id":"ws-peer"}')
+        assert ws.receive_text() == '{"ok":true}'
+    assert "ws-peer" in main.telemetry_manager._peers

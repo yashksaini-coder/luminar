@@ -6,10 +6,12 @@ Output is a list of edges that NodePool uses to wire up peer connections.
 
 from __future__ import annotations
 
-import contextlib
 from dataclasses import dataclass
 
 import networkx as nx
+
+# average_clustering above this is seconds of CPU on the API thread
+MAX_CLUSTERING_EDGES = 20_000
 
 
 @dataclass
@@ -88,8 +90,11 @@ class TopologyManager:
 
     @staticmethod
     def graph_layout(g: nx.Graph, scale: float = 400.0) -> dict[str, tuple[float, float]]:
-        """Compute 2D positions for graph nodes using spring layout."""
-        pos = nx.spring_layout(g, scale=scale)
+        """Cheap deterministic positions; the frontend runs its own force layout.
+
+        spring_layout was ~5 s at 500 nodes on the event loop; circular is O(n).
+        """
+        pos = nx.circular_layout(g, scale=scale)
         return {f"peer-{node}": (float(x), float(y)) for node, (x, y) in pos.items()}
 
     @staticmethod
@@ -111,8 +116,8 @@ class TopologyManager:
         degree_counts = Counter(degrees)
         degree_dist = [{"degree": d, "count": c} for d, c in sorted(degree_counts.items())]
 
-        # Clustering coefficient
-        clustering = nx.average_clustering(g)
+        # Clustering coefficient: O(sum deg²), so skipped on big graphs (-1 = not computed)
+        clustering = nx.average_clustering(g) if e <= MAX_CLUSTERING_EDGES else -1.0
 
         # Connected components
         components = list(nx.connected_components(g))
@@ -139,12 +144,6 @@ class TopologyManager:
         # Density
         density = nx.density(g)
 
-        # Algebraic connectivity (Fiedler value) — measures how well-connected
-        algebraic_connectivity = 0.0
-        if is_connected and n > 2:
-            with contextlib.suppress(Exception):
-                algebraic_connectivity = round(nx.algebraic_connectivity(g), 4)
-
         return {
             "nodes": n,
             "edges": e,
@@ -159,5 +158,4 @@ class TopologyManager:
             "diameter": diameter,
             "avg_path_length": round(avg_path_length, 3) if avg_path_length > 0 else -1,
             "density": round(density, 4),
-            "algebraic_connectivity": algebraic_connectivity,
         }

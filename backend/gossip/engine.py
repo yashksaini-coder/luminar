@@ -38,7 +38,7 @@ HEARTBEAT_INTERVAL = 1.0  # Seconds between heartbeats
 SCORE_THRESHOLD_GRAFT = -5.0  # Don't graft peers with score below this
 SCORE_THRESHOLD_PRUNE = -10.0  # Prune peers with score below this (regardless of mesh size)
 HISTORY_WINDOW = 50  # Number of recent msg_ids to track for IHAVE/IWANT
-MAX_TRACES = 5000  # Maximum number of message traces to retain
+MAX_TRACES = 2000  # Max traces retained; ~444 B/hop × ~N hops × 2000 ≈ 180 MB at 200 nodes
 MAX_SEEN_PER_PEER = 2000  # Maximum seen msg_ids per peer
 
 

@@ -8,6 +8,7 @@ Communication between the two happens via thread-safe queues and shared state.
 from __future__ import annotations
 
 import asyncio
+import hmac
 import io
 import logging
 import os
@@ -16,7 +17,7 @@ from contextlib import asynccontextmanager
 
 import orjson
 import trio
-from fastapi import FastAPI, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,7 +38,10 @@ from backend.telemetry.manager import TelemetryManager
 from backend.telemetry.models import TelemetryPayload
 from backend.topology.manager import TopologyConfig, TopologyManager
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=os.environ.get("LUMINAR_LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # Global simulation state
@@ -149,6 +153,31 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Luminar P2P Simulator", version="0.1.0", lifespan=lifespan)
 
+# Admin gate: when LUMINAR_ADMIN_TOKEN is set, every mutating request (and the telemetry
+# WS) must carry it; unset (the laptop default) leaves the API fully open as before.
+_ADMIN_TOKEN = os.environ.get("LUMINAR_ADMIN_TOKEN", "")
+
+
+def _token_ok(token: str | None) -> bool:
+    return not _ADMIN_TOKEN or hmac.compare_digest((token or "").encode(), _ADMIN_TOKEN.encode())
+
+
+def _ws_token_ok(ws: WebSocket) -> bool:
+    """Admin token for WebSocket handshakes: header or ?token= query param."""
+    return _token_ok(ws.headers.get("x-luminar-token") or ws.query_params.get("token"))
+
+
+@app.middleware("http")
+async def _admin_gate(request: Request, call_next):
+    if request.method not in ("GET", "HEAD", "OPTIONS") and not _token_ok(
+        request.headers.get("x-luminar-token")
+    ):
+        return Response(
+            b'{"detail":"X-Luminar-Token required"}', status_code=403, media_type="application/json"
+        )
+    return await call_next(request)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -188,7 +217,7 @@ async def websocket_events(ws: WebSocket):
     # (never set it on a public deploy).
     recorder = (
         ReelRecorder.open_if_valid(ws.query_params.get("record"))
-        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1"
+        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1" and _ws_token_ok(ws)
         else None
     )
     logger.info("WS client connected%s", f" (recording {recorder.path})" if recorder else "")
@@ -758,7 +787,7 @@ async def topology_edges():
     return {"edges": _initial_edges}
 
 
-# --- Export / Import ---
+# --- Export ---
 
 
 @app.get("/api/export/events")
@@ -824,20 +853,6 @@ async def export_full_snapshot():
         media_type="application/json",
         headers={"Content-Disposition": "attachment; filename=luminar-snapshot.json"},
     )
-
-
-class ImportEventsRequest(BaseModel):
-    events: list[dict]
-
-
-@app.post("/api/import/events")
-async def import_events(req: ImportEventsRequest):
-    """Import events into the event log for replay visualization.
-
-    Events are returned as-is — they don't replay through the simulation
-    engine. This enables loading saved traces for analysis.
-    """
-    return {"imported": len(req.events), "events": req.events}
 
 
 # --- Scenarios ---
@@ -924,6 +939,9 @@ async def websocket_telemetry(ws: WebSocket):
 
     Peers send JSON payloads and receive {"ok": true} acknowledgements.
     """
+    if not _token_ok(ws.headers.get("x-luminar-token") or ws.query_params.get("token")):
+        await ws.close(code=1008)  # before accept() → HTTP 403 handshake
+        return
     await ws.accept()
     logger.info("Telemetry WS peer connected")
     try:

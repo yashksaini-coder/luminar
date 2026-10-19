@@ -9,6 +9,7 @@ from __future__ import annotations
 import bisect
 import contextlib
 import logging
+import os
 from collections import deque
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -20,8 +21,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Max events kept in the ring buffer (500k ≈ 200MB worst case)
-DEFAULT_RING_SIZE = 500_000
+# Max events kept in the ring buffer. 50k ≈ 12 MB (~18 min at 20 nodes); the laptop
+# can raise it, a 512 MB deploy should not (500k was ~200 MB worst case).
+DEFAULT_RING_SIZE = int(os.environ.get("LUMINAR_RING_SIZE", "50000"))
 
 
 class EventBus:
