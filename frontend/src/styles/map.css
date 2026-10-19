@@ -1,0 +1,4 @@
+/* Map chrome owned by the map group: legend settings state and tooltip bits style.css leaves to the TS. */
+.lm-toggle > input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+#node-legend.open #settings-btn { font-size: 12px; line-height: 1; }
+#tooltip { max-width: none; box-shadow: none; backdrop-filter: none; }

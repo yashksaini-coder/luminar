@@ -76,6 +76,12 @@ export interface AppStore {
   beats: { label: string; time: number; color: string }[]  // narrator-derived, merged into milestones
 }
 
+/** Seconds the scrubber spans: the reel's length, else the active scenario's, else the preset. */
+export function timelineTotal(): number {
+  if (store.reel) return store.reel.durationSim ?? 0
+  return store.activeScenario?.scenario?.duration || store.maxDuration
+}
+
 export const store: AppStore = {
   connected: false,
   simState: 'stopped',

@@ -1,183 +1,72 @@
-export interface SparklineOptions {
-  width: number
-  height: number
-  data: number[]        // array of values
-  maxValue?: number     // if not provided, auto-scale
-  color: string         // primary line color (CSS)
-  fillColor?: string    // area fill (CSS with alpha)
-  gridLines?: number    // number of horizontal grid lines
-  label?: string        // bottom-right label
+/** Read a design token at draw time: canvas has no var(), and the stage theme swaps tokens. */
+export function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
-export function drawSparkline(canvas: HTMLCanvasElement, opts: SparklineOptions): void {
+export interface CdfPoint { percentile: number; latency_ms: number }
+
+/** min / max latency and the point nearest p50 — shared by the chart and its title/axis. */
+export function cdfStats(pts: CdfPoint[]): { min: number; max: number; p50: number } {
+  const p50 = pts.reduce((a, b) => (Math.abs(b.percentile - 50) < Math.abs(a.percentile - 50) ? b : a))
+  return { min: pts[0].latency_ms, max: pts[pts.length - 1].latency_ms, p50: p50.latency_ms }
+}
+
+export function fmtLatency(ms: number): string {
+  return ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms.toFixed(0) + 'ms'
+}
+
+/** Size a canvas in CSS px at device resolution and return a scaled 2D context. */
+export function setupCanvas(canvas: HTMLCanvasElement, width: number, height: number): CanvasRenderingContext2D | null {
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
+  if (!ctx) return null
   const dpr = window.devicePixelRatio || 1
-  const { width, height, data, color, fillColor, gridLines, label } = opts
-
   canvas.width = Math.round(width * dpr)
   canvas.height = Math.round(height * dpr)
   canvas.style.width = width + 'px'
   canvas.style.height = height + 'px'
   ctx.scale(dpr, dpr)
+  return ctx
+}
 
-  const maxVal = opts.maxValue ?? Math.max(...data, 1)
-  const n = data.length
-  if (n < 2) return
-
-  ctx.clearRect(0, 0, width, height)
-
-  // Grid lines
-  if (gridLines && gridLines > 0) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)'
-    ctx.lineWidth = 1
-    for (let i = 1; i <= gridLines; i++) {
-      const y = height - (height * i) / (gridLines + 1)
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(width, y)
-      ctx.stroke()
-    }
-  }
-
-  // Build path
-  const stepX = width / (n - 1)
-
-  // Fill
-  if (fillColor) {
-    ctx.beginPath()
-    for (let i = 0; i < n; i++) {
-      const x = i * stepX
-      const y = height - (data[i] / maxVal) * height
-      if (i === 0) ctx.moveTo(x, y)
-      else ctx.lineTo(x, y)
-    }
-    ctx.lineTo(width, height)
-    ctx.lineTo(0, height)
-    ctx.closePath()
-    ctx.fillStyle = fillColor
-    ctx.fill()
-  }
-
-  // Line
-  ctx.beginPath()
-  for (let i = 0; i < n; i++) {
-    const x = i * stepX
-    const y = height - (data[i] / maxVal) * height
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  }
+function hline(ctx: CanvasRenderingContext2D, y: number, w: number, color: string) {
   ctx.strokeStyle = color
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(0, y)
+  ctx.lineTo(w, y)
   ctx.stroke()
-
-  // Current value dot at end
-  if (n > 0) {
-    const lastX = (n - 1) * stepX
-    const lastY = height - (data[n - 1] / maxVal) * height
-    ctx.beginPath()
-    ctx.arc(lastX, lastY, 2.5, 0, Math.PI * 2)
-    ctx.fillStyle = color
-    ctx.fill()
-  }
-
-  // Label
-  if (label) {
-    ctx.font = '10px "JetBrains Mono", monospace'
-    ctx.textAlign = 'right'
-    ctx.textBaseline = 'bottom'
-    ctx.fillStyle = 'rgba(255,255,255,0.3)'
-    ctx.fillText(label, width - 2, height - 2)
-  }
 }
 
-// CDF chart — X = evenly spaced percentile points, Y = delivery %, full width always used
-export function drawCDF(
-  canvas: HTMLCanvasElement,
-  percentiles: { percentile: number; latency_ms: number }[],
-  width: number,
-  height: number,
-): void {
-  const ctx = canvas.getContext('2d')
-  if (!ctx || percentiles.length === 0) return
+/** True CDF: x = latency (linear min→max), y = percentile. No margins, no in-canvas text. */
+export function drawCDF(canvas: HTMLCanvasElement, pts: CdfPoint[], width: number, height: number): void {
+  if (pts.length === 0) return
+  const ctx = setupCanvas(canvas, width, height)
+  if (!ctx) return
+  const { min, max, p50 } = cdfStats(pts)
+  const span = Math.max(max - min, 1e-9)
+  const x = (ms: number) => ((ms - min) / span) * width
+  const y = (p: number) => height - (p / 100) * height
 
-  const dpr = window.devicePixelRatio || 1
-  canvas.width = Math.round(width * dpr)
-  canvas.height = Math.round(height * dpr)
-  canvas.style.width = width + 'px'
-  canvas.style.height = height + 'px'
-  ctx.scale(dpr, dpr)
-  ctx.clearRect(0, 0, width, height)
+  hline(ctx, 0.5, width, cssVar('--lm-raised'))
+  hline(ctx, Math.round(y(50)) + 0.5, width, cssVar('--lm-raised'))
+  hline(ctx, height - 0.5, width, cssVar('--lm-border'))
 
-  const ml = 30, mr = 8, mt = 4, mb = 16
-  const pw = width - ml - mr
-  const ph = height - mt - mb
-  const n = percentiles.length
-
-  ctx.font = '8px "JetBrains Mono", monospace'
-
-  // Y-axis gridlines (0% to 100%)
-  for (const pct of [0, 25, 50, 75, 100]) {
-    const y = mt + ph - (pct / 100) * ph
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-    ctx.lineWidth = 1
-    ctx.beginPath(); ctx.moveTo(ml, y); ctx.lineTo(ml + pw, y); ctx.stroke()
-    ctx.fillStyle = 'rgba(255,255,255,0.25)'
-    ctx.textAlign = 'right'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(pct + '%', ml - 4, y)
-  }
-
-  // X-axis: evenly spaced percentile ticks with latency labels
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'top'
-  ctx.fillStyle = 'rgba(255,255,255,0.2)'
-  // Show labels for p0, p50, p100
-  const labelIndices = [0, Math.floor(n / 2), n - 1]
-  for (const idx of labelIndices) {
-    if (idx < 0 || idx >= n) continue
-    const x = ml + (idx / Math.max(n - 1, 1)) * pw
-    const lat = percentiles[idx].latency_ms
-    const label = lat < 1000 ? lat.toFixed(0) + 'ms' : (lat / 1000).toFixed(1) + 's'
-    ctx.fillText(label, x, mt + ph + 3)
-  }
-
-  // CDF area fill (gradient)
-  const grad = ctx.createLinearGradient(0, mt, 0, mt + ph)
-  grad.addColorStop(0, 'rgba(0, 180, 100, 0.25)')
-  grad.addColorStop(1, 'rgba(0, 180, 100, 0.02)')
-
+  const px = Math.round(x(p50)) + 0.5
+  ctx.setLineDash([2, 2])
+  ctx.strokeStyle = cssVar('--lm-border-strong')
   ctx.beginPath()
-  ctx.moveTo(ml, mt + ph)  // bottom-left start
-  for (let i = 0; i < n; i++) {
-    const x = ml + (i / Math.max(n - 1, 1)) * pw
-    const y = mt + ph - (percentiles[i].percentile / 100) * ph
-    ctx.lineTo(x, y)
-  }
-  ctx.lineTo(ml + pw, mt + ph)  // bottom-right close
-  ctx.closePath()
-  ctx.fillStyle = grad
-  ctx.fill()
-
-  // CDF line
-  ctx.beginPath()
-  for (let i = 0; i < n; i++) {
-    const x = ml + (i / Math.max(n - 1, 1)) * pw
-    const y = mt + ph - (percentiles[i].percentile / 100) * ph
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  }
-  ctx.strokeStyle = 'oklch(0.75 0.14 155)'
-  ctx.lineWidth = 1.5
+  ctx.moveTo(px, 0)
+  ctx.lineTo(px, height)
   ctx.stroke()
+  ctx.setLineDash([])
 
-  // End dot
-  if (n > 0) {
-    const lastY = mt + ph - (percentiles[n - 1].percentile / 100) * ph
-    ctx.beginPath()
-    ctx.arc(ml + pw, lastY, 3, 0, Math.PI * 2)
-    ctx.fillStyle = 'oklch(0.75 0.14 155)'
-    ctx.fill()
-  }
+  ctx.strokeStyle = cssVar('--lm-fg')
+  ctx.lineWidth = 1.5
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  pts.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(x(p.latency_ms), y(p.percentile))
+    else ctx.lineTo(x(p.latency_ms), y(p.percentile))
+  })
+  ctx.stroke()
 }

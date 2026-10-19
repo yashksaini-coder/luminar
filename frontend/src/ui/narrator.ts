@@ -1,17 +1,10 @@
 // Phase narrator — turns scenario phases and derived beats into things an audience can read:
 // timeline wash bands, a caption card over the map, and the Hero ticker strip.
 // Identical live and in reels because both feed the same handlers.
-import { store } from '../store'
+import { store, timelineTotal } from '../store'
 import type { AppEvent } from '../types'
 import { formatTime } from '../format'
 
-const ACTION_COLOR: Record<string, string> = {
-  inject_sybil: 'oklch(0.62 0.24 15 / 0.35)',
-  inject_eclipse: 'oklch(0.72 0.14 300 / 0.35)',
-  inject_partition: 'oklch(0.72 0.14 60 / 0.35)',
-  inject_drop: 'oklch(0.65 0.22 25 / 0.35)',
-  inject_latency: 'oklch(0.75 0.14 85 / 0.35)',
-}
 const CAPTION_MS = 4000
 
 let captionEl: HTMLElement
@@ -41,8 +34,21 @@ export function resetNarrator() {
   renderTicker()
 }
 
-export function caption(text: string) {
-  captionEl.textContent = text
+export type CaptionKind = 'phase' | 'narrator' | 'healed'
+
+/** Caption card: "T+11.9s · NARRATOR" kicker + sentence; the drain bar restarts on every call. */
+export function caption(text: string, kind: CaptionKind = 'narrator', at = store.simTime) {
+  const kicker = captionEl.querySelector('.lm-cap-kicker')
+  const body = captionEl.querySelector('.lm-cap-text')
+  if (kicker && body) {
+    kicker.textContent = `T+${at.toFixed(1)}s · ${kind === 'phase' ? 'PHASE' : 'NARRATOR'}`
+    body.textContent = text
+  } else {
+    captionEl.textContent = text
+  }
+  captionEl.dataset.kind = kind
+  captionEl.classList.remove('show')
+  void captionEl.offsetWidth   // reflow so re-adding .show restarts the drain animation
   captionEl.classList.add('show')
   if (captionTimer) clearTimeout(captionTimer)
   captionTimer = setTimeout(() => captionEl.classList.remove('show'), CAPTION_MS)
@@ -52,7 +58,7 @@ export function caption(text: string) {
 export function renderBands() {
   while (markersEl.firstChild) markersEl.removeChild(markersEl.firstChild)
   const phases = store.activeScenario?.scenario?.phases ?? []
-  const total = store.reel ? (store.reel.durationSim ?? 0) : store.maxDuration
+  const total = timelineTotal()
   if (!phases.length || total <= 0) return
   phases.forEach((p, i) => {
     if (!p.action.startsWith('inject_')) return
@@ -61,7 +67,7 @@ export function renderBands() {
     band.className = 'tl-band'
     band.style.left = `${(p.at / total) * 100}%`
     band.style.width = `${(Math.min(end, total) - p.at) / total * 100}%`
-    band.style.background = ACTION_COLOR[p.action] ?? 'oklch(0.7 0.1 230 / 0.3)'
+    band.dataset.action = p.action  // colour comes from .tl-band[data-action] in CSS
     band.title = `${p.label} (T+${p.at}s)`
     markersEl.appendChild(band)
   })
@@ -77,13 +83,13 @@ export function narratorOnEvents(events: AppEvent[]) {
     switch (evt.event_type) {
       case 'ScenarioPhaseFired':
         phaseLabel = String(evt.label ?? '')
-        caption(phaseLabel)
+        caption(phaseLabel, 'phase', evt.at)
         break
       case 'GossipPrune':
         if (firstSybilPrunedAt === null && evt.to_peer?.startsWith('sybil-') && evt.reason === 'score') {
           firstSybilPrunedAt = evt.at
-          caption(`First Sybil pruned by score at T+${evt.at.toFixed(1)}s`)
-          store.beats.push({ label: 'First Sybil pruned', time: evt.at, color: 'oklch(0.62 0.24 15)' })
+          caption('First Sybil pruned by score', 'narrator', evt.at)
+          store.beats.push({ label: 'First Sybil pruned', time: evt.at, color: 'var(--lm-danger)' })
         }
         break
       case 'GossipMessage':
@@ -102,8 +108,8 @@ export function narratorOnAnalytics() {
   if (healStartAt !== null && !healedAnnounced && ga && (ga.recent_delivery_ratio ?? 0) >= 0.95) {
     healedAnnounced = true
     const n = Math.max(0, store.simTime - healStartAt)
-    caption(`Mesh healed in ${n.toFixed(1)}s`)
-    store.beats.push({ label: 'Mesh healed', time: store.simTime, color: 'oklch(0.78 0.16 155)' })
+    caption(`Mesh healed in ${n.toFixed(1)}s`, 'healed')
+    store.beats.push({ label: 'Mesh healed', time: store.simTime, color: 'var(--lm-ok)' })
   }
   renderTicker()
 }
@@ -119,21 +125,23 @@ export function renderTicker() {
   const degree = has && ga.mesh_stability?.avg_degree != null ? ga.mesh_stability.avg_degree.toFixed(1) : '—'
   const hops = has ? ga.avg_hops.toFixed(1) : '—'
   const lat = has ? `${ga.avg_propagation_ms.toFixed(0)} ms` : '—'
-  const cells: [string, string][] = [
+  // [key, value, danger] — CSS uppercases the key; red only when an attacker count is live
+  const cells: [string, string, boolean?][] = [
     ['phase', phaseLabel || (store.activeScenario?.scenario?.name ?? 'free play')],
     ['delivery', delivery],
-    ['mesh degree', degree],
+    ['mesh d', degree],
     ['hops', hops],
-    ['end-to-end', lat],
-    ['attackers', attackers.length ? `${attackers.length} · ${pruned} pruned` : '0'],
-    ['invalid msgs', String(invalidMsgs)],
-    ['T', formatTime(store.simTime)],
+    ['e2e', lat],
+    ['attackers', attackers.length ? `${attackers.length} · ${pruned} pruned` : '0', attackers.length > 0],
+    ['invalid', String(invalidMsgs), invalidMsgs > 0],
+    ['T', '+' + formatTime(store.simTime)],
   ]
   // Rebuild cheaply: 8 small spans
   while (tickerEl.firstChild) tickerEl.removeChild(tickerEl.firstChild)
-  for (const [k, v] of cells) {
+  for (const [k, v, danger] of cells) {
     const cell = document.createElement('span')
     cell.className = 'tk-cell'
+    if (danger) cell.dataset.danger = ''
     const key = document.createElement('span'); key.className = 'tk-key'; key.textContent = k
     const val = document.createElement('span'); val.className = 'tk-val'; val.textContent = v
     cell.append(key, val)

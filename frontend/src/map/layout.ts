@@ -18,7 +18,11 @@ interface ForceNode extends SimulationNodeDatum {
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
   source: string | ForceNode
   target: string | ForceNode
+  weak?: boolean  // pruned attacker → last victim: keeps it beside the cluster, not in it
 }
+
+/** Edge list entry: [source, target, weak?] */
+export type LayoutEdge = [string, string] | [string, string, true]
 
 let liveSim: Simulation<ForceNode, ForceLink> | null = null
 let liveNodes: ForceNode[] = []
@@ -28,7 +32,7 @@ let currentNodeCount = 0
 /** Start or restart the live force simulation. Call once on topology change. */
 export function startLiveForce(
   nodes: PeerNode[],
-  edges: [string, string][],
+  edges: LayoutEdge[],
   onTick: (positions: [number, number][]) => void,
 ) {
   // Stop any existing simulation
@@ -57,13 +61,13 @@ export function startLiveForce(
   })
   currentNodeCount = n
 
-  const links: ForceLink[] = edges.map(([s, t]) => ({ source: s, target: t }))
+  const links: ForceLink[] = edges.map(([s, t, weak]) => ({ source: s, target: t, weak: weak === true }))
 
   liveSim = forceSimulation<ForceNode, ForceLink>(liveNodes)
     .force('link', forceLink<ForceNode, ForceLink>(links)
       .id(d => d.id)
-      .strength(0.4)
-      .distance(baseDist))
+      .strength(l => l.weak ? 0.08 : 0.4)
+      .distance(l => l.weak ? baseDist * 2.5 : baseDist))
     .force('charge', forceManyBody<ForceNode>()
       .strength(-800)
       .distanceMax(baseDist * 6)
@@ -107,7 +111,7 @@ export function isLiveForceActive(): boolean {
 export function computeLayout(
   mode: LayoutMode,
   nodes: PeerNode[],
-  _edges: [string, string][],
+  _edges: LayoutEdge[],
 ): LayoutResult {
   switch (mode) {
     case 'force': return { positions: [] }  // Force uses live sim, not static
@@ -151,7 +155,7 @@ function layoutGrid(nodes: PeerNode[]): LayoutResult {
 }
 
 // ── Radial layout ─────────────────────────────────────────────────────
-function layoutRadial(nodes: PeerNode[], edges: [string, string][]): LayoutResult {
+function layoutRadial(nodes: PeerNode[], edges: LayoutEdge[]): LayoutResult {
   const n = nodes.length
   if (n === 0) return { positions: [] }
 

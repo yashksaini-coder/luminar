@@ -1,43 +1,54 @@
 import { store } from '../store'
 import { shortName } from '../format'
-import { STATE_CSS } from '../palette'
-import type { AppEvent } from '../types'
-
-const TYPE_CODES: Record<string, { code: string; color: string }> = {
-  GossipMessage:         { code: 'gm', color: 'oklch(0.75 0.14 155)' },
-  GossipGraft:           { code: 'gf', color: 'oklch(0.72 0.12 230)' },
-  GossipPrune:           { code: 'gp', color: 'oklch(0.72 0.14 60)' },
-  GossipIHave:           { code: 'ih', color: 'oklch(0.72 0.12 230)' },
-  GossipIWant:           { code: 'iw', color: 'oklch(0.72 0.12 230)' },
-  PeerConnected:         { code: 'cn', color: 'oklch(0.70 0.08 250)' },
-  PeerDisconnected:      { code: 'dc', color: 'oklch(0.65 0.20 25)' },
-  StreamOpened:          { code: 'so', color: 'oklch(0.72 0.12 230)' },
-  StreamClosed:          { code: 'sc', color: 'var(--text3)' },
-  StreamTimeout:         { code: 'st', color: 'oklch(0.65 0.20 25)' },
-  DHTQueryStarted:       { code: 'ds', color: 'oklch(0.65 0.10 280)' },
-  DHTQueryCompleted:     { code: 'dd', color: 'oklch(0.65 0.10 280)' },
-  DHTQueryFailed:        { code: 'df', color: 'oklch(0.65 0.20 25)' },
-  FaultInjected:         { code: 'fi', color: 'oklch(0.65 0.20 25)' },
-  FaultCleared:          { code: 'fc', color: 'oklch(0.75 0.14 155)' },
-  NodeHealthSnapshot:    { code: 'hs', color: 'oklch(0.72 0.14 60)' },
-}
+import { cssVar, setupCanvas } from '../charts/sparkline'
+import { TYPE_CODES, DEFAULT_TYPE, shortId } from './events-panel'
+import type { AppEvent, PeerNode } from '../types'
 
 const SCORE_HISTORY_MAX = 50
-const scoreHistory: number[] = []
+const SPARK_W = 268, SPARK_H = 56
+const scoreHistory: { t: number; v: number }[] = []
 
 let drawerEl: HTMLElement | null = null
 let evListEl: HTMLElement | null = null
 let sparkCanvas: HTMLCanvasElement | null = null
+let axisEls: HTMLElement[] = []
+let noteEl: HTMLElement | null = null
 let currentPeerId: string | null = null
 
-function isPeerEvent(e: AppEvent, peerId: string): boolean {
-  return e.peer_id === peerId || e.from_peer === peerId || e.to_peer === peerId
+const isPeerEvent = (e: AppEvent, peerId: string) =>
+  e.peer_id === peerId || e.from_peer === peerId || e.to_peer === peerId
+/** Attacker pruned from every honest mesh: hollow dot, PRUNED badge, victims instead of peers. */
+const isPruned = (n: PeerNode) => n.state === 'attacker' && n.connected_peers.length === 0
+
+function span(cls: string, text = ''): HTMLSpanElement {
+  const s = document.createElement('span')
+  s.className = cls
+  s.textContent = text
+  return s
 }
 
 export function initPeerInspector() {
   drawerEl = document.getElementById('peer-inspector')
   evListEl = document.getElementById('pi-events')
   sparkCanvas = document.getElementById('pi-score-spark') as HTMLCanvasElement
+
+  // Pieces the static markup does not carry: spark axis, section meta, pruned note
+  const meta = drawerEl?.querySelector('.lm-sec-meta')
+  // Mock labels the dominant P-component ("P4 invalid msgs"); the snapshot has no per-component score
+  if (meta) meta.textContent = 'last 50 ticks'
+  if (sparkCanvas?.parentElement) {
+    const axis = document.createElement('div')
+    axis.className = 'lm-axis'
+    axisEls = [span(''), span('', '0 ─ ─'), span('')]
+    axis.append(...axisEls)
+    sparkCanvas.parentElement.appendChild(axis)
+  }
+  const peersEl = document.getElementById('pi-peers')
+  if (peersEl?.parentElement) {
+    noteEl = span('lm-pi-note', 'pruned from every honest mesh')
+    noteEl.hidden = true
+    peersEl.parentElement.appendChild(noteEl)
+  }
 
   document.getElementById('pi-close')?.addEventListener('click', () => {
     store.selectedNode = -1
@@ -48,34 +59,22 @@ export function initPeerInspector() {
 
   // Opened by luminar:nodeselect (dispatched from renderer onClick)
   document.addEventListener('luminar:nodeselect', () => {
-    const idx = store.selectedNode
-    if (idx < 0) { closeDrawer(); return }
-    const node = store.nodes[idx]
+    const node = store.nodes[store.selectedNode]
     if (!node) { closeDrawer(); return }
-
-    // New peer selected — reset event list and score history
     if (node.peer_id !== currentPeerId) {
       currentPeerId = node.peer_id
       scoreHistory.length = 0
       clearEventList()
-      // Seed with buffered events already in store
-      const past = store.events.filter(e => isPeerEvent(e, currentPeerId!)).slice(-100)
-      renderEventRows(past)
+      renderEventRows(store.events.filter(e => isPeerEvent(e, currentPeerId!)).slice(-100))
     }
-
-    openDrawer()
+    drawerEl?.classList.add('open')
     refreshStats()
   })
 
-  // Every deselect path (Escape, Reset, event-row toggle-off) ends in luminar:render;
-  // close here so no caller has to know about the drawer.
+  // Every deselect path (Escape, Reset, event-row toggle-off) ends in luminar:render
   document.addEventListener('luminar:render', () => {
     if (store.selectedNode < 0 && drawerEl?.classList.contains('open')) closeDrawer()
   })
-}
-
-function openDrawer() {
-  drawerEl?.classList.add('open')
 }
 
 function closeDrawer() {
@@ -90,107 +89,113 @@ function clearEventList() {
   while (evListEl.firstChild) evListEl.removeChild(evListEl.firstChild)
 }
 
+function setText(id: string, text: string) {
+  const el = document.getElementById(id)
+  if (el) el.textContent = text
+}
+
+function peerChip(peerId: string, pruned: boolean): HTMLElement {
+  const chip = span(pruned ? 'pi-peer-chip lm-pruned' : 'pi-peer-chip', shortId(peerId))
+  chip.title = peerId
+  if (!pruned) chip.addEventListener('click', () => {
+    const i = store.nodeIndex.get(peerId)
+    if (i === undefined) return
+    store.selectedNode = i
+    store.highlightPeers = []
+    document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
+    document.dispatchEvent(new CustomEvent('luminar:render'))
+  })
+  return chip
+}
+
 function refreshStats() {
-  const idx = store.selectedNode
-  if (idx < 0) return
-  const node = store.nodes[idx]
+  const node = store.nodes[store.selectedNode]
   if (!node) return
+  const pruned = isPruned(node)
 
-  const nameEl = document.getElementById('pi-name')
-  if (nameEl) nameEl.textContent = shortName(node)
-
-  const idEl = document.getElementById('pi-peer-id')
-  if (idEl) idEl.textContent = node.peer_id
-
-  const stateEl = document.getElementById('pi-state')
-  if (stateEl) {
-    stateEl.textContent = node.state
-    stateEl.style.color = STATE_CSS[node.state] ?? 'var(--text3)'
+  setText('pi-name', shortName(node))
+  setText('pi-peer-id', node.peer_id)
+  setText('pi-state', pruned ? 'pruned' : node.state)
+  const dot = drawerEl?.querySelector<HTMLElement>('.lm-pi-dot')
+  if (dot) {
+    dot.style.background = pruned ? '' : `var(--lm-node-${node.state})`
+    dot.toggleAttribute('data-pruned', pruned)
   }
+  const badge = drawerEl?.querySelector<HTMLElement>('.lm-badge-attacker')
+  if (badge) badge.hidden = node.state !== 'attacker'
 
+  setText('pi-sent', String(node.messages_sent))
+  setText('pi-recv', String(node.messages_received))
+  setText('pi-peer-count', String(node.connected_peers.length))
   const scoreEl = document.getElementById('pi-score')
   if (scoreEl) {
-    scoreEl.textContent = node.gossip_score.toFixed(3)
-    scoreEl.style.color = node.gossip_score > 0 ? 'oklch(0.75 0.14 155)'
-      : node.gossip_score < 0 ? 'oklch(0.65 0.20 25)' : 'var(--text3)'
+    const v = node.gossip_score
+    scoreEl.textContent = (v < 0 ? '−' : '') + Math.abs(v).toFixed(2)
+    scoreEl.toggleAttribute('data-neg', v < 0)
+    scoreEl.toggleAttribute('data-zero', v === 0)
   }
 
-  const sentEl = document.getElementById('pi-sent')
-  if (sentEl) sentEl.textContent = `↑${node.messages_sent}`
-
-  const recvEl = document.getElementById('pi-recv')
-  if (recvEl) recvEl.textContent = `↓${node.messages_received}`
-
-  const countEl = document.getElementById('pi-peer-count')
-  if (countEl) countEl.textContent = `${node.connected_peers.length} peers`
-
-  // Connected peer chips
   const peersEl = document.getElementById('pi-peers')
   if (peersEl) {
+    const title = peersEl.previousElementSibling
+    if (title) title.textContent = `Connected peers · ${node.connected_peers.length}`
     while (peersEl.firstChild) peersEl.removeChild(peersEl.firstChild)
-    for (const peerId of node.connected_peers) {
-      const chip = document.createElement('span')
-      chip.className = 'pi-peer-chip'
-      chip.textContent = '#' + peerId.replace('peer-', '')
-      chip.title = peerId
-      chip.addEventListener('click', () => {
-        const i = store.nodeIndex.get(peerId)
-        if (i !== undefined) {
-          store.selectedNode = i
-          store.highlightPeers = []
-          // TODO(human): after selecting the new node, also pan the map camera to it
-          document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
-          document.dispatchEvent(new CustomEvent('luminar:render'))
-        }
-      })
-      peersEl.appendChild(chip)
-    }
+    // A pruned attacker lists the honest peers that pruned it (GossipPrune to_peer = this node)
+    const ids = pruned
+      ? [...new Set(store.events
+          .filter(e => e.event_type === 'GossipPrune' && e.to_peer === node.peer_id && e.from_peer)
+          .map(e => e.from_peer!))]
+      : node.connected_peers
+    for (const id of ids) peersEl.appendChild(peerChip(id, pruned))
   }
+  if (noteEl) noteEl.hidden = !pruned
 
   drawScoreSparkline()
 }
 
 function drawScoreSparkline() {
   if (!sparkCanvas || scoreHistory.length < 2) return
-  const dpr = window.devicePixelRatio || 1
-  const w = (sparkCanvas.parentElement?.clientWidth ?? 220) - 16
-  const h = 38
-  sparkCanvas.width = w * dpr
-  sparkCanvas.height = h * dpr
-  sparkCanvas.style.width = w + 'px'
-  sparkCanvas.style.height = h + 'px'
+  const ctx = setupCanvas(sparkCanvas, SPARK_W, SPARK_H)
+  if (!ctx) return
+  const vs = scoreHistory.map(p => p.v)
+  const min = Math.min(...vs, -0.5)
+  const max = Math.max(...vs, 0.5)
+  // 1px inset so a flat line at the extreme (a pruned attacker's -20) is not half-clipped
+  const y = (v: number) => 1 + (SPARK_H - 2) * (1 - (v - min) / (max - min))
 
-  const ctx = sparkCanvas.getContext('2d')!
-  ctx.scale(dpr, dpr)
-  ctx.clearRect(0, 0, w, h)
-
-  const min = Math.min(...scoreHistory, -0.5)
-  const max = Math.max(...scoreHistory, 0.5)
-  const range = max - min
-
-  // Zero line
-  const zeroY = h - ((0 - min) / range) * h
-  ctx.beginPath()
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'
+  const zeroY = Math.round(y(0)) + 0.5
+  ctx.setLineDash([2, 2])
+  ctx.strokeStyle = cssVar('--lm-border-strong')
   ctx.lineWidth = 1
-  ctx.moveTo(0, zeroY)
-  ctx.lineTo(w, zeroY)
-  ctx.stroke()
-
-  // Score line
   ctx.beginPath()
+  ctx.moveTo(0, zeroY)
+  ctx.lineTo(SPARK_W, zeroY)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  const last = scoreHistory[scoreHistory.length - 1]
+  ctx.strokeStyle = cssVar(last.v < 0 ? '--lm-danger' : '--lm-fg')
   ctx.lineWidth = 1.5
   ctx.lineJoin = 'round'
-  for (let i = 0; i < scoreHistory.length; i++) {
-    const x = (i / (scoreHistory.length - 1)) * w
-    const y = h - ((scoreHistory[i] - min) / range) * h
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  }
-  const last = scoreHistory[scoreHistory.length - 1]
-  ctx.strokeStyle = last > 0 ? 'oklch(0.75 0.14 155)'
-    : last < 0 ? 'oklch(0.65 0.20 25)' : 'oklch(0.70 0.05 250)'
+  ctx.beginPath()
+  scoreHistory.forEach((p, i) => {
+    const x = (i / (scoreHistory.length - 1)) * SPARK_W
+    if (i === 0) ctx.moveTo(x, y(p.v))
+    else ctx.lineTo(x, y(p.v))
+  })
   ctx.stroke()
+
+  if (axisEls.length === 3) {
+    axisEls[0].textContent = `T+${scoreHistory[0].t.toFixed(1)}`
+    axisEls[2].textContent = `T+${last.t.toFixed(1)}`
+  }
+}
+
+/** Row detail: what happened, next to who it happened with. */
+function rowDetail(evt: AppEvent): string {
+  if (evt.event_type === 'GossipPrune') return evt.reason ?? ''
+  if (evt.event_type === 'GossipMessage') return evt.msg_id?.startsWith('spam-') ? 'spam' : (evt.msg_id ?? '')
+  return ''
 }
 
 function renderEventRows(events: AppEvent[]) {
@@ -198,50 +203,26 @@ function renderEventRows(events: AppEvent[]) {
   for (const evt of events) {
     const row = document.createElement('div')
     row.className = 'pi-ev-row'
-
-    const ts = document.createElement('span')
-    ts.className = 'pi-ev-ts'
-    ts.textContent = (evt.at * 1000).toFixed(0) + 'ms'
-
-    const typeInfo = TYPE_CODES[evt.event_type] ?? { code: '??', color: 'var(--text3)' }
-    const type = document.createElement('span')
-    type.className = 'pi-ev-type'
-    type.textContent = typeInfo.code
+    const typeInfo = TYPE_CODES[evt.event_type] ?? DEFAULT_TYPE
+    const type = span('pi-ev-type', typeInfo.code)
     type.style.color = typeInfo.color
-
-    const dir = document.createElement('span')
-    dir.className = 'pi-ev-dir'
-    dir.textContent = evt.from_peer === currentPeerId ? '↑'
-      : evt.to_peer === currentPeerId ? '↓' : '·'
-
-    const peer = document.createElement('span')
-    peer.className = 'pi-ev-peer'
+    const dir = evt.from_peer === currentPeerId ? '↑' : evt.to_peer === currentPeerId ? '↓' : '·'
     const other = evt.from_peer === currentPeerId ? evt.to_peer : evt.from_peer
-    peer.textContent = other ? '#' + other.replace('peer-', '') : ''
-
-    row.appendChild(ts)
-    row.appendChild(type)
-    row.appendChild(dir)
-    row.appendChild(peer)
+    const peer = [other ? shortId(other) : '', rowDetail(evt)].filter(Boolean).join(' · ')
+    row.append(span('pi-ev-ts', evt.at.toFixed(2)), type, span('pi-ev-dir', dir), span('pi-ev-peer', peer))
     evListEl.appendChild(row)
   }
-
-  // Trim to 200 visible entries
   while (evListEl.children.length > 200) evListEl.removeChild(evListEl.firstChild!)
   requestAnimationFrame(() => { evListEl!.scrollTop = evListEl!.scrollHeight })
 }
 
 /** Called from app.ts on every WS snapshot push */
 export function refreshPeerInspector() {
-  const idx = store.selectedNode
-  if (idx < 0 || !drawerEl?.classList.contains('open')) return
-
-  const node = store.nodes[idx]
+  if (store.selectedNode < 0 || !drawerEl?.classList.contains('open')) return
+  const node = store.nodes[store.selectedNode]
   if (!node) return
-
-  scoreHistory.push(node.gossip_score)
+  scoreHistory.push({ t: store.simTime, v: node.gossip_score })
   if (scoreHistory.length > SCORE_HISTORY_MAX) scoreHistory.shift()
-
   refreshStats()
 }
 
@@ -249,6 +230,5 @@ export function refreshPeerInspector() {
 export function appendPeerInspectorEvents(events: AppEvent[]) {
   if (!currentPeerId || !drawerEl?.classList.contains('open')) return
   const relevant = events.filter(e => isPeerEvent(e, currentPeerId!))
-  if (relevant.length === 0) return
-  renderEventRows(relevant)
+  if (relevant.length) renderEventRows(relevant)
 }

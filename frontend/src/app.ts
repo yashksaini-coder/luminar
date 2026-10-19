@@ -5,7 +5,7 @@ import { ws } from './api/websocket'
 import { loadReel, stopReel, reelPlaying, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
-import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
+import { computeLayout, startLiveForce, stopLiveForce, type LayoutEdge } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
 import { initEventsPanel, appendEvents } from './ui/events-panel'
 import { initPeerInspector, refreshPeerInspector, appendPeerInspectorEvents } from './ui/peer-inspector'
@@ -16,7 +16,6 @@ import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
 import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker } from './ui/narrator'
 import { formatTime } from './format'
-import { oklchToRgba, P } from './palette'
 import type { AppEvent } from './types'
 
 // ── Topology fingerprint ──
@@ -34,25 +33,27 @@ function computeMilestones() {
 
   // Find first gossip message event
   const firstGossip = store.events.find(e => e.event_type === 'GossipMessage')
-  if (firstGossip) ms.push({ label: 'First gossip message', time: firstGossip.at, color: 'oklch(0.72 0.12 230)' })
+  if (firstGossip) ms.push({ label: 'First gossip message', time: firstGossip.at, color: 'var(--lm-fg2)' })
 
   // Find first fault
   const firstFault = store.events.find(e => e.event_type === 'FaultInjected')
-  if (firstFault) ms.push({ label: 'First fault injected', time: firstFault.at, color: 'oklch(0.65 0.20 25)' })
+  if (firstFault) ms.push({ label: 'First fault injected', time: firstFault.at, color: 'var(--lm-danger)' })
 
   // Compute delivery milestones from analytics
   if (store.gossipAnalytics && store.gossipAnalytics.total_messages > 0) {
-    ms.push({ label: `${store.gossipAnalytics.total_messages} messages`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
+    ms.push({ label: `${store.gossipAnalytics.total_messages} messages`, time: store.simTime, color: 'var(--lm-fg2)' })
   }
 
   // Node state milestones
   const decoded = store.nodes.filter(n => n.state === 'decoded').length
   const receiving = store.nodes.filter(n => n.state === 'receiving').length
-  if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
-  if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'oklch(0.72 0.12 230)' })
+  if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'var(--lm-ok)' })
+  if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'var(--lm-node-receiving)' })
 
   store.milestones = [...store.beats, ...ms]
 }
+
+const lastVictims = new Map<string, string[]>()  // attacker id → victims before it was pruned
 
 function recomputeLayout() {
   // Rebuild node index first (needed by both paths)
@@ -63,13 +64,18 @@ function recomputeLayout() {
 
   // Attackers are not in the topology edge list; link them to the meshes they sit in
   // so the force layout places them next to their targets.
-  const attackerLinks: [string, string][] = []
+  // Pruned attackers have no mesh links left; a weak tether to their last victims keeps them
+  // parked beside the cluster (as in the design) instead of drifting off to infinity.
+  const attackerLinks: LayoutEdge[] = []
   for (const n of store.nodes) {
-    if (n.state === 'attacker') for (const t of n.connected_peers) attackerLinks.push([n.peer_id, t])
+    if (n.state !== 'attacker') continue
+    if (n.connected_peers.length) lastVictims.set(n.peer_id, n.connected_peers.slice(0, 2))
+    const weak = n.connected_peers.length === 0
+    for (const t of weak ? (lastVictims.get(n.peer_id) ?? []) : n.connected_peers) {
+      attackerLinks.push(weak ? [n.peer_id, t, true] : [n.peer_id, t])
+    }
   }
-  // Drop edges whose endpoints are not in store.nodes: a reel's 50-node edges frame lands
-  // before its snapshot, and d3 forceLink throws on an unknown id.
-  const layoutEdges = [...store.edges, ...attackerLinks]
+  const layoutEdges: LayoutEdge[] = [...store.edges, ...attackerLinks]
     .filter(([s, t]) => store.nodeIndex.has(s) && store.nodeIndex.has(t))
 
   if (store.layoutMode === 'force') {
@@ -167,11 +173,16 @@ function buildScenarioDropdown() {
   while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild)
   for (const s of store.scenarios) {
     const btn = document.createElement('button')
-    btn.className = 'dd-item'
-    btn.textContent = `${s.icon} ${s.name}`
-    btn.title = s.description
+    btn.className = 'dd-item lm-dd-col'
+    btn.classList.toggle('active', store.activeScenario?.scenario?.id === s.id)
+    const row = document.createElement('span'); row.className = 'lm-dd-row'
+    const name = document.createElement('span'); name.className = 'lm-dd-name'; name.textContent = s.name
+    const aside = document.createElement('span'); aside.className = 'lm-dd-aside'; aside.textContent = `${s.duration}s`
+    row.append(name, aside)
+    const meta = document.createElement('span'); meta.className = 'lm-dd-meta'; meta.textContent = s.description
+    btn.append(row, meta)
     btn.addEventListener('click', async () => {
-      dropdown.style.display = 'none'
+      setDropdown(dropdown, false)
       if (reelGuard()) return
       await api.scenarioLaunch(s.id, store.simSpeed)
       await fetchSnapshot()
@@ -196,16 +207,12 @@ function handleWsEvents(events: AppEvent[]) {
     if (evt.event_type === 'GossipMessage' && evt.from_peer && evt.to_peer) {
       // One particle per real hop, sender → receiver. The origin publish (no to_peer)
       // draws nothing; its flood relays each carry their own event.
-      const color = evt.from_peer.startsWith('sybil-') ? oklchToRgba(P.attacker, 220) : undefined
-      spawnParticle(evt.from_peer, evt.to_peer, color, evt.dropped === true)
+      spawnParticle(evt.from_peer, evt.to_peer, evt.from_peer.startsWith('sybil-') ? 'sybil' : undefined, evt.dropped === true)
     }
 
     // Spawn particles for graft/prune (mesh changes)
     if ((evt.event_type === 'GossipGraft' || evt.event_type === 'GossipPrune') && evt.from_peer && evt.to_peer) {
-      const color: [number, number, number, number] = evt.event_type === 'GossipGraft'
-        ? oklchToRgba(P.decoded, 200)   // Green for graft
-        : oklchToRgba(P.error, 200)     // Red for prune
-      spawnParticle(evt.from_peer, evt.to_peer, color)
+      spawnParticle(evt.from_peer, evt.to_peer, evt.event_type === 'GossipGraft' ? 'graft' : 'prune')
     }
 
     // Spawn particles for DHT queries
@@ -215,7 +222,7 @@ function handleWsEvents(events: AppEvent[]) {
       const node = dhtIdx !== undefined ? store.nodes[dhtIdx] : undefined
       if (node && node.connected_peers.length > 0) {
         const target = node.connected_peers[Math.floor(Math.random() * node.connected_peers.length)]
-        spawnParticle(initiator, target, oklchToRgba(P.routing, 200))
+        spawnParticle(initiator, target, 'dht')
       }
     }
 
@@ -228,7 +235,7 @@ function handleWsEvents(events: AppEvent[]) {
         if (node) {
           // Red particles burst from affected node to its peers
           for (const peer of node.connected_peers.slice(0, 4)) {
-            spawnParticle(target, peer, oklchToRgba(P.error, 220))
+            spawnParticle(target, peer, 'fault')
           }
         }
       }
@@ -271,6 +278,7 @@ function handleWsEdges(frame: { edges: [string, string][] }) {
 
 function handleWsScenario(frame: any) {
   store.activeScenario = frame.active ? frame : null
+  buildScenarioDropdown()
   narratorOnScenario()
 }
 
@@ -329,17 +337,35 @@ async function fetchReels() {
   reelManifest.forEach((r, i) => {
     const btn = document.createElement('button')
     btn.className = 'dd-item'
-    btn.textContent = `${i + 1}  ${r.title}`
+    btn.dataset.reel = r.name
+    const kbd = document.createElement('span'); kbd.className = 'lm-kbd'; kbd.textContent = String(i + 1)
+    const name = document.createElement('span'); name.className = 'lm-dd-name'; name.textContent = r.title
+    btn.append(kbd, name)
     btn.title = r.blurb ?? ''
-    btn.addEventListener('click', () => { dd.style.display = 'none'; enterReel(r) })
+    btn.addEventListener('click', () => { setDropdown(dd, false); enterReel(r) })
     dd.appendChild(btn)
   })
   const div = document.createElement('div'); div.className = 'dd-divider'; dd.appendChild(div)
   const live = document.createElement('button')
-  live.className = 'dd-item'
-  live.textContent = '0  Back to live'
-  live.addEventListener('click', () => { dd.style.display = 'none'; exitReel() })
+  live.className = 'dd-item lm-dd-live'
+  const kbd0 = document.createElement('span'); kbd0.className = 'lm-kbd'; kbd0.textContent = '0'
+  const liveName = document.createElement('span'); liveName.className = 'lm-dd-name'; liveName.textContent = 'Back to live'
+  live.append(kbd0, liveName)
+  live.addEventListener('click', () => { setDropdown(dd, false); exitReel() })
   dd.appendChild(live)
+}
+
+/** #app.reel dims the live-only controls; the reel dropdown marks the playing row. */
+function syncReelChrome() {
+  document.getElementById('app')?.classList.toggle('reel', !!store.reel)
+  document.querySelectorAll<HTMLElement>('#reel-dropdown [data-reel]').forEach(b =>
+    b.classList.toggle('active', b.dataset.reel === store.reel?.name))
+}
+
+function setDropdown(dd: HTMLElement | null, visible: boolean) {
+  if (!dd) return
+  dd.style.display = visible ? 'block' : 'none'
+  dd.parentElement?.classList.toggle('open', visible)   // .dd-wrap.open drives the trigger + caret
 }
 
 async function enterReel(meta: ReelMeta) {
@@ -348,6 +374,7 @@ async function enterReel(meta: ReelMeta) {
   store.playing = false
   const ok = await loadReel(meta, () => { updatePlaybackUI(); renderLayers() })
   if (!ok) { exitReel(); return }
+  syncReelChrome()
   updateConnectionStatus(false)
   const url = new URL(location.href)
   url.searchParams.set('reel', meta.name)
@@ -356,6 +383,7 @@ async function enterReel(meta: ReelMeta) {
 
 function exitReel() {
   stopReel()
+  syncReelChrome()
   topoKey = ''
   const url = new URL(location.href)
   url.searchParams.delete('reel')
@@ -373,8 +401,8 @@ function initDropdowns() {
   const reelDD = document.getElementById('reel-dropdown')
   const all = [scenarioDD, faultDD, reelDD]
   const toggle = (dd: HTMLElement | null) => {
-    for (const other of all) if (other && other !== dd) other.style.display = 'none'
-    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none'
+    for (const other of all) if (other !== dd) setDropdown(other, false)
+    if (dd) setDropdown(dd, dd.style.display === 'none')
   }
 
   scenarioBtn?.addEventListener('click', () => toggle(scenarioDD))
@@ -389,7 +417,7 @@ function initDropdowns() {
   faultDD?.querySelectorAll('[data-fault]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = (btn as HTMLElement).dataset.fault!
-      if (faultDD) faultDD.style.display = 'none'
+      setDropdown(faultDD, false)
       if (reelGuard()) return
 
       // Fire-and-forget — don't await, don't block UI
@@ -426,7 +454,7 @@ function initDropdowns() {
   })
 
   document.addEventListener('click', (e) => {
-    if (!(e.target as HTMLElement).closest('.dd-wrap')) for (const dd of all) if (dd) dd.style.display = 'none'
+    if (!(e.target as HTMLElement).closest('.dd-wrap')) for (const dd of all) setDropdown(dd, false)
   })
 }
 
@@ -510,13 +538,6 @@ function showFaultFlash(message: string) {
 
   const flash = document.createElement('div')
   flash.id = 'fault-flash'
-  flash.style.cssText = `
-    position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:100;
-    background:oklch(0.20 0.08 25/0.9);border:1px solid oklch(0.45 0.15 25/0.6);
-    border-radius:4px;padding:8px 16px;font-size:12px;font-weight:600;
-    color:oklch(0.65 0.20 25);pointer-events:none;font-family:var(--font);
-    backdrop-filter:blur(8px);animation:fault-fade 2s ease-out forwards;
-  `.replace(/\n/g, '')
   flash.textContent = message
   document.getElementById('map-container')?.appendChild(flash)
 

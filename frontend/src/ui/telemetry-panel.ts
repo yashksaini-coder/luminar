@@ -53,10 +53,14 @@ export function updateTelemetryPanel(status: {
 
   // ── Summary line ──
   if (summaryEl) {
-    summaryEl.textContent = status.active
-      ? `${status.peer_count} live peer${status.peer_count !== 1 ? 's' : ''} reporting`
-      : 'No peers connected — waiting for reports…'
-    summaryEl.style.color = status.active ? 'var(--green)' : 'var(--text3)'
+    while (summaryEl.firstChild) summaryEl.removeChild(summaryEl.firstChild)
+    if (status.active) {
+      const b = document.createElement('b')
+      b.textContent = `${status.peer_count} live peer${status.peer_count !== 1 ? 's' : ''}`
+      summaryEl.append(b, ' reporting · ring on map breathes per check-in')
+    } else {
+      summaryEl.textContent = 'No peers connected — waiting for reports…'
+    }
   }
 
   // ── Peer list (full rebuild — list is small, < 100 peers) ──
@@ -122,7 +126,6 @@ function buildPeerRow(p: {
   const cpuBar = document.createElement('div')
   cpuBar.className = 'tp-cpu-bar'
   cpuBar.style.width = Math.min(100, p.cpu) + '%'
-  cpuBar.style.background = cpuColor(p.cpu)
   cpuWrap.appendChild(cpuBar)
 
   const cpuLabel = document.createElement('span')
@@ -135,10 +138,8 @@ function buildPeerRow(p: {
 
   const age = document.createElement('span')
   age.className = 'tp-age'
-  age.textContent = p.age_seconds < 5 ? 'just now'
-    : p.age_seconds < 60 ? `${Math.floor(p.age_seconds)}s ago`
-    : `${Math.floor(p.age_seconds / 60)}m ago`
-  age.style.color = p.age_seconds > 30 ? 'var(--red)' : 'var(--text3)'
+  age.textContent = p.age_seconds < 60 ? `${Math.floor(p.age_seconds)}s` : `${Math.floor(p.age_seconds / 60)}m`
+  age.toggleAttribute('data-stale', p.age_seconds > 30)
 
   meta.appendChild(cpuWrap)
   meta.appendChild(cpuLabel)
@@ -165,7 +166,8 @@ function appendFeedRow(p: { peer_id: string; node_name: string; cpu: number; bes
 
   const detail = document.createElement('span')
   detail.className = 'tp-feed-detail'
-  detail.textContent = `cpu=${p.cpu.toFixed(0)}% blk=${p.best_block.toLocaleString()}`
+  // Mock shows "score 0.97"; the status payload carries no score, so cpu is the nearest real field
+  detail.textContent = `cpu ${p.cpu.toFixed(0)}%`
 
   row.appendChild(ts)
   row.appendChild(id)
@@ -178,8 +180,3 @@ function shortenId(id: string): string {
   return id.slice(0, 8) + '…' + id.slice(-4)
 }
 
-function cpuColor(cpu: number): string {
-  if (cpu < 50) return 'oklch(0.78 0.16 155)'   // green
-  if (cpu < 80) return 'oklch(0.72 0.14 60)'    // amber
-  return 'oklch(0.65 0.22 25)'                  // red
-}
