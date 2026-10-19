@@ -11,6 +11,7 @@
   "dependencies": {
     "@deck.gl/core": "^9.2.11",
     "@deck.gl/layers": "^9.2.11",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@luma.gl/core": "^9.1.9",
     "@luma.gl/webgl": "^9.1.9",
     "culori": "^4.0.2",

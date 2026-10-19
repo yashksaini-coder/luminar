@@ -95,6 +95,20 @@ function recomputeLayout() {
 // Debug / e2e handle (read-only use): window.__luminar.store, .fitView, .viewState()
 ;(window as any).__luminar = { store, fitView, viewState: getViewState }
 
+/** Nodes preset active state follows the real count (Render boots 20, DigitalOcean 50). */
+function syncNodePreset(n: number) {
+  document.querySelectorAll<HTMLElement>('#node-presets .preset-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.nodes) === n)
+  })
+}
+
+/** Reel mode: menus must not fire requests at a possibly-absent backend. */
+function reelGuard(): boolean {
+  if (!store.reel) return false
+  showFaultFlash('Press 0 to leave the reel first')
+  return true
+}
+
 async function fetchSnapshot() {
   const snap = await api.simSnapshot()
   if (!snap) return
@@ -103,6 +117,7 @@ async function fetchSnapshot() {
   store.simTime = snap.time
   store.simSpeed = snap.speed
   store.nodeCount = snap.node_count
+  syncNodePreset(snap.node_count)
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
   store.mesh = snap.gossip?.mesh ?? {}
@@ -156,8 +171,9 @@ function buildScenarioDropdown() {
     btn.textContent = `${s.icon} ${s.name}`
     btn.title = s.description
     btn.addEventListener('click', async () => {
-      await api.scenarioLaunch(s.id, store.simSpeed)
       dropdown.style.display = 'none'
+      if (reelGuard()) return
+      await api.scenarioLaunch(s.id, store.simSpeed)
       await fetchSnapshot()
       await fetchEdges()
     })
@@ -374,6 +390,7 @@ function initDropdowns() {
     btn.addEventListener('click', () => {
       const action = (btn as HTMLElement).dataset.fault!
       if (faultDD) faultDD.style.display = 'none'
+      if (reelGuard()) return
 
       // Fire-and-forget — don't await, don't block UI
       switch (action) {
@@ -421,6 +438,7 @@ function handleWsSnapshot(snap: any) {
   }
   store.simTime = snap.time
   store.nodeCount = snap.node_count
+  syncNodePreset(snap.node_count)
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
   store.mesh = snap.gossip?.mesh ?? {}
@@ -510,6 +528,7 @@ function initPresets() {
   // Duration presets
   document.querySelectorAll('#duration-presets .preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (reelGuard()) return
       const duration = parseInt((btn as HTMLElement).dataset.duration ?? '300', 10)
       store.maxDuration = duration
       // Update active state
@@ -521,6 +540,7 @@ function initPresets() {
   // Node count presets
   document.querySelectorAll('#node-presets .preset-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
+      if (reelGuard()) return
       const n = parseInt((btn as HTMLElement).dataset.nodes ?? '20', 10)
       // Update active state
       document.querySelectorAll('#node-presets .preset-btn').forEach(b => b.classList.remove('active'))
@@ -614,9 +634,8 @@ async function main() {
   await fetchReels()
   const reelParam = new URLSearchParams(location.search).get('reel')
   const reelMeta = reelParam ? reelManifest.find(r => r.name === reelParam) : undefined
-  if (reelMeta) {
-    // Offline path: no backend needed at all
-    await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })
+  // Offline path: no backend needed at all. A reel that fails to load falls back to live.
+  if (reelMeta && await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })) {
     updateConnectionStatus(false)
   } else {
     // Live: multiplexed WS (snapshot, metrics, analytics pushed by server)

@@ -1,4 +1,9 @@
-/* ── Lumina P2P — netviz stone palette ── */
+/* ── Luminar P2P — netviz stone palette ── */
+/* Self-hosted so the offline reel demo never waits on fonts.googleapis.com */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';
 
 @keyframes fault-fade {
   0% { opacity: 1; transform: translateX(-50%) translateY(0); }

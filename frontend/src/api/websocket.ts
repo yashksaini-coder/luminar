@@ -1,4 +1,5 @@
 import type { AppEvent } from '../types'
+import { adminToken } from './client'
 
 export type EventCallback = (events: AppEvent[]) => void
 export type StatusCallback = (connected: boolean) => void
@@ -64,10 +65,12 @@ class WSManager {
     const wsUrl = apiUrl
       ? apiUrl.replace(/^https/, 'wss').replace(/^http/, 'ws') + '/ws/events'
       : `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/events`
+    const token = adminToken()
+    const sockUrl = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl
     // Single-socket invariant: connect() while a socket is connecting/open is a no-op,
     // and handlers of a superseded socket must not touch shared timer/status/reconnect.
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return
-    const sock = new WebSocket(wsUrl)
+    const sock = new WebSocket(sockUrl)
     this.socket = sock
 
     sock.onopen = () => {
