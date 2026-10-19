@@ -90,6 +90,7 @@ html, body {
 #connection-status {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
   font-size: 11px;
   text-transform: uppercase;
@@ -98,7 +99,10 @@ html, body {
 
 #status-label {
   color: var(--text3);
-  white-space: nowrap;  /* "REEL · Sybil → Eclipse" must not wrap the toolbar at narrow widths */
+  white-space: nowrap;
+  max-width: 220px;        /* "REEL · <title>" truncates instead of wrapping or pushing controls off */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dot-live, .dot-offline {
