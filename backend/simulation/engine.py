@@ -14,6 +14,7 @@ import trio
 
 from backend.events.bus import EventBus
 from backend.events.types import SimulationStateChanged
+from backend.peers import is_honest
 from backend.simulation.clock import SimulationClock
 from backend.simulation.node_pool import DEFAULT_TOPIC, NodePool
 
@@ -89,6 +90,7 @@ class SimulationEngine:
     async def reset(self) -> None:
         self.clock.reset()
         self.event_bus.clear()
+        self.node_pool.gossip.reset()
         self.new_run()
         await self.event_bus.emit(
             SimulationStateChanged(at=0.0, state="stopped", speed=self.clock.speed)
@@ -118,9 +120,7 @@ class SimulationEngine:
         scores = gossip.get_scores(DEFAULT_TOPIC)
         out = []
         for i, aid in enumerate(ids):
-            targets = sorted(
-                p for p, peers in mesh.items() if p.startswith("peer-") and aid in peers
-            )
+            targets = sorted(p for p, peers in mesh.items() if is_honest(p) and aid in peers)
             anchor = self.node_pool.get_node(targets[0]) if targets else None
             out.append(
                 {

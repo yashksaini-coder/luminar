@@ -821,6 +821,7 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
+    engine.node_pool.gossip.reset()  # wire_topology below re-subscribes and re-meshes
     engine.new_run()  # fresh trace-id scope for the exporter
     if otlp_exporter is not None:
         otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost

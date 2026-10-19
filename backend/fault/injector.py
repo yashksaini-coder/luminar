@@ -16,6 +16,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from backend.events.types import FaultCleared, FaultInjected, GossipGraft, PeerRecovered
+from backend.peers import is_honest
 
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
@@ -202,7 +203,7 @@ class FaultInjector:
         subscribers = self.gossip._subscriptions.get(target_topic, set())
 
         # Inject sybil nodes into random honest peers' meshes
-        honest_peers = [p for p in subscribers if not p.startswith("sybil-")]
+        honest_peers = [p for p in subscribers if is_honest(p)]
         for sybil_id in sybil_ids:
             # Add sybil to gossip data structures
             self.gossip._seen[sybil_id] = set()

@@ -4,7 +4,7 @@ import pytest
 import trio
 
 from backend.events.bus import EventBus
-from backend.gossip.engine import GossipEngine
+from backend.gossip.engine import GossipEngine, MessageTrace
 from backend.simulation.clock import SimulationClock
 
 
@@ -266,10 +266,35 @@ def test_snapshot_carries_mesh_map_up_to_100_nodes():
 
 def test_delivery_ratio_counts_honest_peers_only():
     """Deliveries to attackers never push the ratio above 100%."""
-    from backend.gossip.engine import MessageTrace
-
     t = MessageTrace(msg_id="m", topic="t", origin="peer-0", created_at=0.0)
     for p in ("peer-0", "peer-1", "peer-2", "eclipse-0", "eclipse-1", "sybil-0"):
         t.add_hop(p, 0.01, 1.0, 1)
-    assert t.delivery_ratio(3) == 1.0
-    assert t.delivery_ratio(4) == 0.75
+    assert t.delivery_ratio({"peer-0", "peer-1", "peer-2"}) == 1.0
+    assert t.delivery_ratio({"peer-0", "peer-1", "peer-2", "peer-3"}) == 0.75
+
+
+async def test_analytics_ratio_stays_at_one_with_attackers_in_mesh(gossip):
+    """Engine path: an eclipse attacker inside a mesh receives relays and is counted in
+    delivered_count but never in the delivery ratio."""
+    gossip._subscriptions["test-topic"].add("eclipse-0")
+    gossip._seen["eclipse-0"] = set()
+    gossip._mesh["test-topic"]["peer-1"].add("eclipse-0")
+    gossip._mesh["test-topic"]["eclipse-0"] = {"peer-1"}
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.2)
+    trace = gossip.get_trace(msg_id)
+    assert trace["delivered_count"] == 4 and "eclipse-0" in {h["peer"] for h in trace["hops"]}
+    analytics = gossip.get_analytics("test-topic")
+    assert analytics["recent_delivery_ratio"] == 1.0 and analytics["avg_delivery_ratio"] == 1.0
+
+
+async def test_reset_forgets_previous_run(gossip):
+    async with trio.open_nursery() as nursery:
+        await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.1)
+    assert gossip.get_analytics("test-topic")["total_messages"] == 1
+    gossip.reset()
+    assert gossip.get_analytics("test-topic")["total_messages"] == 0
+    async with trio.open_nursery() as nursery:
+        assert await gossip.publish("peer-0", "test-topic", nursery) == "msg-1"

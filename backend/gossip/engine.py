@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 import trio
 
 from backend.gossip.scoring import PeerScoreTracker
+from backend.peers import is_attacker, is_honest
 
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
@@ -77,11 +78,10 @@ class MessageTrace:
             self.first_delivery_peer = peer_id
         self.delivered_to.add(peer_id)
 
-    def delivery_ratio(self, total_nodes: int) -> float:
-        """Share of honest peers reached. Attackers (sybil-/eclipse-) can receive relays
-        but are not in the denominator, so they must not be in the numerator either."""
-        honest = sum(1 for p in self.delivered_to if not p.startswith(("sybil-", "eclipse-")))
-        return min(1.0, honest / max(total_nodes, 1))
+    def delivery_ratio(self, honest: set[str]) -> float:
+        """Share of `honest` peers reached. Numerator and denominator are the same set by
+        construction, so attackers that received relays can never push this above 1."""
+        return len(self.delivered_to & honest) / max(len(honest), 1)
 
     def propagation_latency_ms(self) -> float:
         """Mesh end-to-end: publish → last arrival over mesh/flood hops, in ms.
@@ -112,7 +112,7 @@ class MessageTrace:
             "origin": self.origin,
             "created_at": self.created_at,
             "hops": self.hops,
-            "delivered_count": len(self.delivered_to),
+            "delivered_count": len(self.delivered_to),  # every receiver, attackers included
             "first_delivery_peer": self.first_delivery_peer,
             "propagation_latency_ms": round(self.propagation_latency_ms(), 1),
             "propagation_incl_gossip_ms": round(self.propagation_incl_gossip_ms(), 1),
@@ -157,6 +157,18 @@ class GossipEngine:
     @property
     def traces(self) -> dict[str, MessageTrace]:
         return self._traces
+
+    def reset(self) -> None:
+        """Forget every message and score. Called when the sim clock restarts (reset /
+        scenario launch); otherwise the analytics window keeps the previous run's traces
+        because created_at restarts from 0 and the old ones sort last."""
+        self._traces.clear()
+        self._seen.clear()
+        self._history.clear()
+        self._iwant_pending.clear()
+        self._msg_counter = 0
+        self._spam_counter = 0
+        self.scorer = PeerScoreTracker()
 
     def set_topology(self, edges: list[tuple[str, str]]) -> None:
         """Load the network topology from edge list."""
@@ -356,7 +368,7 @@ class GossipEngine:
 
         for peer_id in list(subscribers):
             # Skip fake peers (sybil/eclipse) — they do no mesh maintenance of their own
-            if peer_id.startswith(("sybil-", "eclipse-")):
+            if is_attacker(peer_id):
                 continue
 
             peer_mesh = mesh.get(peer_id, set())
@@ -457,7 +469,7 @@ class GossipEngine:
         for attacker in [p for p in subscribers if p.startswith("sybil-")]:
             self.scorer.on_invalid_message(topic, attacker)
             for honest, peers in mesh.items():
-                if attacker in peers and not honest.startswith(("sybil-", "eclipse-")):
+                if attacker in peers and is_honest(honest):
                     self._spam_counter += 1
                     await self._event_bus.emit(
                         GossipMessage(
@@ -545,8 +557,7 @@ class GossipEngine:
         traces = [t for t in self._traces.values() if t.topic == topic]
         subscribers = self._subscriptions.get(topic, set())
         # Filter out fake peers for stats
-        honest_subscribers = {p for p in subscribers if not p.startswith(("sybil-", "eclipse-"))}
-        n = len(honest_subscribers)
+        honest_subscribers = {p for p in subscribers if is_honest(p)}
 
         if not traces:
             return {
@@ -562,7 +573,7 @@ class GossipEngine:
             }
 
         # Delivery ratios
-        ratios = [t.delivery_ratio(n) for t in traces]
+        ratios = [t.delivery_ratio(honest_subscribers) for t in traces]
         avg_ratio = sum(ratios) / len(ratios) if ratios else 0
 
         # Propagation latencies
@@ -584,7 +595,7 @@ class GossipEngine:
         # Delivery ratio distribution (last 20 messages). The windowed mean is what a
         # 60 s reel can move; the lifetime mean above barely budges after thousands of msgs.
         recent_ratios = [
-            {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(n), 3)}
+            {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(honest_subscribers), 3)}
             for t in sorted(traces, key=lambda t: t.created_at)[-20:]
         ]
         recent_delivery_ratio = sum(r["ratio"] for r in recent_ratios) / max(len(recent_ratios), 1)
