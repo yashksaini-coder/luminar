@@ -108,8 +108,8 @@ export function narratorOnAnalytics() {
   renderTicker()
 }
 
-function renderTicker() {
-  if (!tickerEl) return
+export function renderTicker() {
+  if (!tickerEl || !store.hero) return  // strip is display:none outside hero; skip the DOM churn
   const ga = store.gossipAnalytics
   const attackers = store.nodes.filter(n => n.state === 'attacker')
   const pruned = attackers.filter(n => n.connected_peers.length === 0).length

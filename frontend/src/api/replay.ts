@@ -1,6 +1,7 @@
 // Reel player — replays a recorded WebSocket frame stream (JSONL) client-side.
 // No backend needed: the Devcon booth runs on this when Wi-Fi dies.
 import { ws } from './websocket'
+import { getStaticText } from './client'
 import { store } from '../store'
 
 export interface ReelFrame { t: number; frame: any }
@@ -22,9 +23,8 @@ export function reelElapsedMs(): number { return elapsed }
 export function reelPlaying(): boolean { return playing }
 
 export async function loadReel(meta: ReelMeta, tick: () => void): Promise<boolean> {
-  const res = await fetch(meta.file).catch(() => null)
-  if (!res || !res.ok) return false
-  const text = await res.text()
+  const text = await getStaticText(meta.file)
+  if (text === null) return false
   const parsed: ReelFrame[] = []
   for (const line of text.split('\n')) {
     if (!line) continue

@@ -48,6 +48,7 @@ MSG_MAP_MAX = 5000  # mirrors MAX_TRACES
 PHASE_BOOST_S = 5.0  # 100% sampling for this long after a scenario phase fires
 SPAM_SPANS_PER_ATTACKER = 50
 RETRY_STATUSES = {429, 502, 503, 504}
+HTTP_TIMEOUT_S = 5
 
 # messaging.operation.type → span kind (PRODUCER=4, CONSUMER=5, INTERNAL=1)
 KIND_PRODUCER, KIND_CONSUMER, KIND_INTERNAL = 4, 5, 1
@@ -84,6 +85,7 @@ class OtlpTraceExporter:
         self._spam_spans: dict[str, int] = {}
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
+        self._flush_lock = threading.Lock()
         # Status counters
         self.spans_emitted = 0
         self.spans_dropped = 0
@@ -101,6 +103,7 @@ class OtlpTraceExporter:
         self._inbound.clear()
         self._open_faults.clear()
         self._spam_spans.clear()
+        self._boost_until = -1.0
 
     @property
     def run_id(self) -> str:
@@ -115,7 +118,7 @@ class OtlpTraceExporter:
     def stop(self) -> None:
         self._stop.set()
         if self._thread:
-            self._thread.join(timeout=3)
+            self._thread.join(timeout=HTTP_TIMEOUT_S + 1)  # outlive a hanging POST
             self._thread = None
         self.flush()
 
@@ -157,7 +160,14 @@ class OtlpTraceExporter:
             while len(self._roots) > MSG_MAP_MAX:
                 old, _ = self._roots.popitem(last=False)
                 self._inbound.pop(old, None)
-        self._inbound.setdefault(msg_id, {})[peer] = sid
+        elif msg_id not in self._roots:
+            return  # unsampled/evicted root: parenting is impossible, don't grow _inbound
+        self._inbound[msg_id][peer] = sid
+
+    def on_new_run(self) -> None:
+        """Sim clock restarted (reset / scenario launch): sim-time state must not carry over."""
+        self._boost_until = -1.0
+        self._spam_spans.clear()
 
     def _build(self, e: BaseEvent) -> dict | None:
         et = e.event_type
@@ -350,7 +360,11 @@ class OtlpTraceExporter:
         }
 
     def flush(self) -> int:
-        """Drain the queue in batches. Returns spans sent."""
+        """Drain the queue in batches. Returns spans sent. Serialised: stop() may overlap _loop."""
+        with self._flush_lock:
+            return self._flush_locked()
+
+    def _flush_locked(self) -> int:
         sent = 0
         while self._queue:
             batch = [self._queue.popleft() for _ in range(min(BATCH_MAX, len(self._queue)))]
@@ -388,7 +402,7 @@ class OtlpTraceExporter:
             url, data=body, headers={"Content-Type": "application/json"}, method="POST"
         )
         try:
-            with urllib.request.urlopen(req, timeout=5) as r:
+            with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_S) as r:
                 return r.status
         except urllib.error.HTTPError as err:
             return err.code

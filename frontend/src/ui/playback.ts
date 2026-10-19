@@ -1,7 +1,7 @@
 import { store } from '../store'
 import * as api from '../api/client'
 import { formatTime } from '../format'
-import { pauseReel, playReel, seekReel, seekReelToSimTime, setReelSpeed } from '../api/replay'
+import { pauseReel, playReel, seekReelToSimTime, setReelSpeed } from '../api/replay'
 
 let timeline: HTMLInputElement
 let tlCurrent: HTMLElement
@@ -21,7 +21,8 @@ export function initPlayback() {
 
   // Reset
   document.getElementById('btn-reset')!.addEventListener('click', () => {
-    if (store.reel) { pauseReel(); seekReel(0); store.playing = false; updatePlaybackUI(); return }
+    // t=0 holds only the edges frame; the first snapshot is what repaints the map
+    if (store.reel) { pauseReel(); seekReelToSimTime(0); store.playing = false; updatePlaybackUI(); return }
     api.simReset()  // fire and forget
     store.simTime = 0
     store.simState = 'stopped'

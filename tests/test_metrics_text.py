@@ -86,3 +86,10 @@ def test_lighthouse_label_scheme_and_gauges():
     assert "luminar_node_count 4" in lines
     # Never a peer_id label
     assert "peer_id=" not in text
+
+
+def test_label_values_are_escaped():
+    from backend.otel.metrics import _fmt_labels, _lbl
+
+    out = _fmt_labels(_lbl(label='Peer "A" eclipsed\nnow', path="a\\b"))
+    assert out == '{label="Peer \\"A\\" eclipsed\\nnow",path="a\\\\b"}'

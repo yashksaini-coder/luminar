@@ -2,7 +2,7 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
-import { loadReel, stopReel, type ReelMeta } from './api/replay'
+import { loadReel, stopReel, reelPlaying, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
 import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
@@ -14,7 +14,7 @@ import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
-import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands } from './ui/narrator'
+import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker } from './ui/narrator'
 import { formatTime } from './format'
 import { oklchToRgba, P } from './palette'
 import type { AppEvent } from './types'
@@ -267,6 +267,7 @@ function applyPrefs() {
   try { localStorage.setItem('luminar.prefs', JSON.stringify({ stageTheme: store.stageTheme, hero: store.hero })) } catch { /* private mode */ }
   handleResize()
   renderBands()
+  renderTicker()
   renderLayers()
 }
 
@@ -296,11 +297,9 @@ function handleWsGap(frame: { dropped: number }) {
 let reelManifest: ReelMeta[] = []
 
 async function fetchReels() {
-  try {
-    const res = await fetch('/reels/manifest.json')
-    if (!res.ok) return
-    reelManifest = await res.json()
-  } catch { return }
+  const manifest = await api.getStatic<ReelMeta[]>('/reels/manifest.json')
+  if (!manifest) return
+  reelManifest = manifest
   const dd = document.getElementById('reel-dropdown')
   if (!dd) return
   while (dd.firstChild) dd.removeChild(dd.firstChild)
@@ -417,7 +416,9 @@ function handleWsSnapshot(snap: any) {
   store.eventCount = snap.event_count
   store.nodes = snap.nodes
   store.mesh = snap.gossip?.mesh ?? {}
-  store.playing = snap.state === 'running'
+  // In reel mode the recorded state says nothing about the player; a seek replays a
+  // 'running' snapshot while paused and would invert the play/pause toggle.
+  store.playing = store.reel ? reelPlaying() : snap.state === 'running'
 
   // Always rebuild nodeIndex when nodes update
   store.nodeIndex.clear()
@@ -425,8 +426,8 @@ function handleWsSnapshot(snap: any) {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
 
-  // Auto-pause at duration limit
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
+  // Auto-pause at duration limit (live only)
+  if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
     api.simPause()
     store.playing = false
     store.simState = 'paused'

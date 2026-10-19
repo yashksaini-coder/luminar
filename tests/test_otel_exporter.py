@@ -195,3 +195,22 @@ def test_sink_errors_never_reach_the_bus():
     engine.event_bus.sinks.append(bad.sink)
     trio.run(_emit_message_chain, engine)
     assert bad.sink_errors == 4 and engine.event_bus.sink_errors == 0
+
+
+def test_forwards_without_a_sampled_root_do_not_grow_inbound():
+    engine = _engine()
+    ex, _ = _exporter(engine, pct=100)
+
+    async def run():
+        bus = engine.event_bus
+        # Forward for a message whose root was never seen (unsampled before a boost)
+        await bus.emit(
+            GossipMessage(
+                at=1.0, topic=TOPIC, from_peer="peer-0", to_peer="peer-1", msg_id="msg-9", hops=1
+            )
+        )
+
+    trio.run(run)
+    assert "msg-9" not in ex._inbound and len(ex._queue) == 1  # span still exported, no map growth
+    ex.on_new_run()
+    assert ex._boost_until == -1.0

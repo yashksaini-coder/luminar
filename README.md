@@ -90,8 +90,9 @@ A reel is a recorded WebSocket frame stream replayed client-side, so a demo work
 no backend and no Wi-Fi. Open **Reels** in the toolbar, press `1`–`3`, or load one by URL:
 `http://localhost:5173/?reel=sybil-eclipse`. `0` returns to live.
 
-Record a new one against a running backend (the pool is reconfigured, the scenario launched
-at 1x, and the file validated for dropped events):
+Record a new one against a backend started with `LUMINAR_ALLOW_RECORD=1` (recording is off by
+default; never enable it on a public deploy). The pool is reconfigured, the scenario launched
+at 1x, and the file validated for dropped events:
 
 ```bash
 uv run python scripts/record_reel.py record sybil-eclipse demo_sybil_eclipse --nodes 50 --duration 40 --min-score-prunes 1

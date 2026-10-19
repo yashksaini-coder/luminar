@@ -29,10 +29,15 @@ def _lbl(**kw: str) -> Labels:
     return tuple(sorted(kw.items()))
 
 
+def _esc(v: str) -> str:
+    """Escape a label value per the Prometheus text exposition format."""
+    return v.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
 def _fmt_labels(labels: Labels) -> str:
     if not labels:
         return ""
-    return "{" + ",".join(f'{k}="{v}"' for k, v in labels) + "}"
+    return "{" + ",".join(f'{k}="{_esc(v)}"' for k, v in labels) + "}"
 
 
 class GossipMetrics:

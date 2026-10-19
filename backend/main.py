@@ -59,6 +59,7 @@ _trio_token: trio.lowlevel.TrioToken | None = None
 _initial_edges: list[tuple[str, str]] = []
 _sim_cancel_scope: trio.CancelScope | None = None
 _sim_thread: threading.Thread | None = None
+_launch_gen = 0  # bumped on every scenario launch/clear so WS clients get a fresh scenario frame
 
 
 def _run_simulation_in_trio(
@@ -93,6 +94,7 @@ def _build_simulation(n_nodes: int) -> None:
     engine.node_pool.gossip._fault_injector = fault_injector
     # Observability sinks live on the bus, so a reconfigure (fresh bus) must re-attach them
     engine.event_bus.sinks.append(gossip_metrics.sink)
+    gossip_metrics.active_faults = 0  # the old injector's faults vanish without FaultCleared
     if otlp_exporter is not None:
         otlp_exporter.attach(engine)
 
@@ -170,7 +172,13 @@ async def websocket_events(ws: WebSocket):
         return
     await ws.accept()
     # ?record=<name> appends every frame this client sees to recordings/<name>.jsonl (a reel)
-    recorder = ReelRecorder.open_if_valid(ws.query_params.get("record"))
+    # Recording writes unbounded files to disk, so it is off unless LUMINAR_ALLOW_RECORD=1
+    # (never set it on a public deploy).
+    recorder = (
+        ReelRecorder.open_if_valid(ws.query_params.get("record"))
+        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1"
+        else None
+    )
     logger.info("WS client connected%s", f" (recording {recorder.path})" if recorder else "")
 
     async def send(frame: dict, *, text: bool = False) -> None:
@@ -184,7 +192,7 @@ async def websocket_events(ws: WebSocket):
     last_event_count = 0
     tick_counter = 0  # counts 50ms ticks
     last_edges: object = None
-    last_scenario: object = None
+    last_launch_gen = -1  # always behind _launch_gen on connect → first frame is unconditional
     # Live clients get the newest 200 events per tick (UI can't show more); a recording
     # must be complete, so it takes the full delta and never silently drops.
     event_cap = 1_000_000 if recorder else 200
@@ -197,8 +205,8 @@ async def websocket_events(ws: WebSocket):
             if _initial_edges is not last_edges:
                 last_edges = _initial_edges
                 await send({"type": "edges", "edges": _initial_edges})
-            if scenario_runner._scenario is not last_scenario:
-                last_scenario = scenario_runner._scenario
+            if _launch_gen != last_launch_gen:
+                last_launch_gen = _launch_gen
                 await send({"type": "scenario", **scenario_runner.get_status()})
 
             # ── Events (every tick, 20Hz) ──
@@ -324,6 +332,8 @@ async def sim_reconfigure(req: ReconfigureRequest):
 
     # Clear active scenario before rebuilding
     scenario_runner.set_scenario(None)
+    global _launch_gen
+    _launch_gen += 1
 
     # Rebuild simulation with new node count and start fresh trio thread
     _build_simulation(n)
@@ -812,6 +822,8 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     engine.clock.reset()
     engine.event_bus.clear()
     engine.new_run()  # fresh trace-id scope for the exporter
+    if otlp_exporter is not None:
+        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(
@@ -828,6 +840,8 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
 
     # 4. Arm scenario runner (sets active scenario, resets phase index)
     scenario_runner.set_scenario(scenario)
+    global _launch_gen
+    _launch_gen += 1
 
     # 5. Set speed and start playback
     engine.clock.speed = max(0.1, min(100.0, req.speed))
