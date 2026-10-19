@@ -51,7 +51,8 @@ class TopicPeerScore:
     def time_in_mesh(self, now: float) -> float:
         if not self.in_mesh or self.mesh_join_time < 0:
             return 0.0
-        return now - self.mesh_join_time
+        # Floor: a reset/seek can put `now` before the join time; P1 must not go negative
+        return max(0.0, now - self.mesh_join_time)
 
     def delivery_ratio(self) -> float:
         if self.mesh_messages_expected <= 0:

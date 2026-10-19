@@ -91,6 +91,7 @@ class SimulationEngine:
         self.clock.reset()
         self.event_bus.clear()
         self.node_pool.gossip.reset()
+        self.node_pool.reset()
         self.new_run()
         await self.event_bus.emit(
             SimulationStateChanged(at=0.0, state="stopped", speed=self.clock.speed)

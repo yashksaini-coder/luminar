@@ -103,18 +103,20 @@ async def test_partition_holds_across_heartbeats(fault_injector, node_pool, cloc
     assert delivered <= set(group_a), delivered
 
 
-async def test_drop_peer_marks_failed(fault_injector, node_pool):
-    """Dropping a peer sets its state to FAILED and removes it from meshes."""
+async def test_drop_peer_marks_failed(fault_injector, node_pool, clock):
+    """Dropping a peer sets it FAILED and keeps it out of every mesh across heartbeats."""
     await fault_injector.drop_peer("peer-2")
     node = node_pool.get_node("peer-2")
     assert node.state == NodeState.FAILED
     assert node.gossip_score == 0.0
 
-    # peer-2 should be removed from other peers' meshes
+    # A crashed peer neither re-grafts nor gets grafted on the next heartbeat
+    clock._time += 1.0
+    await node_pool.gossip.heartbeat("lumina/blocks/1.0")
     mesh = node_pool.gossip.get_mesh_state("lumina/blocks/1.0")
+    assert mesh["peer-2"] == []
     for peer_id, peers in mesh.items():
-        if peer_id != "peer-2":
-            assert "peer-2" not in peers, f"peer-2 still in {peer_id}'s mesh"
+        assert "peer-2" not in peers, f"peer-2 still in {peer_id}'s mesh"
 
 
 async def test_drop_peer_blocks_relay(fault_injector, node_pool):
@@ -182,6 +184,10 @@ async def test_eclipse_replaces_mesh(fault_injector, node_pool):
     for p in target_mesh:
         assert p.startswith("eclipse-"), f"Honest peer {p} still in eclipsed peer-2's mesh"
     assert len(target_mesh) == 3
+    # Meshes are asymmetric: no honest peer may still hold the target either
+    for p, m in mesh.items():
+        if not p.startswith("eclipse-"):
+            assert "peer-2" not in m, f"{p} still holds eclipsed peer-2"
 
 
 async def test_clear_eclipse_removes_attackers(fault_injector, node_pool):
@@ -292,6 +298,24 @@ async def test_eclipse_stays_until_clear(fault_injector, node_pool, clock):
         assert gossip.scorer.compute_score(TOPIC, f"eclipse-{i}", clock.time) >= -0.25
     await fault_injector.clear_fault(fid)
     assert not any(p.startswith("eclipse-") for p in gossip.get_mesh_state(TOPIC).get("peer-2", []))
+
+
+async def test_eclipse_blocks_mesh_relay_and_regraft(fault_injector, node_pool, clock):
+    """Honest peers cannot relay to or GRAFT an eclipsed peer; only IHAVE/IWANT reaches it."""
+    gossip = node_pool.gossip
+    await fault_injector.inject_eclipse("peer-2", 3)
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-1", TOPIC, nursery)  # topology neighbour of peer-2
+        await trio.sleep(0.2)
+    assert "peer-2" not in {h["peer"] for h in gossip.get_trace(msg_id)["hops"]}
+
+    clock._time += 1.0
+    await gossip.heartbeat(TOPIC)
+    hops = [h for h in gossip.get_trace(msg_id)["hops"] if h["peer"] == "peer-2"]
+    assert hops and all(h["via"] == "iwant" for h in hops)
+    mesh = gossip.get_mesh_state(TOPIC)
+    assert all(p.startswith("eclipse-") for p in mesh["peer-2"])
+    assert not any("peer-2" in m for p, m in mesh.items() if not p.startswith("eclipse-"))
 
 
 async def test_prune_reason_defaults_to_overflow(event_bus):

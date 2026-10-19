@@ -101,10 +101,9 @@ async def test_topology_is_respected(event_bus, clock):
         await trio.sleep(0.2)
 
     trace = g.get_trace(msg_id)
-    # The message must traverse 0→1→2→3 (at least 3 hops to reach peer-3)
-    hops = trace["hops"]
-    assert hops[0]["peer"] == "peer-0"
-    assert hops[0]["hop"] == 0
+    # The message must traverse 0→1→2→3: peer-3 only at hop 3 proves no shortcut was taken
+    hop_of = {h["peer"]: h["hop"] for h in trace["hops"]}
+    assert hop_of == {"peer-0": 0, "peer-1": 1, "peer-2": 2, "peer-3": 3}
 
 
 async def test_mesh_state(gossip):
@@ -277,7 +276,7 @@ async def test_analytics_ratio_stays_at_one_with_attackers_in_mesh(gossip):
     """Engine path: an eclipse attacker inside a mesh receives relays and is counted in
     delivered_count but never in the delivery ratio."""
     gossip._subscriptions["test-topic"].add("eclipse-0")
-    gossip._seen["eclipse-0"] = set()
+    gossip._seen["eclipse-0"] = {}
     gossip._mesh["test-topic"]["peer-1"].add("eclipse-0")
     gossip._mesh["test-topic"]["eclipse-0"] = {"peer-1"}
     async with trio.open_nursery() as nursery:
@@ -298,3 +297,80 @@ async def test_reset_forgets_previous_run(gossip):
     assert gossip.get_analytics("test-topic")["total_messages"] == 0
     async with trio.open_nursery() as nursery:
         assert await gossip.publish("peer-0", "test-topic", nursery) == "msg-1"
+
+
+# ── Reset / cap / in-flight regressions ──
+
+
+async def test_seen_cap_evicts_oldest_and_received_keeps_counting(event_bus, clock, monkeypatch):
+    """_seen is a FIFO bounded by MAX_SEEN_PER_PEER; `received` is the unbounded liveness count."""
+    monkeypatch.setattr("backend.gossip.engine.MAX_SEEN_PER_PEER", 5)
+    g = GossipEngine(event_bus, clock)
+    g.set_topology([("peer-0", "peer-1")])
+    g.subscribe_all(["peer-0", "peer-1"], "t")
+    async with trio.open_nursery() as nursery:
+        for _ in range(12):
+            await g.publish("peer-0", "t", nursery)
+            await trio.sleep(0.02)
+    assert g.received["peer-1"] == 12
+    assert len(g._seen["peer-1"]) == 5
+    assert "msg-1" not in g._seen["peer-1"] and "msg-12" in g._seen["peer-1"]
+    g.reset()
+    assert not g.received
+
+
+async def test_reset_regrafts_meshes_without_prune_storm(gossip, event_bus, clock):
+    """Peers grafted late in a run keep a sane P1 after the clock restarts near 0."""
+    clock._time = 40.0
+    for p in ("peer-0", "peer-1", "peer-2"):
+        gossip.scorer.on_graft("test-topic", p, 40.0)
+    async with trio.open_nursery() as nursery:
+        await gossip.publish("peer-0", "test-topic", nursery)
+    clock._time = 0.1
+    gossip.reset()
+    assert gossip.get_recent_traces() == []
+    await gossip.heartbeat("test-topic")
+    assert not [e for e in event_bus.ring if e.event_type == "GossipPrune" and e.reason == "score"]
+    clock._time = 5.0
+    scores = gossip.get_scores("test-topic")
+    assert set(scores) >= {"peer-0", "peer-1", "peer-2"} and all(v > 0 for v in scores.values())
+
+
+async def test_relay_in_flight_across_reset_leaves_no_ghosts(gossip):
+    """A relay sleeping through gossip.reset() must not write the old msg_id into the new run."""
+    async with trio.open_nursery() as nursery:
+        await gossip.publish("peer-0", "test-topic", nursery)
+        await trio.sleep(0.001)
+        gossip.reset()
+        await trio.sleep(0.2)
+    assert gossip._traces == {} and gossip._seen == {} and gossip._history == {}
+
+
+async def test_engine_reset_zeroes_node_counters_but_keeps_failed():
+    from backend.simulation.engine import SimulationEngine
+    from backend.simulation.node_pool import NodeState
+
+    eng = SimulationEngine(n_nodes=3)
+    a, b = eng.node_pool.get_node("peer-0"), eng.node_pool.get_node("peer-1")
+    a.messages_received, a.messages_sent, a.state = 498, 7, NodeState.RECEIVING
+    b.messages_received, b.state = 12, NodeState.FAILED
+    await eng.reset()
+    assert (a.messages_received, a.messages_sent, a.state) == (0, 0, NodeState.IDLE)
+    assert (b.messages_received, b.state) == (0, NodeState.FAILED)
+
+
+async def test_heartbeat_loop_counts_received_not_seen_size(event_bus, clock, monkeypatch):
+    """Node liveness reads gossip.received, so the _seen cap cannot freeze messages_received."""
+    from backend.simulation.node_pool import DEFAULT_TOPIC, NodePool
+
+    monkeypatch.setattr("backend.gossip.engine.MAX_SEEN_PER_PEER", 1)
+    pool = NodePool(event_bus, clock, n_nodes=2)
+    pool.wire_topology([("peer-0", "peer-1")])
+    async with trio.open_nursery() as nursery:
+        await pool.spawn_all(nursery)
+        for _ in range(3):
+            await pool.gossip.publish("peer-0", DEFAULT_TOPIC, nursery)
+            await trio.sleep(0.02)
+        await trio.sleep(0.35)  # heartbeat loop ticks every 0.1 s at speed 10
+        nursery.cancel_scope.cancel()
+    assert pool.get_node("peer-1").messages_received == 3

@@ -103,6 +103,16 @@ class FaultInjector:
                 return True
         return False
 
+    def is_eclipsed(self, peer_a: str, peer_b: str) -> bool:
+        """True when an active eclipse separates its target from an honest peer."""
+        for f in self._active_faults.values():
+            if f["type"] != "eclipse":
+                continue
+            t = f["target"]
+            if (peer_a == t and is_honest(peer_b)) or (peer_b == t and is_honest(peer_a)):
+                return True
+        return False
+
     # ── Injection ──
 
     async def inject_latency(
@@ -206,7 +216,7 @@ class FaultInjector:
         honest_peers = [p for p in subscribers if is_honest(p)]
         for sybil_id in sybil_ids:
             # Add sybil to gossip data structures
-            self.gossip._seen[sybil_id] = set()
+            self.gossip._seen[sybil_id] = {}
             subscribers.add(sybil_id)
             topic_mesh[sybil_id] = set()  # Sybils have empty mesh (don't relay)
 
@@ -259,17 +269,14 @@ class FaultInjector:
 
             subscribers = self.gossip._subscriptions.get(topic, set())
 
-            # Save original mesh for potential recovery
-            original_mesh = set(topic_mesh.get(target_peer_id, set()))
-
-            # Remove target from honest peers' meshes
-            for peer_id in original_mesh:
-                if peer_id in topic_mesh:
-                    topic_mesh[peer_id].discard(target_peer_id)
+            # Remove target from every mesh: meshes are asymmetric, so peers outside the
+            # target's own mesh may still hold it and would keep relaying to it.
+            for mesh_peers in topic_mesh.values():
+                mesh_peers.discard(target_peer_id)
 
             # Replace target's mesh entirely with attackers
             for aid in attacker_ids:
-                self.gossip._seen[aid] = set()
+                self.gossip._seen[aid] = {}
                 subscribers.add(aid)
                 topic_mesh[aid] = {target_peer_id}  # Attackers only connect to target
                 await self._graft_attacker(topic, target_peer_id, aid)

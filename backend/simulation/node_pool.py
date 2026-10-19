@@ -105,6 +105,14 @@ class NodePool:
     def get_all_status(self) -> list[dict]:
         return [node.to_dict() for node in self._nodes.values()]
 
+    def reset(self) -> None:
+        """Zero per-node counters for a new run; crashed peers stay crashed."""
+        for node in self._nodes.values():
+            node.messages_sent = 0
+            node.messages_received = 0
+            if node.state != NodeState.FAILED:
+                node.state = NodeState.IDLE
+
     def wire_topology(self, edges: list[tuple[str, str]]) -> None:
         """Apply topology edges to nodes and gossip engine."""
         # Clear old connections first
@@ -210,9 +218,9 @@ class NodePool:
                     if node.peer_id in scores:
                         node.gossip_score = scores[node.peer_id]
 
-                    seen = self.gossip._seen.get(node.peer_id, set())
-                    if len(seen) > node.messages_received:
-                        node.messages_received = len(seen)
+                    recv = self.gossip.received[node.peer_id]
+                    if recv > node.messages_received:
+                        node.messages_received = recv
                         if node.state == NodeState.IDLE:
                             node.state = NodeState.RECEIVING
                     elif node.state == NodeState.RECEIVING:
