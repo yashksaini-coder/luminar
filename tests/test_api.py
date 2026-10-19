@@ -162,3 +162,12 @@ def test_telemetry_ws_handshake_checks_token(sim, monkeypatch):
         ws.send_text('{"peer_id":"ws-peer"}')
         assert ws.receive_text() == '{"ok":true}'
     assert "ws-peer" in main.telemetry_manager._peers
+
+
+def test_live_mainnet_toggle_round_trip(sim):
+    main.mainnet_feed.fetch = lambda slot: []  # never touch the network in tests
+    assert req("GET", "/api/live/mainnet").json()["enabled"] is False
+    on = req("POST", "/api/live/mainnet", json={"enabled": True}).json()
+    assert on["enabled"] is True
+    off = req("POST", "/api/live/mainnet", json={"enabled": False}).json()
+    assert off["enabled"] is False

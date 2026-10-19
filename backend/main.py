@@ -27,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
+from backend.live.mainnet import MainnetFeed
 from backend.metrics.collector import MetricsCollector
 from backend.otel.exporter import OtlpTraceExporter
 from backend.otel.ids import trace_id as otel_trace_id
@@ -51,6 +52,7 @@ metrics_collector: MetricsCollector | None = None
 topology_manager = TopologyManager()
 scenario_runner = ScenarioRunner()
 telemetry_manager = TelemetryManager()
+mainnet_feed = MainnetFeed()
 gossip_metrics = GossipMetrics()
 # OTel-out is opt-in: set OTEL_EXPORTER_OTLP_ENDPOINT (e.g. http://localhost:4318) to enable.
 _otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or os.environ.get(
@@ -138,6 +140,10 @@ async def lifespan(app: FastAPI):
     _build_simulation(n_nodes)
     _start_sim_thread()
     telemetry_manager.start()
+    mainnet_feed.emit = _emit_from_asyncio
+    mainnet_feed.sim_time = lambda: engine.clock.time if engine else 0.0
+    if os.environ.get("LUMINAR_MAINNET_FEED") == "1":
+        mainnet_feed.start()
     if otlp_exporter is not None:
         otlp_exporter.start()
         logger.info("OTLP trace export → %s", otlp_exporter.endpoint)
@@ -146,6 +152,7 @@ async def lifespan(app: FastAPI):
     yield
 
     telemetry_manager.stop()
+    mainnet_feed.stop()
     if otlp_exporter is not None:
         otlp_exporter.stop()
     engine.clock.stop()
@@ -276,8 +283,9 @@ async def websocket_events(ws: WebSocket):
                 # they are ~60% of a reel's bytes, so the WS frame omits them.
                 snap["gossip"].pop("recent_traces", None)
                 telem = telemetry_manager.get_nodes_as_peer_dicts()
-                if telem:
-                    snap["nodes"] = snap["nodes"] + telem
+                live = mainnet_feed.get_nodes_as_peer_dicts()
+                if telem or live:
+                    snap["nodes"] = snap["nodes"] + telem + live
                     snap["node_count"] = len(snap["nodes"])
                 await send(snap)
 
@@ -300,6 +308,7 @@ async def websocket_events(ws: WebSocket):
                 try:
                     telem_status = telemetry_manager.get_status()
                     telem_status["type"] = "telemetry_status"
+                    telem_status["mainnet"] = mainnet_feed.get_status()
                     telem_status["otel"] = (
                         otlp_exporter.status() if otlp_exporter else {"enabled": False}
                     )
@@ -551,6 +560,15 @@ async def topology_metrics():
 # we use a sync wrapper: mutate state directly, emit events via a helper.
 
 
+async def _emit_from_asyncio(event) -> None:
+    """Publish an event on the simulation bus from the asyncio side (live feeds)."""
+    if engine is None or _trio_token is None:
+        return
+    loop = asyncio.get_running_loop()
+    bus = engine.event_bus
+    await loop.run_in_executor(None, lambda: _run_trio_coro(bus.emit, event))
+
+
 def _run_trio_coro(async_fn, *args):
     """Run a trio-async fault method from the asyncio thread.
 
@@ -754,6 +772,25 @@ async def trace_recent(limit: int = 50):
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
     return {"traces": engine.node_pool.gossip.get_recent_traces(limit)}
+
+
+class MainnetFeedRequest(BaseModel):
+    enabled: bool
+
+
+@app.get("/api/live/mainnet")
+async def live_mainnet_status():
+    return mainnet_feed.get_status()
+
+
+@app.post("/api/live/mainnet")
+async def live_mainnet_toggle(req: MainnetFeedRequest):
+    """Opt in/out of the mainnet block-arrival feed (ethPandaOps public data, ~2.5 min lag)."""
+    if req.enabled:
+        mainnet_feed.start()
+    else:
+        mainnet_feed.stop()
+    return mainnet_feed.get_status()
 
 
 @app.get("/metrics", response_class=PlainTextResponse)
