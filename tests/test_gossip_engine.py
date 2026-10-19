@@ -262,3 +262,14 @@ def test_snapshot_carries_mesh_map_up_to_100_nodes():
     big = SimulationEngine(n_nodes=101)
     big.wire_topology([(f"peer-{i}", f"peer-{(i + 1) % 101}") for i in range(101)], {})
     assert big.get_snapshot()["gossip"]["mesh"] == {}
+
+
+def test_delivery_ratio_counts_honest_peers_only():
+    """Deliveries to attackers never push the ratio above 100%."""
+    from backend.gossip.engine import MessageTrace
+
+    t = MessageTrace(msg_id="m", topic="t", origin="peer-0", created_at=0.0)
+    for p in ("peer-0", "peer-1", "peer-2", "eclipse-0", "eclipse-1", "sybil-0"):
+        t.add_hop(p, 0.01, 1.0, 1)
+    assert t.delivery_ratio(3) == 1.0
+    assert t.delivery_ratio(4) == 0.75

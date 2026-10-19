@@ -78,7 +78,10 @@ class MessageTrace:
         self.delivered_to.add(peer_id)
 
     def delivery_ratio(self, total_nodes: int) -> float:
-        return len(self.delivered_to) / max(total_nodes, 1)
+        """Share of honest peers reached. Attackers (sybil-/eclipse-) can receive relays
+        but are not in the denominator, so they must not be in the numerator either."""
+        honest = sum(1 for p in self.delivered_to if not p.startswith(("sybil-", "eclipse-")))
+        return min(1.0, honest / max(total_nodes, 1))
 
     def propagation_latency_ms(self) -> float:
         """Mesh end-to-end: publish → last arrival over mesh/flood hops, in ms.
