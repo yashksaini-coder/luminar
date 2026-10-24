@@ -242,13 +242,7 @@ function handleWsEvents(events: AppEvent[]) {
     }
   }
 
-  // Auto-pause at duration limit
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    api.simPause()  // Fire and forget (no await in sync handler)
-    store.playing = false
-    store.simState = 'paused'
-    updatePlaybackUI()
-  }
+  autoPauseIfDue()
 
   appendEvents(events)
   appendPeerInspectorEvents(events)
@@ -488,12 +482,7 @@ function handleWsSnapshot(snap: any) {
   maybeAutoGeo()
   updateGeoAvailability()
 
-  // Auto-pause at duration limit (live only)
-  if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    api.simPause()
-    store.playing = false
-    store.simState = 'paused'
-  }
+  autoPauseIfDue()
 
   // Check topology change
   const newTopoKey = currentTopoKey()
@@ -509,6 +498,20 @@ function handleWsSnapshot(snap: any) {
 
   const simTimeEl = document.getElementById('sim-time')
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
+}
+
+// Auto-pause at the duration limit, once: Play afterwards means "keep going", so the latch
+// only re-arms when the sim time drops back under the limit (reset, seek, longer preset).
+let autoPaused = false
+function autoPauseIfDue() {
+  if (store.reel || store.maxDuration <= 0) return
+  if (store.simTime < store.maxDuration) { autoPaused = false; return }
+  if (autoPaused || !store.playing) return
+  autoPaused = true
+  api.simPause()  // fire and forget
+  store.playing = false
+  store.simState = 'paused'
+  updatePlaybackUI()
 }
 
 // ── WebSocket-pushed metrics handler ──

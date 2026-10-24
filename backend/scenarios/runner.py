@@ -36,6 +36,11 @@ class ScenarioRunner:
         self._phase_idx: int = 0
         self._fault_ids: list[str] = []
 
+    def rearm(self) -> None:
+        """Replay the current scenario from phase 0 (a fresh run on the same setup)."""
+        self._phase_idx = 0
+        self._fault_ids = []
+
     def set_scenario(self, scenario: ScenarioDefinition | None) -> None:
         """Update the active scenario (safe to call from asyncio thread)."""
         self._scenario = scenario

@@ -38,6 +38,7 @@ class ReelRecorder:
     def write(self, frame: dict) -> None:
         t = int((time.monotonic() - self._t0) * 1000)
         self._fh.write(orjson.dumps({"t": t, "frame": frame}) + b"\n")
+        self._fh.flush()  # the recorder script copies the file as soon as its socket closes
         self.frames += 1
 
     def close(self) -> None:

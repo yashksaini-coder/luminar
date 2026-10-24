@@ -134,6 +134,11 @@ class PeerScoreTracker:
 
         return p1 + p2 + p3 + p4
 
+    def forget(self, peer_id: str) -> None:
+        """Drop a peer's score state in every topic (an attacker removed by clear_fault)."""
+        for topic_scores in self._scores.values():
+            topic_scores.pop(peer_id, None)
+
     def get_all_scores(self, topic: str, sim_time: float) -> dict[str, float]:
         """Return scores for all peers in a topic."""
         result = {}

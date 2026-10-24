@@ -172,6 +172,9 @@ async def test_clear_sybil_removes_fake_peers(fault_injector, node_pool):
     for peer_id, peers in mesh.items():
         for p in peers:
             assert not p.startswith("sybil-"), f"Sybil {p} still in {peer_id}'s mesh"
+    # and from the score tracker, or the ids keep accruing P1 and show up in /metrics
+    scores = node_pool.gossip.scorer.get_all_scores("lumina/blocks/1.0", 0.0)
+    assert not [p for p in scores if p.startswith("sybil-")]
 
 
 async def test_eclipse_replaces_mesh(fault_injector, node_pool):

@@ -31,6 +31,7 @@ class EventBus:
         self._subscribers: list[trio.MemorySendChannel] = []
         self._ring: deque[BaseEvent] = deque(maxlen=ring_size)
         self._event_count: int = 0
+        self.category_counts: dict[str, int] = {}  # per-category totals, O(1) for the stats panel
         # Synchronous observers (OTel exporter, Prometheus counters). Called on the trio
         # thread inside emit(); they must be O(1) and never raise into the simulation.
         self.sinks: list[Callable[[BaseEvent], None]] = []
@@ -59,6 +60,8 @@ class EventBus:
         """Broadcast event to all subscribers and append to ring buffer."""
         self._ring.append(event)
         self._event_count += 1
+        cat = event.category.value
+        self.category_counts[cat] = self.category_counts.get(cat, 0) + 1
 
         for sink in self.sinks:
             try:
@@ -100,3 +103,4 @@ class EventBus:
         """Clear the ring buffer and reset count."""
         self._ring.clear()
         self._event_count = 0
+        self.category_counts.clear()

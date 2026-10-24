@@ -85,8 +85,9 @@ class TelemetryManager:
             self._eviction_task.cancel()
             self._eviction_task = None
 
-    async def ingest(self, payload, trio_token=None, event_bus=None) -> None:
-        """Upsert a telemetry payload. Optionally emit a NodeHealthSnapshot event."""
+    async def ingest(self, payload, emit=None, at: float = 0.0) -> None:
+        """Upsert a telemetry payload; `emit(event)` (async) publishes a NodeHealthSnapshot
+        stamped with sim time `at`, so it sorts with the rest of the ring."""
         from backend.telemetry.models import TelemetryPayload
 
         if isinstance(payload, dict):
@@ -121,24 +122,22 @@ class TelemetryManager:
             )
             self._peers[peer_id] = TelemetryPeer(**fields)
 
-        # Emit NodeHealthSnapshot into trio event bus if bridge is available
-        if trio_token is not None and event_bus is not None:
+        if emit is not None:
             try:
-                import trio
-
                 from backend.events.types import NodeHealthSnapshot
 
-                snapshot_event = NodeHealthSnapshot(
-                    at=time.time(),
-                    peer_id=peer_id,
-                    cpu=payload.cpu,
-                    mem_mb=payload.mem_mb,
-                    open_streams=payload.open_streams,
-                    score=payload.gossip_score,
+                await emit(
+                    NodeHealthSnapshot(
+                        at=at,
+                        peer_id=peer_id,
+                        cpu=payload.cpu,
+                        mem_mb=payload.mem_mb,
+                        open_streams=payload.open_streams,
+                        score=payload.gossip_score,
+                    )
                 )
-                trio.from_thread.run(event_bus.emit, snapshot_event, trio_token=trio_token)
             except Exception as exc:
-                logger.debug("Skipping trio event emit: %s", exc)
+                logger.debug("Skipping event emit: %s", exc)
 
         logger.debug("Telemetry ingested: %s (total: %d)", peer_id, len(self._peers))
 
