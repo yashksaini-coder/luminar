@@ -171,3 +171,23 @@ def test_live_mainnet_toggle_round_trip(sim):
     assert on["enabled"] is True
     off = req("POST", "/api/live/mainnet", json={"enabled": False}).json()
     assert off["enabled"] is False
+
+
+def test_seek_and_speed_reject_inf_nan_and_out_of_range(sim):
+    for body in ('{"time": 1e400}', '{"time": "nan"}', '{"time": -1}'):
+        assert req("POST", "/api/sim/seek", content=body, headers=JSON).status_code == 422
+    for body in ('{"speed": "nan"}', '{"speed": 1e400}', '{"speed": 0}'):
+        assert req("POST", "/api/sim/speed", content=body, headers=JSON).status_code == 422
+    assert req("POST", "/api/sim/seek", json={"time": 12.5}).json()["time"] == 12.5
+
+
+def test_fault_targets_must_exist(sim):
+    assert (
+        req("POST", "/api/fault/sybil", json={"n_attackers": 2, "target_topic": "nope"}).status_code
+        == 404
+    )
+    for peer in ("peer-999", "sybil-0"):
+        body = {"target_peer_id": peer, "n_attackers": 2}
+        assert req("POST", "/api/fault/eclipse", json=body).status_code == 404
+    assert req("POST", "/api/fault/drop", json={"peer_id": "peer-999"}).status_code == 404
+    assert req("GET", "/api/fault/active").json()["faults"] == []

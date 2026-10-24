@@ -31,15 +31,8 @@ class MetricsCollector:
             total_sent += node["messages_sent"]
             total_received += node["messages_received"]
 
-        # Count events by category — take a snapshot to avoid mutation during iteration
-        event_counts = {}
-        try:
-            ring_snapshot = list(self._event_bus.ring)
-        except RuntimeError:
-            ring_snapshot = []
-        for event in ring_snapshot:
-            cat = event.category.value
-            event_counts[cat] = event_counts.get(cat, 0) + 1
+        # Per-category totals are kept by the bus on emit: no 50k-event ring walk per client
+        event_counts = dict(self._event_bus.category_counts)
 
         return {
             "node_count": len(nodes),

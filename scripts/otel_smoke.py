@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 import time
 import urllib.request
@@ -23,11 +24,17 @@ def _get(url: str) -> dict:
         return json.loads(r.read())
 
 
+def _token_header() -> dict[str, str]:
+    """Admin token (if the backend has one) as a header; REST needs it like the socket does."""
+    token = os.environ.get("LUMINAR_ADMIN_TOKEN")
+    return {"X-Luminar-Token": token} if token else {}
+
+
 def _post(url: str, body: dict | None = None) -> dict:
     req = urllib.request.Request(
         url,
         data=json.dumps(body or {}).encode(),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", **_token_header()},
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=5) as r:

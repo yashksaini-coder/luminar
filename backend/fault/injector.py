@@ -341,22 +341,10 @@ class FaultInjector:
                     PeerRecovered(at=self._clock.time, peer_id=fault["peer_id"])
                 )
 
-        elif fault_type == "sybil":
-            # Remove sybil nodes from meshes
-            sybil_ids = set(fault.get("sybil_ids", []))
-            for topic_mesh in self.gossip._mesh.values():
-                for sid in sybil_ids:
-                    topic_mesh.pop(sid, None)
-                for _peer_id, mesh_peers in topic_mesh.items():
-                    mesh_peers -= sybil_ids
-            for sid in sybil_ids:
-                self.gossip._seen.pop(sid, None)
-                for sub_set in self.gossip._subscriptions.values():
-                    sub_set.discard(sid)
-
-        elif fault_type == "eclipse":
-            # Remove attacker nodes, target will re-mesh via heartbeat
-            attacker_ids = set(fault.get("attacker_ids", []))
+        elif fault_type in ("sybil", "eclipse"):
+            # Remove the attackers everywhere; an eclipsed target re-meshes via heartbeat.
+            # Scores go too, or the ids keep accruing P1 and show up in /metrics for ever.
+            attacker_ids = set(fault.get("sybil_ids") or fault.get("attacker_ids") or [])
             for topic_mesh in self.gossip._mesh.values():
                 for aid in attacker_ids:
                     topic_mesh.pop(aid, None)
@@ -364,6 +352,7 @@ class FaultInjector:
                     mesh_peers -= attacker_ids
             for aid in attacker_ids:
                 self.gossip._seen.pop(aid, None)
+                self.gossip.scorer.forget(aid)
                 for sub_set in self.gossip._subscriptions.values():
                     sub_set.discard(aid)
 

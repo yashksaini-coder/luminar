@@ -242,13 +242,7 @@ function handleWsEvents(events: AppEvent[]) {
     }
   }
 
-  // Auto-pause at duration limit
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    api.simPause()  // Fire and forget (no await in sync handler)
-    store.playing = false
-    store.simState = 'paused'
-    updatePlaybackUI()
-  }
+  autoPauseIfDue()
 
   appendEvents(events)
   appendPeerInspectorEvents(events)
@@ -269,6 +263,8 @@ function handleWsEdges(frame: { edges: [string, string][] }) {
 
 function handleWsScenario(frame: any) {
   store.activeScenario = frame.active ? frame : null
+  // A launch (or reset) makes the scenario's length the pause limit the timeline shows
+  if (frame.active && frame.scenario?.duration > 0) { store.maxDuration = frame.scenario.duration; syncDurationPreset() }
   buildScenarioDropdown()
   narratorOnScenario()
 }
@@ -488,12 +484,7 @@ function handleWsSnapshot(snap: any) {
   maybeAutoGeo()
   updateGeoAvailability()
 
-  // Auto-pause at duration limit (live only)
-  if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    api.simPause()
-    store.playing = false
-    store.simState = 'paused'
-  }
+  autoPauseIfDue()
 
   // Check topology change
   const newTopoKey = currentTopoKey()
@@ -510,6 +501,25 @@ function handleWsSnapshot(snap: any) {
   const simTimeEl = document.getElementById('sim-time')
   if (simTimeEl) simTimeEl.textContent = formatTime(store.simTime)
 }
+
+// The sim pauses at maxDuration, the total the timeline shows. togglePlay extends that
+// total before resuming, so Play at the limit never fights this guard.
+function autoPauseIfDue() {
+  if (store.reel || store.maxDuration <= 0 || !store.playing) return
+  if (store.simTime < store.maxDuration) return
+  api.simPause()  // fire and forget
+  store.playing = false
+  store.simState = 'paused'
+  updatePlaybackUI()
+}
+
+/** Duration preset highlight follows maxDuration; none lit when it is a scenario length or extended. */
+function syncDurationPreset() {
+  document.querySelectorAll<HTMLElement>('#duration-presets .preset-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.duration) === store.maxDuration)
+  })
+}
+document.addEventListener('luminar:duration', syncDurationPreset)
 
 // ── WebSocket-pushed metrics handler ──
 function handleWsMetrics(m: any) {
@@ -561,9 +571,8 @@ function initPresets() {
       if (reelGuard()) return
       const duration = parseInt((btn as HTMLElement).dataset.duration ?? '300', 10)
       store.maxDuration = duration
-      // Update active state
-      document.querySelectorAll('#duration-presets .preset-btn').forEach(b => b.classList.remove('active'))
-      btn.classList.add('active')
+      store.durationStep = duration
+      syncDurationPreset()
     })
   })
 

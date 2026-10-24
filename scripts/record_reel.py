@@ -29,10 +29,16 @@ ROOT = Path(__file__).resolve().parent.parent
 REELS_DIR = ROOT / "frontend" / "public" / "reels"
 
 
+def _token_header() -> dict[str, str]:
+    """Admin token (if the backend has one) as a header; REST needs it like the socket does."""
+    token = os.environ.get("LUMINAR_ADMIN_TOKEN")
+    return {"X-Luminar-Token": token} if token else {}
+
+
 def _post(base: str, path: str, body: dict | None = None) -> dict:
     data = json.dumps(body or {}).encode()
     req = urllib.request.Request(
-        base + path, data=data, headers={"Content-Type": "application/json"}, method="POST"
+        base + path, data=data, headers={"Content-Type": "application/json", **_token_header()}, method="POST"
     )
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())

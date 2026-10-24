@@ -87,6 +87,12 @@ export function togglePlay() {
     store.playing = false
     store.simState = 'paused'
   } else {
+    // Play at the limit means "one more period": the total on the timeline grows with it,
+    // so the sim still pauses at the total that is shown.
+    if (store.maxDuration > 0 && store.simTime >= store.maxDuration) {
+      store.maxDuration = store.simTime + store.durationStep
+      document.dispatchEvent(new CustomEvent('luminar:duration'))
+    }
     api.simPlay()  // fire and forget
     store.playing = true
     store.simState = 'running'

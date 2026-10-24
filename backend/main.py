@@ -266,7 +266,12 @@ async def websocket_events(ws: WebSocket):
                 delta = current_count - last_event_count
                 try:
                     snapshot = list(engine.event_bus.ring)
-                    new_events = snapshot[-min(delta, event_cap) :]
+                    # Events the trio thread appended during the copy sit at the tail and
+                    # belong to the next tick; without this they are sent twice and the
+                    # oldest of this window never.
+                    late = max(0, engine.event_bus.event_count - current_count)
+                    end = len(snapshot) - late
+                    new_events = snapshot[max(0, end - min(delta, event_cap)) : end]
                 except RuntimeError:
                     new_events = []  # deque mutated during iteration
                 if delta > event_cap:
@@ -277,7 +282,11 @@ async def websocket_events(ws: WebSocket):
 
             # ── Snapshot (every 10 ticks = 500ms) ──
             if tick_counter % 10 == 0:
-                snap = engine.get_snapshot()
+                try:
+                    snap = engine.get_snapshot()
+                except RuntimeError:
+                    snap = None  # a dict grew on the trio thread mid-copy: next tick
+            if tick_counter % 10 == 0 and snap is not None:
                 snap["type"] = "snapshot"
                 # Nothing in the UI reads per-snapshot traces (/api/trace/* serves them) and
                 # they are ~60% of a reel's bytes, so the WS frame omits them.
@@ -358,6 +367,9 @@ async def _reset_run() -> None:
     engine.new_run()  # fresh trace-id scope for the exporter
     if otlp_exporter is not None:
         otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
+    scenario_runner.rearm()  # a fresh run replays every phase, not the ones left over
+    global _launch_gen
+    _launch_gen += 1  # WS clients redraw the scenario bands from phase 0
 
 
 @app.post("/api/sim/reset")
@@ -408,7 +420,8 @@ async def sim_reconfigure(req: ReconfigureRequest):
 
 
 class SpeedRequest(BaseModel):
-    speed: float
+    model_config = ConfigDict(allow_inf_nan=False)
+    speed: float = Field(ge=0.1, le=100.0)  # the clock clamps too, but NaN slips past min()
 
 
 @app.post("/api/sim/speed")
@@ -420,7 +433,8 @@ async def sim_speed(req: SpeedRequest):
 
 
 class SeekRequest(BaseModel):
-    time: float
+    model_config = ConfigDict(allow_inf_nan=False)
+    time: float = Field(ge=0.0, le=1e9)  # inf would pin the clock and fire every phase at once
 
 
 @app.post("/api/sim/seek")
@@ -645,6 +659,8 @@ async def fault_sybil(req: SybilRequest):
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
     loop = asyncio.get_running_loop()
+    if req.target_topic not in engine.node_pool.gossip._subscriptions:
+        raise HTTPException(status_code=404, detail=f"Unknown topic: {req.target_topic}")
     fault_id = await loop.run_in_executor(
         None,
         lambda: _run_trio_coro(fault_injector.inject_sybil, req.n_attackers, req.target_topic),
@@ -662,6 +678,8 @@ async def fault_eclipse(req: EclipseRequest):
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
     loop = asyncio.get_running_loop()
+    if engine.node_pool.get_node(req.target_peer_id) is None:  # attackers are not in the pool
+        raise HTTPException(status_code=404, detail=f"Unknown peer: {req.target_peer_id}")
     fault_id = await loop.run_in_executor(
         None,
         lambda: _run_trio_coro(fault_injector.inject_eclipse, req.target_peer_id, req.n_attackers),
@@ -678,6 +696,8 @@ async def fault_drop(req: DropPeerRequest):
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
     loop = asyncio.get_running_loop()
+    if engine.node_pool.get_node(req.peer_id) is None:
+        raise HTTPException(status_code=404, detail=f"Unknown peer: {req.peer_id}")
     fault_id = await loop.run_in_executor(
         None,
         lambda: _run_trio_coro(fault_injector.drop_peer, req.peer_id),
@@ -935,9 +955,8 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
         n_nodes=engine.node_pool.node_count,  # not a hard-coded 20: the pool may be 50/100
         **scenario.topology_params,
     )
-    graph = topology_manager.generate(topo_config)
-    edges = topology_manager.graph_to_edges(graph)
-    positions = topology_manager.graph_layout(graph)
+    loop = asyncio.get_running_loop()
+    edges, positions, _ = await loop.run_in_executor(None, _build_topology, topo_config, True)
     engine.wire_topology(edges, positions)
     global _initial_edges
     _initial_edges = edges  # so /api/topology/edges and the WS edges frame follow the launch
@@ -972,7 +991,9 @@ async def active_scenario():
 @app.post("/api/telemetry/submit")
 async def telemetry_submit(payload: TelemetryPayload):
     """Accept a telemetry payload from a real peer node."""
-    await telemetry_manager.ingest(payload, _trio_token, engine.event_bus if engine else None)
+    await telemetry_manager.ingest(
+        payload, _emit_from_asyncio, engine.clock.time if engine else 0.0
+    )
     return {"ok": True}
 
 
@@ -994,11 +1015,11 @@ async def websocket_telemetry(ws: WebSocket):
                 data = orjson.loads(text)
                 payload = TelemetryPayload(**data)
                 await telemetry_manager.ingest(
-                    payload, _trio_token, engine.event_bus if engine else None
+                    payload, _emit_from_asyncio, engine.clock.time if engine else 0.0
                 )
                 await ws.send_text('{"ok":true}')
             except Exception as exc:
-                await ws.send_text(f'{{"ok":false,"error":{str(exc)!r}}}')
+                await ws.send_text(orjson.dumps({"ok": False, "error": str(exc)}).decode())
     except WebSocketDisconnect:
         logger.info("Telemetry WS peer disconnected")
     except Exception:
