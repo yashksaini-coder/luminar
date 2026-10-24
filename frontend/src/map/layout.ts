@@ -1,4 +1,4 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, forceRadial, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
 import type { LayoutMode, PeerNode } from '../types'
 
 export interface LayoutResult {
@@ -90,6 +90,9 @@ function layoutForce(allNodes: PeerNode[], edges: LayoutEdge[], topologyKey: str
       .distanceMax(baseDist * 6)
       .theta(0.9))
     .force('center', forceCenter(0, 0).strength(0.03))
+    // A node with no links has nothing holding it and charge flings it to the corner, which
+    // makes the fit zoom out for one dot: keep isolated nodes on the cluster's rim instead.
+    .force('rim', forceRadial<ForceNode>(initRadius, 0, 0).strength(d => firstNeighbour.has(d.id) ? 0 : 0.3))
     .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
     .stop()
   // ponytail: synchronous ticks; ~50 ms at 50 nodes, about a second at 500 (cold only)
