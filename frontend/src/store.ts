@@ -50,8 +50,10 @@ export interface AppStore {
   streamManager: { open: number; max: number; available: number }
   dhtCoordinator: { active: number; available: number }
 
-  // Duration
-  maxDuration: number  // simulation duration in seconds
+  // Duration: the sim always pauses at maxDuration, which is what the timeline shows as its
+  // total; a scenario launch sets it to the scenario's length, Play past it adds durationStep.
+  maxDuration: number
+  durationStep: number  // the preset last chosen (default 5m)
 
   // Display settings
   particlesEnabled: boolean
@@ -77,10 +79,10 @@ export interface AppStore {
   beats: { label: string; time: number; color: string }[]  // narrator-derived, merged into milestones
 }
 
-/** Seconds the scrubber spans: the reel's length, else the active scenario's, else the preset. */
+/** Seconds the scrubber spans: the reel's length, else the pause limit (one source of truth). */
 export function timelineTotal(): number {
   if (store.reel) return store.reel.durationSim ?? 0
-  return store.activeScenario?.scenario?.duration || store.maxDuration
+  return store.maxDuration
 }
 
 export const store: AppStore = {
@@ -120,6 +122,7 @@ export const store: AppStore = {
   hero: false,
   scale: { node: 1, particle: 1, edgeAlpha: 1 },
   maxDuration: 300,  // default 5 minutes
+  durationStep: 300,
   gossipAnalytics: null,
   milestones: [],
   beats: [],
