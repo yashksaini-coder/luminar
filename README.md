@@ -55,7 +55,7 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 | play / pause | `Space`, toolbar | runs the trio simulation; `f` fits the view, `Esc` deselects |
 | nodes | toolbar: 20 · 50 · 100 · 200 · 500 | rebuilds the pool; the API clamps to 2–500 |
 | speed · duration | 0.5 · 1 · 2 · 3 · 5 · 10× · 1m · 2m · 5m · 10m | duration auto-pauses, default 5m |
-| layout | top centre: Force · Radial · Geo | d3-force physics, rings by degree, world map for observer nodes |
+| layout | top centre: Force · Radial · Geo | d3-force laid out once and frozen, rings by degree, world map for observer nodes |
 | Scenarios ▾ | 5 scripted runs | timed phases with narrator captions, table below |
 | Inject Fault ▾ | partition · Sybil ×5 · eclipse ×4 on the selected node · drop · clear all | latency is API-only: `POST /api/fault/latency` |
 | inspector | click a node | score sparkline, connected peers, live events for that peer |

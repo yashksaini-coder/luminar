@@ -1,11 +1,15 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type Simulation, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
 import type { LayoutMode, PeerNode } from '../types'
 
 export interface LayoutResult {
   positions: [number, number][]
 }
 
-// ── Live d3-force simulation (Obsidian-like interactive physics) ─────
+// ── One-shot d3-force layout ──────────────────────────────────────────
+// The graph is laid out once and frozen: nothing drifts between frames. A topology change
+// (new edge set) lays everything out from scratch; a node set change on the same topology
+// (attackers appearing or leaving, feed on/off) pins every known node and only settles the
+// new ones, so the mesh the audience is looking at never moves.
 
 interface ForceNode extends SimulationNodeDatum {
   id: string
@@ -38,108 +42,103 @@ export const GEO_SCALE = 2.5
 
 export type LayoutEdge = [string, string] | [string, string, true]
 
-let liveSim: Simulation<ForceNode, ForceLink> | null = null
-let liveNodes: ForceNode[] = []
-let onTickCallback: ((positions: [number, number][]) => void) | null = null
+const placed = new Map<string, [number, number]>()  // last frozen position per peer id
+let placedTopology: string | null = null  // the edge-set key those positions were computed for
 
-/** Start or restart the live force simulation. Call once on topology change. */
-export function startLiveForce(
-  allNodes: PeerNode[],
-  edges: LayoutEdge[],
-  onTick: (positions: [number, number][]) => void,
-) {
-  // Stop any existing simulation
-  if (liveSim) liveSim.stop()
-  onTickCallback = onTick
-
+function layoutForce(allNodes: PeerNode[], edges: LayoutEdge[], topologyKey: string): [number, number][] {
+  const full: [number, number][] = allNodes.map(() => [0, 0])
   // Only nodes drawn in Force take part: hidden ones get no charge, no slot, no centroid
   // weight, and are reported at the origin so the positions array stays index-aligned.
   const visibleIdx = allNodes.map((nd, i) => (isNodeVisible('force', nd) ? i : -1)).filter(i => i >= 0)
-  const nodes = visibleIdx.map(i => allNodes[i])
-  const n = nodes.length
-  if (n === 0) { onTick(allNodes.map(() => [0, 0])); return }
+  const n = visibleIdx.length
+  if (n === 0) return full
 
-  const baseDist = Math.max(40, 400 / Math.sqrt(n))
-  const initRadius = Math.min(300, n * 6)
-
-  // Reuse existing positions if node count matches (topology update without reset)
-  const oldMap = new Map<string, ForceNode>()
-  for (const fn of liveNodes) oldMap.set(fn.id, fn)
-
-  liveNodes = nodes.map((nd, i) => {
-    const existing = oldMap.get(nd.peer_id)
-    return {
-      id: nd.peer_id,
-      x: existing?.x ?? initRadius * Math.cos((2 * Math.PI * i) / n),
-      y: existing?.y ?? initRadius * Math.sin((2 * Math.PI * i) / n),
-      fx: existing?.fx,
-      fy: existing?.fy,
-    }
-  })
-
-  const visibleIds = new Set(nodes.map(nd => nd.peer_id))
+  // Cold when the edge set changed, or when most nodes are new: a node-count change can
+  // reach us before its edges frame (or the reverse), and pinning the old pool while the
+  // rest piles onto the ring would freeze that half-arrived state on screen.
+  const known = visibleIdx.filter(i => placed.has(allNodes[i].peer_id)).length
+  const cold = topologyKey !== placedTopology || known * 2 < n
+  if (cold) placed.clear()
+  const visibleIds = new Set(visibleIdx.map(i => allNodes[i].peer_id))
   const links: ForceLink[] = edges
     .filter(([s, t]) => visibleIds.has(s) && visibleIds.has(t))
     .map(([s, t, weak]) => ({ source: s, target: t, weak: weak === true }))
+  const baseDist = Math.max(40, 400 / Math.sqrt(n))
+  const initRadius = Math.min(300, n * 6)
 
-  const emit = () => {
-    if (!onTickCallback) return
-    const full: [number, number][] = allNodes.map(() => [0, 0])
-    liveNodes.forEach((fn, k) => { full[visibleIdx[k]] = [fn.x, fn.y] })
-    onTickCallback(full)
+  // New nodes start beside their first linked neighbour (an attacker next to its victim),
+  // else on a ring; known nodes start where they were and stay pinned there.
+  const firstNeighbour = new Map<string, string>()
+  for (const [s, t] of links.map(l => [l.source as string, l.target as string])) {
+    if (!firstNeighbour.has(s)) firstNeighbour.set(s, t)
+    if (!firstNeighbour.has(t)) firstNeighbour.set(t, s)
+  }
+  const nodes: ForceNode[] = visibleIdx.map((i, k) => {
+    const id = allNodes[i].peer_id
+    const known = placed.get(id)
+    if (known) return { id, x: known[0], y: known[1], fx: known[0], fy: known[1] }
+    const near = placed.get(firstNeighbour.get(id) ?? '')
+    const a = (2 * Math.PI * k) / n
+    return near
+      ? { id, x: near[0] + baseDist * Math.cos(a), y: near[1] + baseDist * Math.sin(a) }
+      : { id, x: initRadius * Math.cos(a), y: initRadius * Math.sin(a) }
+  })
+
+  // Nothing to settle (every node pinned, or no links yet to pull anything): skip the ticks.
+  const fresh = nodes.filter(nd => nd.fx == null).length
+  if (fresh > 0 && links.length > 0) {
+    const sim = forceSimulation<ForceNode, ForceLink>(nodes)
+      .force('link', forceLink<ForceNode, ForceLink>(links)
+        .id(d => d.id)
+        .strength(l => l.weak ? 0.2 : 0.4)
+        .distance(l => l.weak ? baseDist * 1.6 : baseDist))
+      .force('charge', forceManyBody<ForceNode>()
+        .strength(-800)
+        .distanceMax(baseDist * 6)
+        .theta(0.9))
+      .force('center', forceCenter(0, 0).strength(0.03))
+      .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
+      .stop()
+    // ponytail: synchronous ticks; ~50 ms at 50 nodes, about a second at 500 (cold only)
+    const ticks = cold ? (n > 200 ? 150 : 300) : 60
+    sim.alpha(cold ? 1 : 0.5)
+    for (let i = 0; i < ticks; i++) sim.tick()
   }
 
-  liveSim = forceSimulation<ForceNode, ForceLink>(liveNodes)
-    .force('link', forceLink<ForceNode, ForceLink>(links)
-      .id(d => d.id)
-      .strength(l => l.weak ? 0.2 : 0.4)
-      .distance(l => l.weak ? baseDist * 1.6 : baseDist))
-    .force('charge', forceManyBody<ForceNode>()
-      .strength(-800)
-      .distanceMax(baseDist * 6)
-      .theta(0.9))
-    .force('center', forceCenter(0, 0).strength(0.03))
-    .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
-    .alphaDecay(0.01)        // Slow decay — keeps nodes slightly alive
-    .velocityDecay(0.35)     // Springy feel like Obsidian
-    .on('tick', emit)
+  // A node with no links has nothing holding it and charge flings it to the corner, which
+  // makes the fit zoom out for one dot: park isolated newcomers just outside the cluster.
+  let rim = 0
+  for (const nd of nodes) if (firstNeighbour.has(nd.id) || nd.fx != null) rim = Math.max(rim, Math.hypot(nd.x, nd.y))
+  rim = (rim || initRadius) + baseDist
+  nodes.forEach((nd, k) => {
+    if (nd.fx != null || firstNeighbour.has(nd.id)) return
+    const a = (2 * Math.PI * k) / n
+    nd.x = rim * Math.cos(a); nd.y = rim * Math.sin(a)
+  })
 
-  // Warm up with a quick burst so initial layout isn't chaotic — unless most nodes
-  // already had positions (attackers appearing), in which case just nudge gently.
-  const reused = liveNodes.filter(fn => oldMap.has(fn.id)).length
-  if (reused < n * 0.8) {
-    liveSim.alpha(1)
-    for (let i = 0; i < 80; i++) liveSim.tick()
-    liveSim.alpha(0.3).restart()
-  } else {
-    liveSim.alpha(0.15).restart()
-  }
+  // Remember only the nodes still here, so a re-used id (sybil-0 after clear all) is new again.
+  placedTopology = topologyKey
+  placed.clear()
+  nodes.forEach((fn, k) => {
+    placed.set(fn.id, [fn.x, fn.y])
+    full[visibleIdx[k]] = [fn.x, fn.y]
+  })
+  return full
 }
 
-/** Stop the live simulation */
-export function stopLiveForce() {
-  if (liveSim) { liveSim.stop(); liveSim = null }
-  liveNodes = []
-  onTickCallback = null
-}
-
-/** Check if live sim is running */
-export function isLiveForceActive(): boolean {
-  return liveSim !== null
-}
-
-// ── Static layout computation (Radial and Geo modes) ─────────────────
+// ── Layout entry point ────────────────────────────────────────────────
 
 export function computeLayout(
   mode: LayoutMode,
   nodes: PeerNode[],
-  _edges: LayoutEdge[],
+  edges: LayoutEdge[],
+  topologyKey = '',  // Force only: same key → known nodes stay where they are
 ): LayoutResult {
   switch (mode) {
-    case 'force': return { positions: [] }  // Force uses live sim, not static
+    case 'force': return { positions: layoutForce(nodes, edges, topologyKey) }
     // Producers project y down (y = −lat·2.5); the orthographic view's y points up, so flip once here
     case 'geo': return { positions: nodes.map(n => [n.x, -n.y] as [number, number]) }
-    case 'radial': return layoutRadial(nodes, _edges)
+    case 'radial': return layoutRadial(nodes, edges)
   }
 }
 

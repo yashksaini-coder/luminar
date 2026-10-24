@@ -5,7 +5,7 @@ import { ws } from './api/websocket'
 import { loadReel, stopReel, reelPlaying, seekReelToSimTime, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
-import { computeLayout, startLiveForce, stopLiveForce, isNodeVisible, isSimPeer, type LayoutEdge } from './map/layout'
+import { computeLayout, isNodeVisible, isSimPeer, type LayoutEdge } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
 import { initEventsPanel, appendEvents } from './ui/events-panel'
 import { initPeerInspector, refreshPeerInspector, appendPeerInspectorEvents } from './ui/peer-inspector'
@@ -21,12 +21,12 @@ import type { AppEvent, LayoutMode } from './types'
 // ── Topology fingerprint ──
 let topoKey = ''
 /** One key format for every site, so an edges frame followed by a same-topology snapshot recomputes once. */
+const edgesKey = () => store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
 function currentTopoKey(): string {
   // Only nodes drawn in this view count (observers arriving per slot must not restart Force),
   // keyed with their index because nodePositions is index-aligned with store.nodes
   const ids = store.nodes.map((n, i) => isNodeVisible(store.layoutMode, n) ? `${i}:${n.peer_id}` : '').filter(Boolean).join(',')
-  const edges = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  return `${ids}|${edges}|${store.layoutMode}`
+  return `${ids}|${edgesKey()}|${store.layoutMode}`
 }
 
 // ── Milestone computation ──
@@ -55,10 +55,8 @@ function computeMilestones() {
   store.milestones = [...store.beats, ...ms]
 }
 
-let fitTimers: ReturnType<typeof setTimeout>[] = []
 
 function recomputeLayout() {
-  for (const t of fitTimers) clearTimeout(t)  // a pending Force fit must not land on another layout
   // Rebuild node index first (needed by both paths)
   store.nodeIndex.clear()
   for (let i = 0; i < store.nodes.length; i++) {
@@ -80,26 +78,12 @@ function recomputeLayout() {
   const layoutEdges: LayoutEdge[] = [...store.edges, ...attackerLinks]
     .filter(([s, t]) => store.nodeIndex.has(s) && store.nodeIndex.has(t))
 
-  if (store.layoutMode === 'force') {
-    // Live d3-force simulation with Obsidian-like interactive physics.
-    // startLiveForce restarts in place and reuses positions for nodes it already knows;
-    // calling stopLiveForce() first would wipe that memory and re-seed the whole graph.
-    startLiveForce(store.nodes, layoutEdges, (positions) => {
-      store.nodePositions = positions
-      renderLayers()
-    })
-    // Initial fitView after warm-up settles
-    // Fit once after the warm-up and again once the live sim has settled (it keeps expanding
-    // for ~1 s after a cold start), so a layout switch never leaves the graph half framed.
-    fitTimers = [setTimeout(() => fitView(), 200), setTimeout(() => fitView(), 1400)]
-  } else {
-    // Static layouts (grid, radial) — compute once, no physics
-    stopLiveForce()
-    const result = computeLayout(store.layoutMode, store.nodes, layoutEdges)
-    store.nodePositions = result.positions
-    renderLayers()
-    requestAnimationFrame(() => fitView())
-  }
+  // Every layout is computed once and frozen; Force keeps known nodes in place while the
+  // topology (store.edges) is unchanged, so only new attackers get placed.
+  const result = computeLayout(store.layoutMode, store.nodes, layoutEdges, edgesKey())
+  store.nodePositions = result.positions
+  renderLayers()
+  requestAnimationFrame(() => fitView())
 }
 
 // Debug / e2e handle (read-only use): window.__luminar.store, .fitView, .viewState()
@@ -119,21 +103,12 @@ function reelGuard(): boolean {
   return true
 }
 
-async function fetchSnapshot() {
-  const snap = await api.simSnapshot()
+/** Edges land before the snapshot is applied, so the one layout that follows sees both halves. */
+async function fetchTopology() {
+  const [snap, result] = await Promise.all([api.simSnapshot(), api.topologyEdges()])
+  if (result) store.edges = result.edges
   if (snap) handleWsSnapshot(snap)
-}
-
-async function fetchEdges() {
-  const result = await api.topologyEdges()
-  if (!result) return
-  store.edges = result.edges
-
-  const fullKey = currentTopoKey()
-  if (fullKey !== topoKey) {
-    topoKey = fullKey
-    recomputeLayout()
-  }
+  else if (result) handleWsEdges(result)
 }
 
 async function fetchScenarios() {
@@ -162,8 +137,7 @@ function buildScenarioDropdown() {
       if (reelGuard()) return
       leaveGeoForSim()
       await api.scenarioLaunch(s.id, store.simSpeed)
-      await fetchSnapshot()
-      await fetchEdges()
+      await fetchTopology()
     })
     dropdown.appendChild(btn)
   }
@@ -588,8 +562,7 @@ function initPresets() {
       // Reconfigure backend
       topoKey = ''
       await api.simReconfigure(n)
-      await fetchSnapshot()
-      await fetchEdges()
+      await fetchTopology()
     })
   })
 }
@@ -799,8 +772,7 @@ async function main() {
     ws.connect()
 
     // Initial data fetch (one-time, then WS takes over)
-    await fetchSnapshot()
-    await fetchEdges()
+    await fetchTopology()
     applyUrlMoment()
   }
   await fetchScenarios()
