@@ -22,3 +22,7 @@ test('no network stylesheet or shard/slab decoration', () => {
   expect(globals).not.toMatch(/googleapis|fontshare|@import\s+url\(\s*['"]?https?:/)
   expect(globals.slice(tokens.length)).not.toMatch(/shard|slab|--halftone/)
 })
+
+test('primary button keeps its fg field on hover', () => {
+  expect(globals.slice(tokens.length)).toMatch(/\.btn-primary:hover\s*\{[^}]*background:\s*var\(--fg\)/)
+})

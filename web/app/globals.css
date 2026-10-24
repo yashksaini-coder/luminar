@@ -372,6 +372,7 @@ canvas, img, video, svg { display: block; max-width: 100%; }
 .btn:hover { background: var(--wash); }
 .btn:active { transform: scale(.97); }
 .btn-primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn-primary:hover { background: var(--fg); }
 
 /* menu (popover positioning is phase 3's call, spec §12) */
 .menu {
