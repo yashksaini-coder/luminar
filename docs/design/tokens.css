@@ -1,0 +1,307 @@
+/* ==========================================================================
+   Luminar — FINAL design tokens for the Next.js overhaul (feat/ui-overhaul)
+   Base: direction "instrument-panel" (winner), with grafts from
+   "poster-minimal" (display voice, brief-exact base colours, hatch, rails) and
+   "editorial-dither" (@supports OKLCH pattern, light-mode plate override,
+   stage scale tokens, score-band densities, CSS dither patterns, stamp).
+   Verdict and scoring: docs/design/direction-verdict.md
+
+   HOW COLOUR WORKS HERE — one rule per colour, nothing else may use it
+   ---------------------------------------------------------------------------
+   pitch-*   The dark field. Near-black, faintly cool (hue 286) so the warm
+             paper reads warmer against it. pitch-0 is the brief's
+             rgb(11,11,13). pitch-1..4 step up for rails, menus, hover, idle.
+   paper-*   The ink. Off-white, faintly warm (hue ~106). paper-0 is the
+             brief's rgb(242,242,239): text, numbers, honest peers, lit dither
+             cells. paper-1 secondary text + mesh links, paper-2 labels and
+             captions (AA), paper-3 hairlines/disabled ONLY — never text.
+   flame     The brief's rgb(255,90,44). ONE job: attacker, fault, alarm.
+             Never a brand accent, never a hover, never a primary button.
+             It reads loud only because nothing else on the field is warm.
+   signal    Cool cyan. The "good" colour: live, observer (real node), decoded,
+             delivered, healed. Cyan not green so it survives deuteranopia
+             next to flame (flame→ochre, cyan holds). Always paired with a
+             ring shape; never the sole carrier.
+   There is no violet and no amber in the final set: origin is a paper disc
+   with a pitch centre dot, partition/latency washes are paper at low alpha.
+   Two hues on a 1-bit field. Every role = colour + SHAPE (see --node-*).
+
+   All colours are authored in OKLCH; hex is the base value and the OKLCH
+   value overrides it inside @supports (a custom property cannot carry a
+   fallback by double declaration — the last value always wins).
+   Hex values were derived from the OKLCH values (and vice-versa for the
+   three brief colours) on 2026-10-24; contrast computed with WCAG 2.x
+   relative luminance, not estimated.
+
+   WCAG contrast (dark)                      ratio   use
+   paper-0  on pitch-0                       17.5    body, numbers, display      AAA
+   paper-1  on pitch-0                       10.6    secondary text, mesh links  AAA
+   paper-2  on pitch-0                        6.3    labels, captions, log ts    AA
+   paper-3  on pitch-0                        3.6    hairlines / disabled ONLY   (non-text)
+   paper-0  on pitch-1                       16.9    text in rails               AAA
+   paper-2  on pitch-1                        6.1    labels in rails             AA
+   paper-0  on pitch-2                       15.6    text on menus               AAA
+   paper-2  on pitch-2                        5.6    labels on menus             AA
+   flame    on pitch-0                        6.3    attacker ids, alarm text    AA
+   flame    on pitch-1                        6.1    attacker text in rails      AA
+   flame    on pitch-2                        5.6    attacker text in menus      AA
+   pitch-0  on flame                          6.3    text inside a flame stamp   AA
+   flame-dim on pitch-0                       3.1    pruned outline ONLY         (non-text)
+   signal   on pitch-0                       11.8    live pill, healed label     AAA
+   pitch-0  on signal                        11.8    text inside a signal fill   AAA
+   signal-dim on pitch-0                      5.2    muted signal text           AA
+   WCAG contrast (light)
+   fg       on bg (#fff)                     18.2    body                        AAA
+   fg       on paper-0 (panel)               16.3    body in rails               AAA
+   fg-2     on paper-0                        8.9    secondary                   AAA
+   fg-3     on paper-0                        4.9    captions (AA small text)    AA
+   flame    on paper-0                        2.8    FILLS / SHAPES ONLY, never text
+   flame-dim on paper-0                       5.7    orange TEXT on paper        AA
+   paper-0  on flame-dim                      5.7    text on an accent fill      AA
+   signal-dim on paper-0                      3.4    rings + large text only
+   In light mode the sim canvas and the landing plate stay pitch (see the
+   `.plate` override): they are dark objects on a white page, so every
+   on-canvas pair uses the dark column.
+
+   Colour-vision: flame vs signal is the only hue pair that must separate.
+   The direction authors report Machado-2009 deutan simulation keeps them
+   0.21 apart in OKLab (flame → ochre, signal → pale blue); the judge did not
+   re-run that simulation. Every role is ALSO shape-coded, so the design
+   reads in full greyscale. flame on signal is 1.9:1 — never set one on the
+   other.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- neutral ramp A: PITCH (the dark field) --------------------------- */
+  --pitch-0: #0b0b0d;   /* page / canvas / plate — brief rgb(11,11,13)        */
+  --pitch-1: #101013;   /* rail, panel                                        */
+  --pitch-2: #19191c;   /* raised: menu, popover, inspector card              */
+  --pitch-3: #262629;   /* hover wash, scrubber track                         */
+  --pitch-4: #37383b;   /* idle node fill                                     */
+
+  /* ---- neutral ramp B: PAPER (the ink) ---------------------------------- */
+  --paper-0: #f2f2ef;   /* text, numbers, honest peers — brief rgb(242,242,239) */
+  --paper-1: #bebeba;   /* secondary text, mesh links                         */
+  --paper-2: #93928d;   /* labels, captions, log timestamps (AA 6.3)          */
+  --paper-3: #696964;   /* NON-TEXT: hairlines, disabled, pruned outline      */
+
+  /* ---- FLAME: attacker / fault / alarm. Nothing else. ------------------- */
+  --flame:      #ff5a2c;            /* brief rgb(255,90,44)                   */
+  --flame-dim:  #a73a1b;            /* light-mode flame TEXT; dark: outlines  */
+  --flame-text: var(--flame);       /* any orange text — re-pointed in light  */
+  --on-flame:   var(--pitch-0);     /* text inside a flame stamp (6.3)        */
+
+  /* ---- SIGNAL: live / observer / decoded / delivered / healed ----------- */
+  --signal:     #4ddcdc;
+  --signal-dim: #2b9191;
+  --signal-text: var(--signal);     /* re-pointed to signal-dim in light      */
+  --on-signal:  var(--pitch-0);
+
+  /* ---- semantic surface + text roles (what components reference) ------- */
+  --bg:         var(--pitch-0);
+  --panel:      var(--pitch-1);
+  --raised:     var(--pitch-2);
+  --wash-bg:    var(--pitch-3);
+  --fg:         var(--paper-0);
+  --fg-2:       var(--paper-1);
+  --fg-3:       var(--paper-2);
+  --fg-mute:    var(--paper-3);     /* non-text */
+  --hair:        rgb(242 242 239 / 0.14);  /* every rule; there are no boxes */
+  --hair-strong: rgb(242 242 239 / 0.28);  /* stage / focus rule             */
+  --wash:        rgb(242 242 239 / 0.05);  /* hover wash                      */
+  --focus:      var(--paper-0);
+
+  /* ---- simulator roles: colour + SHAPE, never colour alone -------------- */
+  --node-honest:    var(--paper-0);  /* ● disc; Bayer halo density = score band   */
+  --node-idle:      var(--pitch-4);  /* ● disc + 1px paper-3 rim                   */
+  --node-origin:    var(--paper-0);  /* ◉ disc with a pitch centre dot             */
+  --node-receiving: var(--paper-0);  /* ● disc (default lit state)                 */
+  --node-decoded:   var(--signal);   /* ◎ disc + solid signal ring at 1.6r         */
+  --node-observer:  var(--signal);   /* ◎◎ double ring, breathing (real node)      */
+  --node-joining:   var(--paper-1);  /* ○ hollow disc, 1px                          */
+  --node-failed:    var(--paper-3);  /* ⊗ disc with an X stroke                     */
+  --node-attacker:  var(--flame);    /* ◆ DIAMOND, 45° hatch, NEVER dithered        */
+  --node-pruned:    var(--paper-3);  /* ◇ hollow dashed diamond                     */
+  --node-selected:  var(--paper-0);  /* ⌖ reticle: ring at 2r + four cross ticks    */
+  --node-error:     var(--flame-dim);/* ⊗ failed glyph in flame-dim                  */
+
+  --link-topology:  rgb(242 242 239 / 0.16);  /* 1px dotted (dash 1/3)        */
+  --link-mesh:      rgb(190 190 186 / 0.55);  /* 1px solid                    */
+  --link-attack:    rgb(255 90 44 / 0.55);    /* 1px dashed 4/3               */
+  --link-highlight: var(--paper-1);           /* event-row → peers            */
+  --particle:       var(--paper-0);  /* ▪ 2-cell hard square, no blur, no glow */
+  --particle-spam:  var(--flame);    /* ▪ same square, flame, trailing cell    */
+  --particle-graft: var(--signal);
+  --particle-dht:   var(--paper-1);
+  --ring-telemetry: var(--signal);
+
+  /* score → Bayer halo density around an honest disc (functional dither) */
+  --score-pos:  var(--paper-0);      /* positive score: paper cells             */
+  --score-neg:  var(--flame);        /* negative score: flame cells             */
+  --band-0: 0.12;   /* score < 0   : nearly hollow — about to be pruned        */
+  --band-1: 0.35;   /* 0 … 2                                                   */
+  --band-2: 0.65;   /* 2 … 6                                                   */
+  --band-3: 1.00;   /* > 6         : solid                                     */
+
+  /* timeline wash bands under injected faults (paper for non-attack faults) */
+  --wash-sybil:     rgb(255 90 44 / 0.35);
+  --wash-eclipse:   rgb(255 90 44 / 0.20);
+  --wash-partition: rgb(242 242 239 / 0.18);
+  --wash-latency:   rgb(242 242 239 / 0.10);
+  --wash-heal:      rgb(77 220 220 / 0.18);
+
+  /* ---- type ---------------------------------------------------------------
+     display = Instrument Serif (one weight, roman + italic): h1, Fig. captions,
+               narrator sentence, inspector peer name. The only large voice.
+     mono    = IBM Plex Mono: every control, label, number, log row.
+     ui      = Manrope: nav, buttons, stamps (the "doing" layer).            */
+  --font-display: "Instrument Serif", "EB Garamond", Georgia, serif;
+  --font-mono:    "IBM Plex Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-ui:      "Manrope", -apple-system, "Segoe UI", sans-serif;
+  --tnum: "tnum" 1, "zero" 1;                       /* tabular + slashed zero */
+
+  --t-poster: clamp(3.5rem, 13.5vw, 13rem);  /* landing hero line, 56 → 208px  */
+  --t-h1:     clamp(34px, 5.4vw, 76px);      /* section display                */
+  --t-hero-n: clamp(44px, 5.2vw, 88px);      /* stage / broadcast numbers      */
+  --t-kpi:    clamp(28px, 2.6vw, 40px);      /* panel readout numbers          */
+  --t-lead:   clamp(16px, 1.35vw, 21px);     /* lead paragraph                 */
+  --t-narr:   clamp(17px, 1.2vw, 24px);      /* narrator sentence, display italic */
+  --t-fig:    clamp(14px, 1.05vw, 16px);     /* Fig. N caption, display italic */
+  --t-ui:     clamp(13px, 0.95vw, 14.5px);   /* buttons, nav                   */
+  --t-body:   clamp(12px, 0.85vw, 13px);     /* rows, readouts                 */
+  --t-label:  clamp(10px, 0.72vw, 11px);     /* uppercase labels, .12em        */
+  --t-micro:  clamp(9px, 0.60vw, 10px);      /* kbd, tick labels               */
+  --t-stamp:  clamp(10px, 0.95vw, 14px);     /* Manrope 600, .10em, uppercase  */
+  --lh-tight: 0.92; --lh-ui: 1.2; --lh-body: 1.45; --lh-prose: 1.58;
+  --track-label: .12em; --track-stamp: .10em; --track-poster: -.03em;
+
+  /* ---- spacing (4px base; rails on an 8px grid) ------------------------- */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+  --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
+  --gutter: clamp(16px, 2.5vw, 36px);       /* 16 at phone width              */
+  --col-prose: 620px; --col-wide: 1080px;
+  --nav-h: 56px; --toolbar-h: 44px; --row-h: 22px; --ticker-h: 56px;
+  --strip-h: 52px;                          /* floating command strip         */
+  --rail-l: 264px; --rail-r: 312px;
+
+  /* ---- shape: square corners everywhere; the only curve is the node ----- */
+  --r-0: 0px; --r-node: 50%;
+  --hair-w: 1px; --hair-w2: 2px;
+  --stroke-node: 1px; --stroke-select: 2px;
+
+  /* ---- dither geometry (CSS px) ----------------------------------------- */
+  --cell-final:  3px;    /* settled plate / canvas                             */
+  --cell-mesh:   2px;    /* score halos, gauges on the canvas                  */
+  --cell-ui:     4px;    /* dithered bars in panels (readable at 1x)           */
+  --cell-coarse: 28px;   /* first frame of the reveal                          */
+  --dither-reveal-steps: 28, 20, 14, 10, 7, 5, 4, 3;
+  --dither-contrast: 1.15;
+  --halftone: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Ccircle cx='4' cy='4' r='3.1'/%3E%3C/svg%3E") 0 0 / 8px 8px;
+  --dither-25: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23f2f2ef'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23f2f2ef'/%3E%3C/svg%3E") 0 0 / 4px 4px;
+  --dither-50: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23f2f2ef'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23f2f2ef'/%3E%3C/svg%3E") 0 0 / 2px 2px;
+  --dither-flame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23ff5a2c'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23ff5a2c'/%3E%3C/svg%3E") 0 0 / 2px 2px;
+  --hatch: repeating-linear-gradient(45deg, transparent 0 2px, rgb(11 11 13 / .55) 2px 3px);
+  --loupe: 132px;
+
+  /* ---- stamp (the rotated off-white label) ------------------------------ */
+  --stamp-tilt: 3deg;
+  --stamp-shadow: 0 1px 0 rgb(0 0 0 / 0.25);   /* the ONE shadow in the system */
+
+  /* ---- motion: one easing family; everything gated by reduced-motion ---- */
+  --ease:       cubic-bezier(.16, 1, .3, 1);
+  --ease-lin:   linear;
+  --d-press:    150ms;   /* button scale .97              */
+  --d-fast:     200ms;   /* colour, nudge                 */
+  --d-menu:     400ms;   /* overlay fade                  */
+  --d-row:      550ms;   /* staggered rows, 40ms step     */
+  --d-reveal:   150ms;   /* per dither step               */
+  --d-rail:     220ms;   /* rail drawer slide             */
+  --d-pulse:    800ms;   /* node state pulse              */
+  --d-particle: 800ms;
+  --d-caption:  4000ms;  /* narrator drain bar            */
+  --stagger:    40ms;
+  --parallax-travel: -170px;  /* × data-depth across the plate's scroll life */
+}
+
+/* OKLCH overrides — same colours, perceptual authoring, wide-gamut ready. */
+@supports (color: oklch(50% 0 0)) {
+  :root {
+    --pitch-0: oklch(15.1% 0.004 286);
+    --pitch-1: oklch(17.4% 0.006 286);
+    --pitch-2: oklch(21.5% 0.006 286);
+    --pitch-3: oklch(27.0% 0.005 286);
+    --pitch-4: oklch(34.1% 0.005 271);
+    --paper-0: oklch(96.0% 0.004 106);
+    --paper-1: oklch(80.0% 0.006 107);
+    --paper-2: oklch(65.9% 0.007 97);
+    --paper-3: oklch(51.9% 0.008 107);
+    --flame:      oklch(68.3% 0.209 36);
+    --flame-dim:  oklch(50.0% 0.150 36);
+    --signal:     oklch(82.0% 0.120 195);
+    --signal-dim: oklch(60.0% 0.090 195);
+  }
+}
+
+/* ---- LIGHT variant: paper page, pitch ink. ----------------------------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:        #ffffff;
+  --panel:     var(--paper-0);
+  --raised:    #e6e6e2;
+  --wash-bg:   #dcdbd6;
+  --fg:        #161514;
+  --fg-2:      #44423e;
+  --fg-3:      #6c6864;            /* 4.9:1 on paper-0 */
+  --fg-mute:   #a29e98;
+  --hair:        rgb(22 21 20 / 0.14);
+  --hair-strong: rgb(22 21 20 / 0.30);
+  --wash:        rgb(22 21 20 / 0.04);
+  --focus:     var(--fg);
+  --flame-text:  var(--flame-dim);   /* any orange TEXT on paper               */
+  --on-flame:    var(--paper-0);     /* only on a flame-dim fill (5.7)          */
+  --signal-text: var(--signal-dim);  /* rings + large text only (3.4)           */
+  --on-signal:   var(--paper-0);
+  --dither-25: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23161514'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23161514'/%3E%3C/svg%3E") 0 0 / 4px 4px;
+  --dither-50: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23161514'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23161514'/%3E%3C/svg%3E") 0 0 / 2px 2px;
+}
+@supports (color: oklch(50% 0 0)) {
+  :root[data-theme="light"] {
+    --raised: oklch(92.4% 0.005 107);
+    --fg:     oklch(19.6% 0.003 68);
+    --fg-2:   oklch(38.0% 0.007 85);
+    --fg-3:   oklch(52% 0.008 70);
+  }
+}
+/* The sim canvas and the landing plate stay PITCH in light mode: a dark
+   object on a white page. `color` is set too, because an inherited colour
+   does not re-resolve when a custom property is overridden below it. */
+:root[data-theme="light"] .plate {
+  --bg: var(--pitch-0); --panel: var(--pitch-1); --raised: var(--pitch-2);
+  --fg: var(--paper-0); --fg-2: var(--paper-1); --fg-3: var(--paper-2); --fg-mute: var(--paper-3);
+  --hair: rgb(242 242 239 / 0.14); --hair-strong: rgb(242 242 239 / 0.28); --wash: rgb(242 242 239 / 0.05);
+  --flame-text: var(--flame); --on-flame: var(--pitch-0);
+  --signal-text: var(--signal); --on-signal: var(--pitch-0);
+  --dither-25: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23f2f2ef'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23f2f2ef'/%3E%3C/svg%3E") 0 0 / 4px 4px;
+  --dither-50: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23f2f2ef'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23f2f2ef'/%3E%3C/svg%3E") 0 0 / 2px 2px;
+  color: var(--fg);
+}
+
+/* ---- STAGE mode (projector, 10 m): scale tokens, not CSS zoom ----------- */
+:root[data-stage="1"] {
+  --t-ui: 16px; --t-label: 13px; --t-body: 13.5px; --t-fig: 17px; --t-micro: 12px;
+  --t-narr: 24px; --t-stamp: 16px; --t-kpi: 40px;
+  --row-h: 26px; --cell-final: 4px; --cell-mesh: 3px; --cell-ui: 5px;
+  --fg-3: var(--paper-1);
+  --hair: var(--hair-strong);
+  --link-topology: rgb(242 242 239 / 0.26);
+  --link-mesh:     rgb(190 190 186 / 0.75);
+}
+
+@media (max-width: 390px) { :root { --gutter: 16px; } }
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-press: 0ms; --d-fast: 0ms; --d-menu: 0ms; --d-row: 0ms; --d-reveal: 0ms;
+          --d-rail: 0ms; --d-pulse: 0ms; --d-particle: 0ms; --stagger: 0ms;
+          --parallax-travel: 0px; }
+}
