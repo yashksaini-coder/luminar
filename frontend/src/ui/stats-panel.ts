@@ -1,205 +1,237 @@
 import { store } from '../store'
-import { STATE_CSS, chrome } from '../palette'
 import { formatNumber } from '../format'
-import { drawCDF } from '../charts/sparkline'
+import { drawCDF, cdfStats, fmtLatency } from '../charts/sparkline'
 
-interface ValueEl { el: HTMLElement; key: string }
-const valueEls: ValueEl[] = []
+const STATES = ['idle', 'origin', 'receiving', 'decoded', 'joining', 'failed', 'error', 'attacker', 'pruned']
+const CATS = ['gossip', 'connection', 'stream', 'dht', 'fault', 'health']
+const KPIS: [string, string][] = [
+  ['gossip-delivery', 'Delivery'],
+  ['gossip-latency', 'Propagation'],
+  ['gossip-hops', 'Avg hops'],
+  ['gossip-mesh-size', 'Mesh degree'],
+]
 
-function findValue(key: string): HTMLElement | null {
-  for (const { el, key: k } of valueEls) {
-    if (k === key) return el
-  }
-  return null
+const els = new Map<string, HTMLElement>()
+
+function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: string): HTMLElementTagNameMap[K] {
+  const e = document.createElement(tag)
+  if (cls) e.className = cls
+  if (text !== undefined) e.textContent = text
+  return e
+}
+
+/** "1,284" under 10k, "61.9K" above. */
+const fmtCount = (n: number) => (n < 10_000 ? n.toLocaleString('en-US') : formatNumber(n))
+
+function addBarRow(parent: HTMLElement, label: string, key: string, cat?: string): void {
+  const row = h('div', 'lm-barrow')
+  if (cat) row.dataset.cat = cat
+  const bar = h('div', 'lm-bar')
+  const fill = h('span')
+  bar.appendChild(fill)
+  const value = h('span', 'value', '0')
+  row.append(h('span', 'label', label), bar, value)
+  parent.appendChild(row)
+  els.set(key, value)
+  els.set(`${key}-bar`, fill)
 }
 
 export function initStatsPanel() {
   const container = document.getElementById('stats-content')!
-  // Clear existing content safely
   while (container.firstChild) container.removeChild(container.firstChild)
-  valueEls.length = 0
+  els.clear()
 
-  // Network Nodes group
-  const nodesGroup = addGroup(container, 'Network Nodes')
-  addRow(nodesGroup, 'Total', '0', 'total')
-  for (const state of ['idle', 'origin', 'receiving', 'decoded', 'failed', 'error']) {
-    const color = STATE_CSS[state] ?? chrome.idle.css
-    addRow(nodesGroup, state.charAt(0).toUpperCase() + state.slice(1), '0', `state-${state}`, color)
+  // KPI tiles
+  const kpis = h('div', 'lm-kpis')
+  for (const [key, label] of KPIS) {
+    const tile = h('div', 'lm-kpi')
+    const val = h('span', 'lm-kpi-val')
+    const num = h('span', 'lm-kpi-num value', '—')
+    const unit = h('span', 'lm-kpi-unit')
+    unit.hidden = true
+    val.append(num, unit)
+    if (key === 'gossip-delivery') {
+      const dot = h('span', 'lm-kpi-dot')
+      val.appendChild(dot)
+      els.set('gossip-delivery-dot', dot)
+    }
+    tile.append(h('span', 'lm-label', label), val)
+    kpis.appendChild(tile)
+    els.set(key, num)
+    els.set(`${key}-unit`, unit)
   }
+  container.appendChild(kpis)
 
-  // Data group
-  const dataGroup = addGroup(container, 'Messages')
-  addRow(dataGroup, 'Sent', '0', 'msg-sent')
-  addRow(dataGroup, 'Received', '0', 'msg-recv')
-  addRow(dataGroup, 'Total Events', '0', 'total-events')
+  // Node states: header count, stacked bar, 2-column grid
+  const nodes = h('div', 'lm-sec lm-nodes')
+  const head = h('div', 'lm-sec-head')
+  const count = h('span', 'lm-sec-meta', '0')
+  head.append(h('span', 'lm-label', 'Nodes'), count)
+  els.set('node-count', count)
+  const bar = h('div', 'lm-statebar')
+  const grid = h('div', 'lm-stategrid')
+  for (const state of STATES) {
+    const seg = h('span', 'lm-seg')
+    seg.style.background = state === 'pruned' ? 'var(--lm-fg3)' : `var(--lm-node-${state})`
+    seg.style.display = 'none'
+    bar.appendChild(seg)
+    els.set(`seg-${state}`, seg)
 
-  // Gossip Analytics group
-  const gossipGroup = addGroup(container, 'Gossip Analytics')
-  addRow(gossipGroup, 'Delivery Ratio', '\u2014', 'gossip-delivery')
-  addRow(gossipGroup, 'Propagation', '\u2014', 'gossip-latency')
-  addRow(gossipGroup, 'Avg Hops', '\u2014', 'gossip-hops')
-  addRow(gossipGroup, 'Mesh Size', '\u2014', 'gossip-mesh-size')
-
-  // Delivery CDF chart
-  const cdfWrap = document.createElement('div')
-  cdfWrap.className = 'chart-wrap'
-  const cdfTitle = document.createElement('div')
-  cdfTitle.className = 'chart-title'
-  cdfTitle.textContent = 'DELIVERY CDF'
-  cdfWrap.appendChild(cdfTitle)
-  const cdfCanvas = document.createElement('canvas')
-  cdfCanvas.id = 'cdf-chart'
-  cdfWrap.appendChild(cdfCanvas)
-  container.appendChild(cdfWrap)
-
-  // Milestones group
-  const msGroup = document.createElement('div')
-  msGroup.className = 'stat-group'
-  msGroup.id = 'milestones-section'
-  const msTitle = document.createElement('h3')
-  msTitle.textContent = 'Milestones'
-  msGroup.appendChild(msTitle)
-  container.appendChild(msGroup)
-
-  // Event categories group
-  const evtGroup = addGroup(container, 'Event Categories')
-  for (const cat of ['gossip', 'connection', 'stream', 'dht', 'fault', 'health']) {
-    addRow(evtGroup, cat, '0', `evt-${cat}`)
+    const row = h('div', 'lm-staterow')
+    row.dataset.state = state
+    const dot = h('span', 'nl-dot')
+    dot.dataset.state = state
+    if (state !== 'pruned') dot.style.background = `var(--lm-node-${state})`
+    const value = h('span', 'value', '0')
+    row.append(dot, h('span', 'label', state), value)
+    grid.appendChild(row)
+    els.set(`state-${state}`, value)
   }
+  nodes.append(head, bar, grid)
+  container.appendChild(nodes)
 
-  // Infrastructure group
-  const infraGroup = addGroup(container, 'Infrastructure')
-  addRow(infraGroup, 'Streams Open', '0/64', 'streams')
-  addRow(infraGroup, 'DHT Active', '0/8', 'dht')
+  // Messages
+  const msgs = h('div', 'lm-sec lm-msgs')
+  msgs.appendChild(h('div', 'lm-label', 'Messages'))
+  for (const [key, label] of [['msg-sent', 'Sent'], ['msg-recv', 'Received'], ['total-events', 'Total events']]) {
+    const row = h('div', 'stat-row')
+    const value = h('span', 'value', '0')
+    row.append(h('span', 'label', label), value)
+    msgs.appendChild(row)
+    els.set(key, value)
+  }
+  container.appendChild(msgs)
+
+  // Delivery CDF
+  const cdf = h('div', 'chart-wrap')
+  const title = h('div', 'chart-title')
+  const meta = h('span', 'lm-sec-meta')
+  title.append(h('span', '', 'Delivery CDF'), meta)
+  els.set('cdf-meta', meta)
+  const canvas = h('canvas')
+  canvas.id = 'cdf-chart'
+  const axis = h('div', 'lm-axis')
+  for (const k of ['cdf-min', 'cdf-mid', 'cdf-max']) {
+    const s = h('span')
+    axis.appendChild(s)
+    els.set(k, s)
+  }
+  cdf.append(title, canvas, axis)
+  container.appendChild(cdf)
+
+  // Milestones (updateStatsPanel keeps children[0] as the title)
+  const ms = h('div', 'stat-group')
+  ms.id = 'milestones-section'
+  ms.appendChild(h('div', 'lm-label', 'Milestones'))
+  container.appendChild(ms)
+
+  // Event categories
+  const cats = h('div', 'lm-sec lm-cats')
+  cats.appendChild(h('div', 'lm-label', 'Event categories'))
+  for (const cat of CATS) addBarRow(cats, cat, `evt-${cat}`, cat)
+  container.appendChild(cats)
+
+  // Infrastructure
+  const infra = h('div', 'lm-sec lm-infra')
+  infra.appendChild(h('div', 'lm-label', 'Infrastructure'))
+  addBarRow(infra, 'Streams', 'streams')
+  const dht = h('div', 'lm-barrow')
+  const segs = h('div', 'lm-segs')
+  for (let i = 0; i < 8; i++) segs.appendChild(h('span'))
+  const dhtVal = h('span', 'value', '0/8')
+  dht.append(h('span', 'label', 'DHT'), segs, dhtVal)
+  infra.appendChild(dht)
+  els.set('dht', dhtVal)
+  els.set('dht-segs', segs)
+  container.appendChild(infra)
+}
+
+function setKpi(key: string, text: string | null, unit = '') {
+  els.get(key)!.textContent = text ?? '—'
+  const u = els.get(`${key}-unit`)!
+  u.textContent = unit
+  u.hidden = text === null || !unit
 }
 
 export function updateStatsPanel() {
-  for (const { el, key } of valueEls) {
-    let val = ''
-    if (key === 'total') val = String(store.nodeCount)
-    else if (key.startsWith('state-')) val = String(store.stateDistribution[key.replace('state-', '')] ?? 0)
-    else if (key === 'msg-sent') val = formatNumber(store.totalMessagesSent)
-    else if (key === 'msg-recv') val = formatNumber(store.totalMessagesReceived)
-    else if (key === 'total-events') val = formatNumber(store.eventCount)
-    else if (key.startsWith('evt-')) val = formatNumber(store.eventCounts[key.replace('evt-', '')] ?? 0)
-    else if (key === 'streams') val = `${store.streamManager.open}/${store.streamManager.max}`
-    else if (key === 'dht') val = `${store.dhtCoordinator.active}/8`
-    else continue  // skip gossip keys handled below
-    el.textContent = val
+  if (!els.size) return
+
+  // Nodes: attackers pruned from every mesh move to their own row
+  const pruned = store.nodes.filter(n => n.state === 'attacker' && n.connected_peers.length === 0).length
+  const counts: Record<string, number> = { ...store.stateDistribution, pruned }
+  counts.attacker = Math.max(0, (counts.attacker ?? 0) - pruned)
+  els.get('node-count')!.textContent = String(store.nodeCount)
+  for (const state of STATES) {
+    const n = counts[state] ?? 0
+    els.get(`state-${state}`)!.textContent = String(n)
+    const seg = els.get(`seg-${state}`)!
+    seg.style.flex = String(n)
+    seg.style.display = n > 0 ? '' : 'none'
   }
 
-  // Update gossip analytics
-  if (store.gossipAnalytics) {
-    const ga = store.gossipAnalytics
-    const deliveryEl = findValue('gossip-delivery')
-    if (deliveryEl) {
-      // Windowed (last 20 msgs) when available: the lifetime mean can't move in a 60s run
-      const ratio = ga.recent_delivery_ratio ?? ga.avg_delivery_ratio
-      if (ratio != null) {
-        const pct = ratio * 100
-        deliveryEl.textContent = pct.toFixed(1) + '%'
-        // Color based on threshold
-        if (pct > 80) deliveryEl.style.color = 'var(--green)'
-        else if (pct > 50) deliveryEl.style.color = 'oklch(0.75 0.14 95)'
-        else deliveryEl.style.color = 'var(--red)'
-      } else {
-        deliveryEl.textContent = '\u2014'
-        deliveryEl.style.color = ''
-      }
-    }
-    const latencyEl = findValue('gossip-latency')
-    if (latencyEl) {
-      latencyEl.textContent = ga.avg_propagation_ms != null
-        ? ga.avg_propagation_ms.toFixed(1) + 'ms' : '\u2014'
-    }
-    const hopsEl = findValue('gossip-hops')
-    if (hopsEl) {
-      hopsEl.textContent = ga.avg_hops != null
-        ? ga.avg_hops.toFixed(1) : '\u2014'
-    }
-    const meshEl = findValue('gossip-mesh-size')
-    if (meshEl) {
-      meshEl.textContent = ga.mesh_stability
-        ? String(Math.round(ga.mesh_stability.avg_degree)) : '\u2014'
-    }
+  els.get('msg-sent')!.textContent = fmtCount(store.totalMessagesSent)
+  els.get('msg-recv')!.textContent = fmtCount(store.totalMessagesReceived)
+  els.get('total-events')!.textContent = fmtCount(store.eventCount)
 
-    // Update CDF chart
-    const cdfCanvas = document.getElementById('cdf-chart') as HTMLCanvasElement
-    if (cdfCanvas && ga.latency_cdf && ga.latency_cdf.length > 0) {
-      const w = cdfCanvas.parentElement!.clientWidth - 16
-      if (w > 0) drawCDF(cdfCanvas, ga.latency_cdf, w, 90)
-    }
+  const total = store.eventCount || 1
+  for (const cat of CATS) {
+    const n = store.eventCounts[cat] ?? 0
+    els.get(`evt-${cat}`)!.textContent = formatNumber(n)
+    els.get(`evt-${cat}-bar`)!.style.width = n > 0 ? `${Math.max((n / total) * 100, 2)}%` : '0'
   }
 
-  // Update milestones
+  const { open, max } = store.streamManager
+  els.get('streams')!.textContent = `${open}/${max}`
+  els.get('streams-bar')!.style.width = `${max > 0 ? (open / max) * 100 : 0}%`
+  const active = store.dhtCoordinator.active
+  els.get('dht')!.textContent = `${active}/8`
+  els.get('dht-segs')!.querySelectorAll('span').forEach((s, i) => s.classList.toggle('active', i < active))
+
+  // Gossip KPIs — analytics arrive zeroed before the first message; show "—" until then
+  const ga = store.gossipAnalytics
+  const has = !!ga && ga.total_messages > 0
+  const dot = els.get('gossip-delivery-dot')!
+  if (has) {
+    const pct = (ga.recent_delivery_ratio ?? ga.avg_delivery_ratio) * 100
+    setKpi('gossip-delivery', pct.toFixed(1), '%')
+    dot.toggleAttribute('data-ok', pct >= 95)
+    dot.toggleAttribute('data-bad', pct < 50)
+    setKpi('gossip-latency', ga.avg_propagation_ms.toFixed(0), 'ms')
+    setKpi('gossip-hops', ga.avg_hops.toFixed(1))
+    const m = ga.mesh_stability
+    // Mock shows the target "D=6"; the app has no target-D field, so min–max degree is the honest unit
+    setKpi('gossip-mesh-size', m?.avg_degree != null ? m.avg_degree.toFixed(1) : null,
+      m?.avg_degree != null ? `${m.min_degree}–${m.max_degree}` : '')
+  } else {
+    for (const [key] of KPIS) setKpi(key, null)
+    dot.removeAttribute('data-ok')
+    dot.removeAttribute('data-bad')
+  }
+
+  const cdf = has ? ga.latency_cdf : []
+  const canvas = document.getElementById('cdf-chart') as HTMLCanvasElement | null
+  if (canvas && cdf?.length) {
+    drawCDF(canvas, cdf, 224, 56)
+    const { min, max, p50 } = cdfStats(cdf)
+    els.get('cdf-meta')!.textContent = `p50 ${fmtLatency(p50)}`
+    els.get('cdf-min')!.textContent = fmtLatency(min)
+    els.get('cdf-mid')!.textContent = 'p50'
+    els.get('cdf-max')!.textContent = fmtLatency(max)
+  }
+
+  // Milestones: narrator beats get the brighter label
   const msSection = document.getElementById('milestones-section')
-  if (msSection && store.milestones.length > 0) {
-    // Clear existing items (keep title h3)
+  if (msSection) {
     while (msSection.children.length > 1) msSection.removeChild(msSection.lastChild!)
     for (const ms of store.milestones) {
-      const row = document.createElement('div')
-      row.className = 'stat-row milestone-row'
-      row.style.cursor = 'pointer'
-      const label = document.createElement('span')
-      label.className = 'label'
-      const dot = document.createElement('span')
-      dot.className = 'nl-dot'
+      const row = h('div', 'stat-row milestone-row')
+      row.classList.toggle('lm-beat', store.beats.includes(ms))
+      const label = h('span', 'label')
+      const dot = h('span', 'nl-dot')
       dot.style.background = ms.color
-      dot.style.display = 'inline-block'
-      dot.style.width = '6px'
-      dot.style.height = '6px'
-      dot.style.borderRadius = '50%'
-      dot.style.marginRight = '5px'
-      label.appendChild(dot)
-      label.appendChild(document.createTextNode(ms.label))
-      const value = document.createElement('span')
-      value.className = 'value'
-      value.textContent = ms.time.toFixed(3) + 's'
-      row.appendChild(label)
-      row.appendChild(value)
+      label.append(dot, ms.label)
+      row.append(label, h('span', 'value', ms.time.toFixed(3) + 's'))
       msSection.appendChild(row)
     }
   }
-}
-
-function addGroup(parent: HTMLElement, title: string): HTMLElement {
-  const group = document.createElement('div')
-  group.className = 'stat-group'
-  const h = document.createElement('h3')
-  h.textContent = title
-  group.appendChild(h)
-  parent.appendChild(group)
-  return group
-}
-
-function addRow(parent: HTMLElement, label: string, initial: string, key: string, dotColor?: string): void {
-  const row = document.createElement('div')
-  row.className = 'stat-row'
-
-  const labelEl = document.createElement('span')
-  labelEl.className = 'label'
-  if (dotColor) {
-    const dot = document.createElement('span')
-    dot.className = 'nl-dot'
-    dot.style.background = dotColor
-    dot.style.display = 'inline-block'
-    dot.style.width = '6px'
-    dot.style.height = '6px'
-    dot.style.borderRadius = '50%'
-    dot.style.marginRight = '5px'
-    labelEl.appendChild(dot)
-    labelEl.appendChild(document.createTextNode(label))
-  } else {
-    labelEl.textContent = label
-  }
-
-  const valueEl = document.createElement('span')
-  valueEl.className = 'value'
-  valueEl.textContent = initial
-
-  row.appendChild(labelEl)
-  row.appendChild(valueEl)
-  parent.appendChild(row)
-
-  valueEls.push({ el: valueEl, key })
 }

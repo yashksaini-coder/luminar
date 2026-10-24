@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import shutil
 import sys
 import urllib.request
@@ -45,7 +46,12 @@ async def record(args: argparse.Namespace) -> int:
     _post(base, "/api/sim/reconfigure", {"n_nodes": args.nodes})
     _post(base, "/api/sim/pause")
 
-    async with websockets.connect(f"{ws_base}/ws/events?record={args.name}", max_size=None) as ws:
+    # The admin token (if the backend has one) travels as a header, never in the URL
+    token = os.environ.get("LUMINAR_ADMIN_TOKEN")
+    headers = {"X-Luminar-Token": token} if token else {}
+    async with websockets.connect(
+        f"{ws_base}/ws/events?record={args.name}", max_size=None, additional_headers=headers
+    ) as ws:
         # Let the connect-time edges/scenario frames land before the launch resets everything
         await asyncio.sleep(0.5)
         _post(base, f"/api/scenarios/{args.scenario}/launch", {"speed": 1})

@@ -105,6 +105,14 @@ class NodePool:
     def get_all_status(self) -> list[dict]:
         return [node.to_dict() for node in self._nodes.values()]
 
+    def reset(self) -> None:
+        """Zero per-node counters for a new run; crashed peers stay crashed."""
+        for node in self._nodes.values():
+            node.messages_sent = 0
+            node.messages_received = 0
+            if node.state != NodeState.FAILED:
+                node.state = NodeState.IDLE
+
     def wire_topology(self, edges: list[tuple[str, str]]) -> None:
         """Apply topology edges to nodes and gossip engine."""
         # Clear old connections first
@@ -146,8 +154,14 @@ class NodePool:
 
     async def _peer_loop(self, node: PeerNode) -> None:
         """Main loop for a simulated peer — periodic gossip publishing."""
+        # Network-wide rate: N peers / 10 s mean wait = N/10 msg/s, and each message costs
+        # ~N deliveries, so trio work grows as N². Above 50 nodes stretch every wait by
+        # N/50 so the network stays at ~5 msg/s (500 nodes: 500/100 s); ≤50 is unchanged.
+        scale = max(1.0, self.node_count / 50)
         # Stagger startup so not all peers publish at once
         await trio.sleep(random.uniform(0.1, 2.0))
+        # First publish spread over one period, else 500 nodes shows nothing for 50-150 s
+        wait = random.uniform(0.0, 10.0) * scale
 
         while True:
             if self._clock.paused:
@@ -158,9 +172,9 @@ class NodePool:
                 await trio.sleep(0.5)
                 continue
 
-            # Each peer publishes a message every 5-15 sim-seconds
-            wait = random.uniform(5.0, 15.0) / max(self._clock.speed, 0.1)
-            await trio.sleep(wait)
+            # Each peer publishes a message every 5-15 sim-seconds (× scale)
+            await trio.sleep(wait / max(self._clock.speed, 0.1))
+            wait = random.uniform(5.0, 15.0) * scale
 
             if self._clock.paused or node.state == NodeState.FAILED:
                 continue
@@ -210,9 +224,9 @@ class NodePool:
                     if node.peer_id in scores:
                         node.gossip_score = scores[node.peer_id]
 
-                    seen = self.gossip._seen.get(node.peer_id, set())
-                    if len(seen) > node.messages_received:
-                        node.messages_received = len(seen)
+                    recv = self.gossip.received[node.peer_id]
+                    if recv > node.messages_received:
+                        node.messages_received = recv
                         if node.state == NodeState.IDLE:
                             node.state = NodeState.RECEIVING
                     elif node.state == NodeState.RECEIVING:

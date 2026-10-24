@@ -23,6 +23,7 @@ class EventCategory(StrEnum):
     FAULT = "fault"
     HEALTH = "health"
     SIMULATION = "simulation"
+    LIVE = "live"  # real-network observations (mainnet feed, real-trace reels)
 
 
 @dataclass(slots=True, frozen=True)
@@ -295,6 +296,28 @@ class SimulationStateChanged(BaseEvent):
     @property
     def category(self) -> EventCategory:
         return EventCategory.SIMULATION
+
+
+@dataclass(slots=True, frozen=True)
+class BlockSeen(BaseEvent):
+    """A real observer node saw a mainnet beacon block (ethPandaOps arrival data).
+
+    `seen_ms` is milliseconds after the slot start as reported by that node; `at` is the
+    simulation time at which the feed replayed it so it sits on the normal timeline.
+    """
+
+    peer_id: str = ""
+    slot: int = 0
+    block_root: str = ""
+    seen_ms: int = 0
+    client: str = ""
+    country: str = ""
+    source: str = ""
+    first: bool = False  # first sighting of this block among the observers
+
+    @property
+    def category(self) -> EventCategory:
+        return EventCategory.LIVE
 
 
 @dataclass(slots=True, frozen=True)

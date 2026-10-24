@@ -1,9 +1,12 @@
-import { store } from '../store'
+import { store, timelineTotal } from '../store'
 import * as api from '../api/client'
 import { formatTime } from '../format'
 import { pauseReel, playReel, seekReelToSimTime, setReelSpeed } from '../api/replay'
+import { narratorOnScenario } from './narrator'
 
 let timeline: HTMLInputElement
+let scrubber: HTMLElement
+let bubble: HTMLElement | null
 let tlCurrent: HTMLElement
 let tlTotal: HTMLElement
 let playIcon: HTMLElement
@@ -11,6 +14,8 @@ let pauseIcon: HTMLElement
 
 export function initPlayback() {
   timeline = document.getElementById('timeline') as HTMLInputElement
+  scrubber = document.getElementById('tl-scrubber')!
+  bubble = scrubber.querySelector('.lm-tl-bubble')
   tlCurrent = document.getElementById('tl-current')!
   tlTotal = document.getElementById('tl-total')!
   playIcon = document.getElementById('icon-play')!
@@ -23,6 +28,7 @@ export function initPlayback() {
   document.getElementById('btn-reset')!.addEventListener('click', () => {
     // t=0 holds only the edges frame; the first snapshot is what repaints the map
     if (store.reel) { pauseReel(); seekReelToSimTime(0); store.playing = false; updatePlaybackUI(); return }
+    document.dispatchEvent(new CustomEvent('luminar:sim-action'))  // leaves Geo so the reset is visible
     api.simReset()  // fire and forget
     store.simTime = 0
     store.simState = 'stopped'
@@ -32,6 +38,7 @@ export function initPlayback() {
     store.highlightPeers = []
     store.selectedNode = -1
     store.milestones = []
+    narratorOnScenario()  // narrator latches/beats/ticker only reset on a scenario frame otherwise
     // Reset timeline slider to 0
     timeline.value = '0'
     updatePlaybackUI()
@@ -45,8 +52,10 @@ export function initPlayback() {
   // Timeline scrub
   timeline.addEventListener('input', () => {
     const pct = Number(timeline.value) / Number(timeline.max)
-    if (store.reel) { seekReelToSimTime(pct * (store.reel.durationSim ?? 0)); return }
-    const seekTime = pct * store.maxDuration
+    const total = timelineTotal()
+    const seekTime = pct * total
+    syncScrubber(seekTime)
+    if (store.reel) { seekReelToSimTime(seekTime); return }
     api.simSeek(seekTime)
     store.simTime = seekTime
   })
@@ -96,7 +105,7 @@ export function updatePlaybackUI() {
   }
 
   // Time display (a reel's total is its recorded sim length, not the duration preset)
-  const total = store.reel ? (store.reel.durationSim ?? 0) : store.maxDuration
+  const total = timelineTotal()
   tlCurrent.textContent = formatTime(store.simTime)
   tlTotal.textContent = formatTime(total)
 
@@ -107,9 +116,18 @@ export function updatePlaybackUI() {
     timeline.value = String(Math.floor(pct))
   }
 
+  syncScrubber(store.simTime)
+
   // Speed button active state sync
   document.querySelectorAll('.speed-btn').forEach(btn => {
     const speed = parseFloat((btn as HTMLElement).dataset.speed ?? '0')
     btn.classList.toggle('active', speed === store.simSpeed)
   })
+}
+
+/** The range input is an invisible hit layer; fill, head and bubble follow --tl-pct. */
+function syncScrubber(simTime: number) {
+  const pct = (Number(timeline.value) / Number(timeline.max)) * 100
+  scrubber.style.setProperty('--tl-pct', pct.toFixed(2) + '%')
+  if (bubble) bubble.textContent = formatTime(simTime)
 }

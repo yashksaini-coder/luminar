@@ -16,6 +16,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from backend.events.types import FaultCleared, FaultInjected, GossipGraft, PeerRecovered
+from backend.peers import is_honest
 
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
@@ -50,6 +51,13 @@ class FaultInjector:
 
     def get_active_faults(self) -> list[dict]:
         return list(self._active_faults.values())
+
+    def attacker_victims(self) -> dict[str, list[str]]:
+        """Attacker id → the honest peers it was injected against (stable after pruning)."""
+        out: dict[str, list[str]] = {}
+        for f in self._active_faults.values():
+            out.update(f.get("victims", {}))
+        return out
 
     def attacker_ids(self) -> list[str]:
         """Ids of every live sybil/eclipse attacker, in injection order."""
@@ -99,6 +107,16 @@ class FaultInjector:
         """Check if peer was dropped by fault injection."""
         for f in self._active_faults.values():
             if f["type"] == "drop" and f["peer_id"] == peer_id:
+                return True
+        return False
+
+    def is_eclipsed(self, peer_a: str, peer_b: str) -> bool:
+        """True when an active eclipse separates its target from an honest peer."""
+        for f in self._active_faults.values():
+            if f["type"] != "eclipse":
+                continue
+            t = f["target"]
+            if (peer_a == t and is_honest(peer_b)) or (peer_b == t and is_honest(peer_a)):
                 return True
         return False
 
@@ -202,15 +220,17 @@ class FaultInjector:
         subscribers = self.gossip._subscriptions.get(target_topic, set())
 
         # Inject sybil nodes into random honest peers' meshes
-        honest_peers = [p for p in subscribers if not p.startswith("sybil-")]
+        honest_peers = [p for p in subscribers if is_honest(p)]
+        victims: dict[str, list[str]] = {}
         for sybil_id in sybil_ids:
             # Add sybil to gossip data structures
-            self.gossip._seen[sybil_id] = set()
+            self.gossip._seen[sybil_id] = {}
             subscribers.add(sybil_id)
             topic_mesh[sybil_id] = set()  # Sybils have empty mesh (don't relay)
 
             # Force sybil into D random honest peers' meshes
             targets = random.sample(honest_peers, min(len(honest_peers), D_SYBIL_FANOUT))
+            victims[sybil_id] = sorted(targets)
             for target_peer in targets:
                 mesh = topic_mesh.get(target_peer, set())
                 mesh.add(sybil_id)
@@ -223,6 +243,7 @@ class FaultInjector:
             "n_attackers": n_attackers,
             "target_topic": target_topic,
             "sybil_ids": sybil_ids,
+            "victims": victims,  # attacker id → honest peers it was grafted into (for layout)
         }
         self._active_faults[fault_id] = fault
 
@@ -258,17 +279,14 @@ class FaultInjector:
 
             subscribers = self.gossip._subscriptions.get(topic, set())
 
-            # Save original mesh for potential recovery
-            original_mesh = set(topic_mesh.get(target_peer_id, set()))
-
-            # Remove target from honest peers' meshes
-            for peer_id in original_mesh:
-                if peer_id in topic_mesh:
-                    topic_mesh[peer_id].discard(target_peer_id)
+            # Remove target from every mesh: meshes are asymmetric, so peers outside the
+            # target's own mesh may still hold it and would keep relaying to it.
+            for mesh_peers in topic_mesh.values():
+                mesh_peers.discard(target_peer_id)
 
             # Replace target's mesh entirely with attackers
             for aid in attacker_ids:
-                self.gossip._seen[aid] = set()
+                self.gossip._seen[aid] = {}
                 subscribers.add(aid)
                 topic_mesh[aid] = {target_peer_id}  # Attackers only connect to target
                 await self._graft_attacker(topic, target_peer_id, aid)
@@ -281,6 +299,7 @@ class FaultInjector:
             "target": target_peer_id,
             "n_attackers": n_attackers,
             "attacker_ids": attacker_ids,
+            "victims": {aid: [target_peer_id] for aid in attacker_ids},
         }
         self._active_faults[fault_id] = fault
 

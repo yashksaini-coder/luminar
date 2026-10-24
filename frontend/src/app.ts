@@ -2,10 +2,10 @@ import './style.css'
 import { store } from './store'
 import * as api from './api/client'
 import { ws } from './api/websocket'
-import { loadReel, stopReel, reelPlaying, type ReelMeta } from './api/replay'
+import { loadReel, stopReel, reelPlaying, seekReelToSimTime, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
-import { computeLayout, startLiveForce, stopLiveForce } from './map/layout'
+import { computeLayout, startLiveForce, stopLiveForce, isNodeVisible, isSimPeer, type LayoutEdge } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
 import { initEventsPanel, appendEvents } from './ui/events-panel'
 import { initPeerInspector, refreshPeerInspector, appendPeerInspectorEvents } from './ui/peer-inspector'
@@ -14,13 +14,20 @@ import { initPlayback, updatePlaybackUI } from './ui/playback'
 import { initLegend } from './ui/legend'
 import { initModeSwitcher } from './ui/mode-switcher'
 import { initKeyboard } from './ui/keyboard'
-import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker } from './ui/narrator'
+import { initNarrator, narratorOnEvents, narratorOnAnalytics, narratorOnScenario, renderBands, renderTicker, caption } from './ui/narrator'
 import { formatTime } from './format'
-import { oklchToRgba, P } from './palette'
-import type { AppEvent } from './types'
+import type { AppEvent, LayoutMode } from './types'
 
 // ── Topology fingerprint ──
 let topoKey = ''
+/** One key format for every site, so an edges frame followed by a same-topology snapshot recomputes once. */
+function currentTopoKey(): string {
+  // Only nodes drawn in this view count (observers arriving per slot must not restart Force),
+  // keyed with their index because nodePositions is index-aligned with store.nodes
+  const ids = store.nodes.map((n, i) => isNodeVisible(store.layoutMode, n) ? `${i}:${n.peer_id}` : '').filter(Boolean).join(',')
+  const edges = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
+  return `${ids}|${edges}|${store.layoutMode}`
+}
 
 // ── Milestone computation ──
 function computeMilestones() {
@@ -28,27 +35,30 @@ function computeMilestones() {
 
   // Find first gossip message event
   const firstGossip = store.events.find(e => e.event_type === 'GossipMessage')
-  if (firstGossip) ms.push({ label: 'First gossip message', time: firstGossip.at, color: 'oklch(0.72 0.12 230)' })
+  if (firstGossip) ms.push({ label: 'First gossip message', time: firstGossip.at, color: 'var(--lm-fg2)' })
 
   // Find first fault
   const firstFault = store.events.find(e => e.event_type === 'FaultInjected')
-  if (firstFault) ms.push({ label: 'First fault injected', time: firstFault.at, color: 'oklch(0.65 0.20 25)' })
+  if (firstFault) ms.push({ label: 'First fault injected', time: firstFault.at, color: 'var(--lm-danger)' })
 
   // Compute delivery milestones from analytics
   if (store.gossipAnalytics && store.gossipAnalytics.total_messages > 0) {
-    ms.push({ label: `${store.gossipAnalytics.total_messages} messages`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
+    ms.push({ label: `${store.gossipAnalytics.total_messages} messages`, time: store.simTime, color: 'var(--lm-fg2)' })
   }
 
   // Node state milestones
   const decoded = store.nodes.filter(n => n.state === 'decoded').length
   const receiving = store.nodes.filter(n => n.state === 'receiving').length
-  if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'oklch(0.75 0.14 155)' })
-  if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'oklch(0.72 0.12 230)' })
+  if (decoded > 0) ms.push({ label: `${decoded} nodes decoded`, time: store.simTime, color: 'var(--lm-ok)' })
+  if (receiving > 0) ms.push({ label: `${receiving} nodes receiving`, time: store.simTime, color: 'var(--lm-node-receiving)' })
 
   store.milestones = [...store.beats, ...ms]
 }
 
+let fitTimers: ReturnType<typeof setTimeout>[] = []
+
 function recomputeLayout() {
+  for (const t of fitTimers) clearTimeout(t)  // a pending Force fit must not land on another layout
   // Rebuild node index first (needed by both paths)
   store.nodeIndex.clear()
   for (let i = 0; i < store.nodes.length; i++) {
@@ -57,11 +67,18 @@ function recomputeLayout() {
 
   // Attackers are not in the topology edge list; link them to the meshes they sit in
   // so the force layout places them next to their targets.
-  const attackerLinks: [string, string][] = []
+  // Pruned attackers have no mesh links left; a weak tether to their last victims keeps them
+  // parked beside the cluster (as in the design) instead of drifting off to infinity.
+  const attackerLinks: LayoutEdge[] = []
   for (const n of store.nodes) {
-    if (n.state === 'attacker') for (const t of n.connected_peers) attackerLinks.push([n.peer_id, t])
+    if (n.state !== 'attacker') continue
+    const weak = n.connected_peers.length === 0
+    for (const t of weak ? (n.last_targets ?? []).slice(0, 2) : n.connected_peers) {
+      attackerLinks.push(weak ? [n.peer_id, t, true] : [n.peer_id, t])
+    }
   }
-  const layoutEdges = attackerLinks.length ? [...store.edges, ...attackerLinks] : store.edges
+  const layoutEdges: LayoutEdge[] = [...store.edges, ...attackerLinks]
+    .filter(([s, t]) => store.nodeIndex.has(s) && store.nodeIndex.has(t))
 
   if (store.layoutMode === 'force') {
     // Live d3-force simulation with Obsidian-like interactive physics.
@@ -72,7 +89,9 @@ function recomputeLayout() {
       renderLayers()
     })
     // Initial fitView after warm-up settles
-    setTimeout(() => fitView(), 200)
+    // Fit once after the warm-up and again once the live sim has settled (it keeps expanding
+    // for ~1 s after a cold start), so a layout switch never leaves the graph half framed.
+    fitTimers = [setTimeout(() => fitView(), 200), setTimeout(() => fitView(), 1400)]
   } else {
     // Static layouts (grid, radial) — compute once, no physics
     stopLiveForce()
@@ -86,37 +105,23 @@ function recomputeLayout() {
 // Debug / e2e handle (read-only use): window.__luminar.store, .fitView, .viewState()
 ;(window as any).__luminar = { store, fitView, viewState: getViewState }
 
+/** Nodes preset active state follows the real count (Render boots 20, DigitalOcean 50). */
+function syncNodePreset(n: number) {
+  document.querySelectorAll<HTMLElement>('#node-presets .preset-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.nodes) === n)
+  })
+}
+
+/** Reel mode: menus must not fire requests at a possibly-absent backend. */
+function reelGuard(): boolean {
+  if (!store.reel) return false
+  showFaultFlash('Press 0 to leave the reel first')
+  return true
+}
+
 async function fetchSnapshot() {
   const snap = await api.simSnapshot()
-  if (!snap) return
-
-  store.simState = snap.state
-  store.simTime = snap.time
-  store.simSpeed = snap.speed
-  store.nodeCount = snap.node_count
-  store.eventCount = snap.event_count
-  store.nodes = snap.nodes
-  store.mesh = snap.gossip?.mesh ?? {}
-  store.playing = snap.state === 'running'
-
-  // Auto-pause when duration limit is reached
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    await api.simPause()
-    store.playing = false
-    store.simState = 'paused'
-  }
-
-  const nodeIds = snap.nodes.map(n => n.peer_id).sort().join(',')
-  const newTopoKey = `${nodeIds}|${store.layoutMode}`
-
-  if (newTopoKey !== topoKey) {
-    topoKey = newTopoKey
-    recomputeLayout()
-  } else {
-    renderLayers()
-  }
-
-  updatePlaybackUI()
+  if (snap) handleWsSnapshot(snap)
 }
 
 async function fetchEdges() {
@@ -124,8 +129,7 @@ async function fetchEdges() {
   if (!result) return
   store.edges = result.edges
 
-  const edgeKey = result.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  const fullKey = currentTopoKey()
   if (fullKey !== topoKey) {
     topoKey = fullKey
     recomputeLayout()
@@ -145,12 +149,19 @@ function buildScenarioDropdown() {
   while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild)
   for (const s of store.scenarios) {
     const btn = document.createElement('button')
-    btn.className = 'dd-item'
-    btn.textContent = `${s.icon} ${s.name}`
-    btn.title = s.description
+    btn.className = 'dd-item lm-dd-col'
+    btn.classList.toggle('active', store.activeScenario?.scenario?.id === s.id)
+    const row = document.createElement('span'); row.className = 'lm-dd-row'
+    const name = document.createElement('span'); name.className = 'lm-dd-name'; name.textContent = s.name
+    const aside = document.createElement('span'); aside.className = 'lm-dd-aside'; aside.textContent = `${s.duration}s`
+    row.append(name, aside)
+    const meta = document.createElement('span'); meta.className = 'lm-dd-meta'; meta.textContent = s.description
+    btn.append(row, meta)
     btn.addEventListener('click', async () => {
+      setDropdown(dropdown, false)
+      if (reelGuard()) return
+      leaveGeoForSim()
       await api.scenarioLaunch(s.id, store.simSpeed)
-      dropdown.style.display = 'none'
       await fetchSnapshot()
       await fetchEdges()
     })
@@ -168,21 +179,31 @@ function handleWsEvents(events: AppEvent[]) {
   store.eventCount += events.length
   narratorOnEvents(events)
 
+  // Real-network arrivals: light the observer up now rather than at the next snapshot
+  for (const evt of events) {
+    if (evt.event_type !== 'BlockSeen' || !evt.peer_id) continue
+    const idx = store.nodeIndex.get(evt.peer_id)
+    if (idx === undefined) continue
+    if (evt.first) {
+      for (const n of store.nodes) if (n.is_real) n.state = 'idle'  // new block: reset the wave
+      // Narrate real blocks only where the observers are drawn; in Force/Radial the ticker and log carry them
+      if (store.layoutMode === 'geo') caption(`slot ${evt.slot} · block ${String(evt.block_root).slice(0, 10)}… · first seen ${evt.seen_ms} ms (${evt.client || '?'}, ${evt.country || '?'})`)
+    }
+    store.nodes[idx].state = evt.first ? 'origin' : 'decoded'
+    store.nodes[idx].seen_ms = evt.seen_ms as number
+  }
+
   for (const evt of events) {
     // Spawn particles for gossip messages — show message propagation
     if (evt.event_type === 'GossipMessage' && evt.from_peer && evt.to_peer) {
       // One particle per real hop, sender → receiver. The origin publish (no to_peer)
       // draws nothing; its flood relays each carry their own event.
-      const color = evt.from_peer.startsWith('sybil-') ? oklchToRgba(P.attacker, 220) : undefined
-      spawnParticle(evt.from_peer, evt.to_peer, color, evt.dropped === true)
+      spawnParticle(evt.from_peer, evt.to_peer, evt.from_peer.startsWith('sybil-') ? 'sybil' : undefined, evt.dropped === true)
     }
 
     // Spawn particles for graft/prune (mesh changes)
     if ((evt.event_type === 'GossipGraft' || evt.event_type === 'GossipPrune') && evt.from_peer && evt.to_peer) {
-      const color: [number, number, number, number] = evt.event_type === 'GossipGraft'
-        ? oklchToRgba(P.decoded, 200)   // Green for graft
-        : oklchToRgba(P.error, 200)     // Red for prune
-      spawnParticle(evt.from_peer, evt.to_peer, color)
+      spawnParticle(evt.from_peer, evt.to_peer, evt.event_type === 'GossipGraft' ? 'graft' : 'prune')
     }
 
     // Spawn particles for DHT queries
@@ -192,7 +213,7 @@ function handleWsEvents(events: AppEvent[]) {
       const node = dhtIdx !== undefined ? store.nodes[dhtIdx] : undefined
       if (node && node.connected_peers.length > 0) {
         const target = node.connected_peers[Math.floor(Math.random() * node.connected_peers.length)]
-        spawnParticle(initiator, target, oklchToRgba(P.routing, 200))
+        spawnParticle(initiator, target, 'dht')
       }
     }
 
@@ -205,13 +226,13 @@ function handleWsEvents(events: AppEvent[]) {
         if (node) {
           // Red particles burst from affected node to its peers
           for (const peer of node.connected_peers.slice(0, 4)) {
-            spawnParticle(target, peer, oklchToRgba(P.error, 220))
+            spawnParticle(target, peer, 'fault')
           }
         }
       }
     }
 
-    if (evt.event_type === 'SimulationStateChanged') {
+    if (evt.event_type === 'SimulationStateChanged' && !store.reel) {
       if (evt.state) store.simState = evt.state as any
       if (evt.speed) store.simSpeed = evt.speed
       store.playing = store.simState === 'running'
@@ -239,8 +260,7 @@ function handleWsEvents(events: AppEvent[]) {
 // ── Non-periodic WS frames: edges, scenario, gap ──
 function handleWsEdges(frame: { edges: [string, string][] }) {
   store.edges = frame.edges
-  const edgeKey = frame.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  const fullKey = `${store.nodes.map(n => n.peer_id).sort().join(',')}|${edgeKey}|${store.layoutMode}`
+  const fullKey = currentTopoKey()
   if (fullKey !== topoKey) {
     topoKey = fullKey
     recomputeLayout()
@@ -249,6 +269,7 @@ function handleWsEdges(frame: { edges: [string, string][] }) {
 
 function handleWsScenario(frame: any) {
   store.activeScenario = frame.active ? frame : null
+  buildScenarioDropdown()
   narratorOnScenario()
 }
 
@@ -269,6 +290,7 @@ function applyPrefs() {
   renderBands()
   renderTicker()
   renderLayers()
+  document.dispatchEvent(new CustomEvent('luminar:prefs-applied'))
 }
 
 function loadPrefs() {
@@ -306,25 +328,45 @@ async function fetchReels() {
   reelManifest.forEach((r, i) => {
     const btn = document.createElement('button')
     btn.className = 'dd-item'
-    btn.textContent = `${i + 1}  ${r.title}`
+    btn.dataset.reel = r.name
+    const kbd = document.createElement('span'); kbd.className = 'lm-kbd'; kbd.textContent = String(i + 1)
+    const name = document.createElement('span'); name.className = 'lm-dd-name'; name.textContent = r.title
+    btn.append(kbd, name)
     btn.title = r.blurb ?? ''
-    btn.addEventListener('click', () => { dd.style.display = 'none'; enterReel(r) })
+    btn.addEventListener('click', () => { setDropdown(dd, false); enterReel(r) })
     dd.appendChild(btn)
   })
   const div = document.createElement('div'); div.className = 'dd-divider'; dd.appendChild(div)
   const live = document.createElement('button')
-  live.className = 'dd-item'
-  live.textContent = '0  Back to live'
-  live.addEventListener('click', () => { dd.style.display = 'none'; exitReel() })
+  live.className = 'dd-item lm-dd-live'
+  const kbd0 = document.createElement('span'); kbd0.className = 'lm-kbd'; kbd0.textContent = '0'
+  const liveName = document.createElement('span'); liveName.className = 'lm-dd-name'; liveName.textContent = 'Back to live'
+  live.append(kbd0, liveName)
+  live.addEventListener('click', () => { setDropdown(dd, false); exitReel() })
   dd.appendChild(live)
+}
+
+/** #app.reel dims the live-only controls; the reel dropdown marks the playing row. */
+function syncReelChrome() {
+  document.getElementById('app')?.classList.toggle('reel', !!store.reel)
+  document.querySelectorAll<HTMLElement>('#reel-dropdown [data-reel]').forEach(b =>
+    b.classList.toggle('active', b.dataset.reel === store.reel?.name))
+}
+
+function setDropdown(dd: HTMLElement | null, visible: boolean) {
+  if (!dd) return
+  dd.style.display = visible ? 'block' : 'none'
+  dd.parentElement?.classList.toggle('open', visible)   // .dd-wrap.open drives the trigger + caret
 }
 
 async function enterReel(meta: ReelMeta) {
   ws.disconnect()
+  applyMainnetStatus(null)  // the reel brings its own status (real reels) or none (sim reels)
   topoKey = ''
   store.playing = false
   const ok = await loadReel(meta, () => { updatePlaybackUI(); renderLayers() })
   if (!ok) { exitReel(); return }
+  syncReelChrome()
   updateConnectionStatus(false)
   const url = new URL(location.href)
   url.searchParams.set('reel', meta.name)
@@ -333,6 +375,8 @@ async function enterReel(meta: ReelMeta) {
 
 function exitReel() {
   stopReel()
+  syncReelChrome()
+  applyMainnetStatus(null)  // a real reel's recorded status must not outlive it
   topoKey = ''
   const url = new URL(location.href)
   url.searchParams.delete('reel')
@@ -350,8 +394,8 @@ function initDropdowns() {
   const reelDD = document.getElementById('reel-dropdown')
   const all = [scenarioDD, faultDD, reelDD]
   const toggle = (dd: HTMLElement | null) => {
-    for (const other of all) if (other && other !== dd) other.style.display = 'none'
-    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none'
+    for (const other of all) if (other !== dd) setDropdown(other, false)
+    if (dd) setDropdown(dd, dd.style.display === 'none')
   }
 
   scenarioBtn?.addEventListener('click', () => toggle(scenarioDD))
@@ -366,12 +410,14 @@ function initDropdowns() {
   faultDD?.querySelectorAll('[data-fault]').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = (btn as HTMLElement).dataset.fault!
-      if (faultDD) faultDD.style.display = 'none'
+      setDropdown(faultDD, false)
+      if (reelGuard()) return
+      leaveGeoForSim()
 
       // Fire-and-forget — don't await, don't block UI
       switch (action) {
         case 'partition': {
-          const peers = store.nodes.map(n => n.peer_id)
+          const peers = store.nodes.filter(isSimPeer).map(n => n.peer_id)
           const mid = Math.floor(peers.length / 2)
           api.faultPartition(peers.slice(0, mid), peers.slice(mid))
             .then(() => showFaultFlash('Network Partition injected'))
@@ -382,13 +428,15 @@ function initDropdowns() {
             .then(() => showFaultFlash('Sybil Attack injected'))
           break
         case 'eclipse': {
-          const t = store.selectedNode >= 0 ? store.nodes[store.selectedNode].peer_id : store.nodes[0]?.peer_id
+          const sel = store.nodes[store.selectedNode]
+          const t = sel && isSimPeer(sel) ? sel.peer_id : store.nodes.find(isSimPeer)?.peer_id
           if (t) api.faultEclipse(t, 4)
             .then(() => showFaultFlash(`Eclipse on ${t}`))
           break
         }
         case 'drop': {
-          const t = store.selectedNode >= 0 ? store.nodes[store.selectedNode].peer_id : null
+          const sel = store.nodes[store.selectedNode]
+          const t = sel && isSimPeer(sel) ? sel.peer_id : null
           if (t) api.faultDrop(t)
             .then(() => showFaultFlash(`Dropped ${t}`))
           break
@@ -402,18 +450,23 @@ function initDropdowns() {
   })
 
   document.addEventListener('click', (e) => {
-    if (scenarioDD && !(e.target as HTMLElement).closest('#scenario-picker')) scenarioDD.style.display = 'none'
-    if (faultDD && !(e.target as HTMLElement).closest('#fault-picker')) faultDD.style.display = 'none'
+    if (!(e.target as HTMLElement).closest('.dd-wrap')) for (const dd of all) setDropdown(dd, false)
   })
 }
 
 // ── WebSocket-pushed snapshot handler (replaces HTTP polling) ──
 function handleWsSnapshot(snap: any) {
-  store.simState = snap.state
+  if (!store.reel) {  // a reel's recorded state/speed describe the recording, not the player
+    store.simState = snap.state
+    store.simSpeed = snap.speed
+  }
   store.simTime = snap.time
-  store.simSpeed = snap.speed
   store.nodeCount = snap.node_count
+  syncNodePreset(snap.node_count)
   store.eventCount = snap.event_count
+  // Selection is remembered by id from the store itself, so every site that clears or sets
+  // store.selectedNode (Escape, inspector close, event row, Reset) is honoured on the next frame
+  const selectedPeerId = store.selectedNode >= 0 ? store.nodes[store.selectedNode]?.peer_id ?? null : null
   store.nodes = snap.nodes
   store.mesh = snap.gossip?.mesh ?? {}
   // In reel mode the recorded state says nothing about the player; a seek replays a
@@ -425,6 +478,15 @@ function handleWsSnapshot(snap: any) {
   for (let i = 0; i < store.nodes.length; i++) {
     store.nodeIndex.set(store.nodes[i].peer_id, i)
   }
+  // Re-resolve the selection by id; drop it if the node is gone
+  const resolved = selectedPeerId ? store.nodeIndex.get(selectedPeerId) : undefined
+  if (store.selectedNode !== (resolved ?? -1)) {
+    store.selectedNode = resolved ?? -1
+    if (resolved === undefined) { store.highlightPeers = []; document.dispatchEvent(new CustomEvent('luminar:nodeselect')) }
+  }
+  // Geo availability follows the node set; the feed auto-selects Geo once observers exist
+  maybeAutoGeo()
+  updateGeoAvailability()
 
   // Auto-pause at duration limit (live only)
   if (!store.reel && store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
@@ -434,8 +496,7 @@ function handleWsSnapshot(snap: any) {
   }
 
   // Check topology change
-  const nodeIds = snap.nodes.map((n: any) => n.peer_id).sort().join(',')
-  const newTopoKey = `${nodeIds}|${store.layoutMode}`
+  const newTopoKey = currentTopoKey()
   if (newTopoKey !== topoKey) {
     topoKey = newTopoKey
     recomputeLayout()
@@ -470,6 +531,7 @@ function handleWsAnalytics(analytics: any) {
 
 // ── WebSocket-pushed telemetry status handler ──
 function handleWsTelemetryStatus(status: any) {
+  applyMainnetStatus(status?.mainnet)
   const badge = document.getElementById('telemetry-badge') as HTMLButtonElement | null
   if (!badge) return
   badge.style.display = status.active ? 'inline-flex' : 'none'
@@ -485,13 +547,6 @@ function showFaultFlash(message: string) {
 
   const flash = document.createElement('div')
   flash.id = 'fault-flash'
-  flash.style.cssText = `
-    position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:100;
-    background:oklch(0.20 0.08 25/0.9);border:1px solid oklch(0.45 0.15 25/0.6);
-    border-radius:4px;padding:8px 16px;font-size:12px;font-weight:600;
-    color:oklch(0.65 0.20 25);pointer-events:none;font-family:var(--font);
-    backdrop-filter:blur(8px);animation:fault-fade 2s ease-out forwards;
-  `.replace(/\n/g, '')
   flash.textContent = message
   document.getElementById('map-container')?.appendChild(flash)
 
@@ -503,6 +558,7 @@ function initPresets() {
   // Duration presets
   document.querySelectorAll('#duration-presets .preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (reelGuard()) return
       const duration = parseInt((btn as HTMLElement).dataset.duration ?? '300', 10)
       store.maxDuration = duration
       // Update active state
@@ -514,6 +570,8 @@ function initPresets() {
   // Node count presets
   document.querySelectorAll('#node-presets .preset-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
+      if (reelGuard()) return
+      leaveGeoForSim()
       const n = parseInt((btn as HTMLElement).dataset.nodes ?? '20', 10)
       // Update active state
       document.querySelectorAll('#node-presets .preset-btn').forEach(b => b.classList.remove('active'))
@@ -550,6 +608,117 @@ function handleResize() {
 }
 
 // ── Init ──
+// ── Live mainnet feed (ethPandaOps arrival data) ──
+function applyMainnetStatus(m: any) {
+  const was = store.mainnet?.enabled ?? false
+  store.mainnet = m ?? null
+  const on = !!m?.enabled
+  document.getElementById('mainnet-badge')?.classList.toggle('active', on)
+  const prov = document.getElementById('provenance')
+  if (prov) {
+    prov.style.display = on ? 'block' : 'none'
+    if (on) {
+      prov.textContent = ''
+      const k = document.createElement('span'); k.className = 'prov-k'; k.textContent = store.reel ? 'RECORDED MAINNET' : 'LIVE MAINNET'
+      const v = document.createElement('span'); v.className = 'prov-v'
+      const where = store.layoutMode === 'geo' ? '' : ' · shown on the Geo layout'
+      v.textContent = `slot ${m.slot ?? '…'} · ${store.reel ? 'recorded' : `T−${m.lag_s ?? 156}s`} · ${m.with_geo ?? m.observers ?? 0} observers${where} · arrival at observer nodes, not mesh paths · data: ethPandaOps (CC BY 4.0)`
+      prov.append(k, v)
+    }
+  }
+  if (on && !was) maybeAutoGeo()
+  if (!on && was) { geoAutoDone = false; updateGeoAvailability() }
+  renderTicker()
+}
+
+function setLayoutMode(mode: LayoutMode) {
+  if (mode === 'geo' && !hasRealNodes()) mode = 'force'  // Geo is for real observers only
+  document.querySelectorAll<HTMLButtonElement>('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode))
+  store.layoutMode = mode
+  // A node that is not drawn in this view cannot stay selected (no ghost ring, no inspector)
+  if (store.selectedNode >= 0 && !isNodeVisible(mode, store.nodes[store.selectedNode])) {
+    store.selectedNode = -1
+    store.highlightPeers = []
+    document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
+  }
+  recomputeLayout()
+  topoKey = currentTopoKey()  // already laid out: the next snapshot must not recompute again
+  if (store.mainnet?.enabled) applyMainnetStatus(store.mainnet)
+}
+
+/** Placed nodes (mainnet observers, real-trace reel, telemetry peers) are the only ones with coordinates. */
+function hasRealNodes(): boolean {
+  return store.nodes.some(n => !isSimPeer(n))
+}
+
+let layoutBeforeGeo: LayoutMode | null = null
+let geoAutoDone = false  // the feed auto-selects Geo once per feed-on, never on later snapshots
+
+/** The feed picks Geo once, as soon as observers exist; a manual pick afterwards wins. */
+function maybeAutoGeo() {
+  if (!store.mainnet?.enabled || !hasRealNodes() || geoAutoDone) return
+  geoAutoDone = true
+  if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
+}
+
+/** Called whenever the node set or the feed changes: Geo is offered only while real
+ *  observers exist, and leaving that state restores the layout the user had before. */
+function updateGeoAvailability() {
+  const real = hasRealNodes()
+  const tab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="geo"]')
+  if (tab) {
+    tab.disabled = !real
+    tab.title = real ? 'Place real observers by latitude/longitude' : 'Geo needs real observers (turn MAINNET on or open a real reel)'
+  }
+  if (!real && store.layoutMode === 'geo') {
+    const back = layoutBeforeGeo ?? 'force'
+    layoutBeforeGeo = null
+    setLayoutMode(back)
+  }
+}
+
+/** The simulation is invisible in Geo; a simulated action switches back so it can be seen. */
+function leaveGeoForSim() {
+  if (store.layoutMode !== 'geo') return
+  const back = layoutBeforeGeo ?? 'force'
+  layoutBeforeGeo = null
+  setLayoutMode(back)
+  showFaultFlash('Geo shows real observers only — switched to ' + back)
+}
+
+async function toggleMainnet() {
+  if (store.reel) { showFaultFlash('Press 0 to leave the reel first'); return }
+  const res = await api.liveMainnet(!(store.mainnet?.enabled))
+  if (!res) { showFaultFlash('Backend offline'); return }
+  applyMainnetStatus(res)
+}
+
+// ── URL moments: ?t= (paused sim seconds, reels only) and ?peer= ──
+function syncUrlMoment() {
+  const url = new URL(location.href)
+  const sel = store.selectedNode >= 0 ? store.nodes[store.selectedNode]?.peer_id : undefined
+  if (sel) url.searchParams.set('peer', sel); else url.searchParams.delete('peer')
+  if (store.reel && !store.playing) url.searchParams.set('t', store.simTime.toFixed(1)); else url.searchParams.delete('t')
+  if (url.href !== location.href) history.replaceState(null, '', url)
+}
+
+async function shareMoment() {
+  syncUrlMoment()
+  try { await navigator.clipboard.writeText(location.href); showFaultFlash('Link copied') }
+  catch { window.prompt('Copy this link', location.href) }
+}
+
+function applyUrlMoment() {
+  const q = new URLSearchParams(location.search)
+  const t = Number(q.get('t'))
+  if (store.reel && q.has('t') && Number.isFinite(t)) seekReelToSimTime(t)
+  const peer = q.get('peer')
+  if (peer) {
+    const idx = store.nodeIndex.get(peer)
+    if (idx !== undefined) { store.selectedNode = idx; document.dispatchEvent(new CustomEvent('luminar:nodeselect')); renderLayers() }
+  }
+}
+
 async function main() {
   // Initialize UI
   initStatsPanel()
@@ -557,13 +726,17 @@ async function main() {
   initPeerInspector()
   initTelemetryPanel()
   initPlayback()
-  initLegend()
   initKeyboard()
   initDropdowns()
   initPresets()
 
   // Telemetry badge click → toggle panel
   document.getElementById('telemetry-badge')?.addEventListener('click', toggleTelemetryPanel)
+  document.getElementById('mainnet-badge')?.addEventListener('click', () => { void toggleMainnet() })
+  document.addEventListener('luminar:share', () => { void shareMoment() })
+  document.addEventListener('luminar:sim-action', leaveGeoForSim)
+  document.addEventListener('luminar:nodeselect', syncUrlMoment)
+  setInterval(syncUrlMoment, 1000)
 
   // Initialize renderer
   const deckCanvas = document.getElementById('deck-canvas') as HTMLCanvasElement
@@ -575,9 +748,9 @@ async function main() {
   handleResize()
 
   // Mode switcher
-  initModeSwitcher(() => {
-    topoKey = ''
-    recomputeLayout()
+  initModeSwitcher((mode) => {
+    layoutBeforeGeo = null  // a manual pick replaces the remembered layout
+    setLayoutMode(mode)
   })
 
   // Keyboard events
@@ -592,6 +765,7 @@ async function main() {
 
   initNarrator()
   loadPrefs()
+  initLegend()  // after loadPrefs: the settings toggles are built from the restored prefs
   ws.bind(
     handleWsEvents,
     updateConnectionStatus,
@@ -607,9 +781,9 @@ async function main() {
   await fetchReels()
   const reelParam = new URLSearchParams(location.search).get('reel')
   const reelMeta = reelParam ? reelManifest.find(r => r.name === reelParam) : undefined
-  if (reelMeta) {
-    // Offline path: no backend needed at all
-    await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })
+  // Offline path: no backend needed at all. A reel that fails to load falls back to live.
+  if (reelMeta && await loadReel(reelMeta, () => { updatePlaybackUI(); renderLayers() })) {
+    applyUrlMoment()
     updateConnectionStatus(false)
   } else {
     // Live: multiplexed WS (snapshot, metrics, analytics pushed by server)
@@ -618,6 +792,7 @@ async function main() {
     // Initial data fetch (one-time, then WS takes over)
     await fetchSnapshot()
     await fetchEdges()
+    applyUrlMoment()
   }
   await fetchScenarios()
 

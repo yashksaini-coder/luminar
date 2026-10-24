@@ -79,7 +79,7 @@ export function seekReel(ms: number) {
     if (f.type) last[f.type] = f          // edges / scenario / snapshot / metrics / analytics
     i++
   }
-  for (const type of ['edges', 'scenario', 'snapshot', 'metrics', 'analytics']) {
+  for (const type of ['edges', 'scenario', 'telemetry_status', 'snapshot', 'metrics', 'analytics']) {
     if (last[type]) ws.dispatch(last[type])
   }
   ws.flush()

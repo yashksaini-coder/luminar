@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
 Usage: ./start.sh [OPTIONS]
 
 Options:
-  --nodes N       Number of simulated peers (default: 20, range: 2-100)
+  --nodes N       Number of simulated peers (default: 20, range: 2-500)
   --port PORT     Backend port (default: 8000)
   --log LEVEL     Log level: DEBUG, INFO, WARNING, ERROR (default: INFO)
   --prod          Disable hot-reload (suitable for demos)

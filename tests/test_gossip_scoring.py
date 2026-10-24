@@ -105,6 +105,13 @@ def test_score_breakdown():
     assert bd["time_in_mesh_s"] == 5.0
 
 
+def test_time_in_mesh_floors_at_zero_when_clock_moves_back():
+    """A reset/seek can put `now` before mesh_join_time; P1 must not go negative and prune."""
+    scorer = PeerScoreTracker()
+    scorer.on_graft("t", "peer-0", 40.0)
+    assert scorer.compute_score("t", "peer-0", 0.1) == 0.0
+
+
 # ── Flood Publish Tests ──
 
 
@@ -157,7 +164,7 @@ async def test_heartbeat_ihave_iwant(event_bus, clock):
     # peer-0 has a message that others haven't seen
     from backend.gossip.engine import MessageTrace
 
-    g._seen["peer-0"].add("msg-fake")
+    g._seen["peer-0"]["msg-fake"] = None
     g._history["peer-0"].append("msg-fake")
     g._traces["msg-fake"] = MessageTrace(
         msg_id="msg-fake", topic="t", origin="peer-0", created_at=clock.time

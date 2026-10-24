@@ -4,6 +4,11 @@ import type { SimSnapshot, MetricsSnapshot, AppEvent, ScenarioDefinition, Active
 // Prod: VITE_API_URL points to the deployed backend
 const BASE: string = import.meta.env.VITE_API_URL ?? ''
 
+/** Presenter token for a deploy with LUMINAR_ADMIN_TOKEN set; absent = viewer-only. */
+export function adminToken(): string | null {
+  try { return localStorage.getItem('luminar.token') } catch { return null }
+}
+
 async function get<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(BASE + path)
@@ -14,9 +19,13 @@ async function get<T>(path: string): Promise<T | null> {
 
 async function post<T>(path: string, body?: unknown): Promise<T | null> {
   try {
+    const headers: Record<string, string> = {}
+    if (body != null) headers['Content-Type'] = 'application/json'
+    const token = adminToken()
+    if (token) headers['X-Luminar-Token'] = token
     const res = await fetch(BASE + path, {
       method: 'POST',
-      headers: body != null ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body != null ? JSON.stringify(body) : undefined,
     })
     if (!res.ok) return null
@@ -79,6 +88,9 @@ export const faultClearAll = () =>
   post<{ok: boolean; cleared: number}>('/api/fault/clear-all')
 export const faultActive = () =>
   get<{faults: ActiveFault[]}>('/api/fault/active')
+
+// Live network
+export const liveMainnet = (enabled: boolean) => post<{enabled: boolean}>('/api/live/mainnet', { enabled })
 
 // Scenarios
 export const scenariosList = () => get<{scenarios: ScenarioDefinition[]}>('/api/scenarios')

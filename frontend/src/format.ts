@@ -16,3 +16,8 @@ export function truncatePeerId(peerId: string): string {
   return peerId.replace('peer-', '#')
 }
 
+
+/** Short display name: n12 for simulated peers, the raw id for attackers/telemetry peers. */
+export function shortName(node: { peer_id: string; index: number }): string {
+  return node.peer_id.startsWith('peer-') ? `n${node.index}` : node.peer_id
+}

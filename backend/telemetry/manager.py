@@ -28,6 +28,8 @@ _TELEM_Y_MAX = 550
 
 # Peers not heard from in this many seconds are evicted
 _TTL_SECONDS = 60
+# Every peer is appended to every viewer's snapshot frame; the registry is open to anyone
+_MAX_PEERS = 64
 
 
 @dataclass
@@ -98,6 +100,9 @@ class TelemetryManager:
         async with self._lock:
             existing = self._peers.get(peer_id)
             if existing is None:
+                if len(self._peers) >= _MAX_PEERS:
+                    logger.warning("Telemetry registry full (%d); dropping %s", _MAX_PEERS, peer_id)
+                    return
                 self._index_counter += 1
                 idx = self._index_counter
             else:

@@ -152,3 +152,25 @@ def test_metrics_empty_graph():
     m = TopologyManager.compute_metrics(g)
     assert m["nodes"] == 0
     assert m["edges"] == 0
+
+
+def test_metrics_skip_clustering_on_huge_graphs():
+    """average_clustering is gated by edge count; algebraic_connectivity is gone."""
+    import networkx as nx
+
+    from backend.topology.manager import MAX_CLUSTERING_EDGES
+
+    def disjoint_edges(k: int) -> nx.Graph:  # k edges, largest component is 2 nodes: cheap
+        g = nx.Graph()
+        g.add_edges_from((2 * i, 2 * i + 1) for i in range(k))
+        return g
+
+    assert (
+        TopologyManager.compute_metrics(disjoint_edges(MAX_CLUSTERING_EDGES))[
+            "clustering_coefficient"
+        ]
+        == 0.0
+    )
+    m = TopologyManager.compute_metrics(disjoint_edges(MAX_CLUSTERING_EDGES + 1))
+    assert m["clustering_coefficient"] == -1
+    assert "algebraic_connectivity" not in m

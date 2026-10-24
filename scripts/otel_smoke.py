@@ -3,11 +3,12 @@
 
 make otel-up
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 make backend   # in another shell
-make otel-smoke
+make otel-smoke   # LUMINAR_OTLP_TRACE_PCT=100 on the backend for an instant result
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import time
@@ -40,18 +41,27 @@ def main() -> int:
             "FAIL: exporter disabled — start the backend with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318"
         )
         return 1
+    pct = status["sample_pct"]
     _post(f"{BASE}/api/sim/play")
-    # Peers publish after a random 5-15 sim-second wait: poll for the first trace (≤ 20 s)
+    # Peers publish after a random 5-15 sim-second wait, and the exporter only emits the
+    # traces `sampled()` picks (LUMINAR_OTLP_TRACE_PCT, default 5): poll until one of the
+    # recent messages is a sampled one (~2 msg/s at 1x, so 60 s is ample at 5%).
     trace = None
-    for _ in range(40):
-        recent = _get(f"{BASE}/api/trace/recent?limit=1")
+    for _ in range(120):
+        recent = _get(f"{BASE}/api/trace/recent?limit=50")
         items = recent if isinstance(recent, list) else recent.get("traces", [])
-        if items:
-            trace = _get(f"{BASE}/api/trace/{items[0]['msg_id']}")
+        run_id = _get(f"{BASE}/api/otel/status")["run_id"]
+        for item in items:
+            # same rule as backend/otel/ids.py: trace_id = md5(run_id|msg_id), sampled by %100
+            tid = hashlib.md5(f"{run_id}|{item['msg_id']}".encode()).hexdigest()
+            if int(tid[:8], 16) % 100 < pct:
+                trace = _get(f"{BASE}/api/trace/{item['msg_id']}")
+                break
+        if trace is not None:
             break
         time.sleep(0.5)
     if trace is None:
-        print("FAIL: no message published within 20 s")
+        print(f"FAIL: no sampled message within 60 s (sample_pct={pct})")
         return 1
     tid = trace["trace_id"]
     time.sleep(2.5)  # exporter flushes every 1 s

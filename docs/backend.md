@@ -8,7 +8,6 @@
 | FastAPI | Latest | HTTP + WebSocket server |
 | uvicorn | Latest | ASGI server |
 | Trio | Latest | Structured concurrency (async runtime) |
-| py-libp2p | Latest | P2P protocol primitives |
 | NetworkX | Latest | Graph theory / topology generation |
 | orjson | Latest | Fast JSON serialization (binary output) |
 | Pydantic | v2 | Data validation for API models |
@@ -21,7 +20,7 @@ Trio provides **structured concurrency** — every async task has a well-defined
 - Clean cancellation (cancelling a nursery cancels all child tasks)
 - No silent exception swallowing (exceptions propagate to parent nurseries)
 
-Since py-libp2p is built on Trio, Luminar uses Trio exclusively to avoid the complexity and bugs of mixing async runtimes.
+py-libp2p is Trio-based, so modelling its peers in Trio keeps the concurrency semantics comparable. Luminar uses Trio exclusively for the simulation to avoid mixing async runtimes.
 
 ## 4.2 Entry Point — `backend/main.py`
 
@@ -32,20 +31,20 @@ The FastAPI application serves as both the HTTP API and WebSocket server.
 ```python
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create engine, injector, metrics, gossip
-    engine = SimulationEngine(node_count=NODE_COUNT)
-    fault_injector = FaultInjector()
-    metrics = MetricsCollector()
-
-    # Start trio simulation in background thread
-    trio_thread = Thread(target=trio.run, args=(run_simulation,))
-    trio_thread.start()
+    n_nodes = int(os.environ.get("LUMINAR_NODE_COUNT", 20))
+    _build_simulation(n_nodes)   # engine, injector, metrics, gossip sinks, topology
+    _start_sim_thread()          # daemon thread running trio.run(...); never joined
+    telemetry_manager.start()
+    if otlp_exporter is not None:
+        otlp_exporter.start()
 
     yield  # Application runs
 
-    # Shutdown: stop engine, join thread
-    engine.stop()
-    trio_thread.join()
+    # Shutdown: stop the collectors, then the simulation clock
+    telemetry_manager.stop()
+    if otlp_exporter is not None:
+        otlp_exporter.stop()
+    engine.clock.stop()
 ```
 
 ### Trio–asyncio Bridge
@@ -122,7 +121,7 @@ Central pub/sub hub with ring buffer for replay:
 ```python
 class EventBus:
     _subscribers: list[trio.MemorySendChannel]
-    _ring: deque[BaseEvent]  # maxlen=500_000
+    _ring: deque[BaseEvent]  # maxlen=LUMINAR_RING_SIZE (default 50_000)
     _event_count: int
 
     async def emit(self, event: BaseEvent):
@@ -145,7 +144,7 @@ class EventBus:
 ```
 
 **Design Decisions:**
-- **Ring buffer (500k)**: Bounded memory (~200MB worst case), oldest events evicted
+- **Ring buffer (50k default, `LUMINAR_RING_SIZE`)**: Bounded memory (~12MB), oldest events evicted
 - **Backpressure**: Slow subscribers get dropped events (not blocked)
 - **events_since()**: Enables timeline scrubbing — seek to time T, replay events from T
 
@@ -292,7 +291,7 @@ class NodePool:
 
 ### StreamManager (`backend/concurrency/stream_manager.py`)
 
-Manages the lifecycle of libp2p streams with guaranteed cleanup:
+Manages the lifecycle of simulated libp2p-style streams with guaranteed cleanup:
 
 ```python
 class StreamManager:
@@ -400,7 +399,7 @@ class TopologyManager:
             case "complete":
                 G = nx.complete_graph(n)
 
-        positions = nx.spring_layout(G, scale=400)
+        positions = nx.circular_layout(G, scale=400)  # frontend runs its own d3-force layout
         return G, positions
 
     def compute_metrics(self, G: Graph) -> dict:
@@ -411,7 +410,6 @@ class TopologyManager:
             "clustering": nx.average_clustering(G),
             "diameter": nx.diameter(G),
             "avg_path_length": nx.average_shortest_path_length(G),
-            "algebraic_connectivity": nx.algebraic_connectivity(G),
             "degree_distribution": dict(Counter(dict(G.degree()).values())),
         }
 ```

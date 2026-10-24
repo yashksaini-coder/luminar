@@ -13,6 +13,8 @@ import time
 from collections import Counter
 from typing import TYPE_CHECKING
 
+from backend.peers import is_attacker, is_honest
+
 if TYPE_CHECKING:
     from backend.events.types import BaseEvent
     from backend.simulation.engine import SimulationEngine
@@ -135,7 +137,7 @@ class GossipMetrics:
         except RuntimeError:  # concurrent mutation on the trio thread; skip this scrape
             return "\n".join(out) + "\n"
 
-        honest = {p: m for p, m in mesh.items() if p.startswith("peer-")}
+        honest = {p: m for p, m in mesh.items() if is_honest(p)}
         degrees = [len(m) for m in honest.values()]
         avg_deg = sum(degrees) / len(degrees) if degrees else 0.0
         line(
@@ -189,6 +191,6 @@ class GossipMetrics:
         line("luminar_sim_time_seconds", _lbl(), engine.clock.time, "gauge")
         line("luminar_speed", _lbl(), engine.clock.speed, "gauge")
         line("luminar_node_count", _lbl(), engine.node_pool.node_count, "gauge")
-        attackers = sum(1 for p in mesh if p.startswith(("sybil-", "eclipse-")))
+        attackers = sum(1 for p in mesh if is_attacker(p))
         line("luminar_attackers", _lbl(), attackers, "gauge")
         return "\n".join(out) + "\n"

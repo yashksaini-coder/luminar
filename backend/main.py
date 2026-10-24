@@ -8,6 +8,7 @@ Communication between the two happens via thread-safe queues and shared state.
 from __future__ import annotations
 
 import asyncio
+import hmac
 import io
 import logging
 import os
@@ -16,14 +17,17 @@ from contextlib import asynccontextmanager
 
 import orjson
 import trio
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend.events.recorder import ReelRecorder
 from backend.fault.injector import FaultInjector
+from backend.live.mainnet import MainnetFeed
 from backend.metrics.collector import MetricsCollector
 from backend.otel.exporter import OtlpTraceExporter
 from backend.otel.ids import trace_id as otel_trace_id
@@ -35,7 +39,10 @@ from backend.telemetry.manager import TelemetryManager
 from backend.telemetry.models import TelemetryPayload
 from backend.topology.manager import TopologyConfig, TopologyManager
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=os.environ.get("LUMINAR_LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # Global simulation state
@@ -45,6 +52,7 @@ metrics_collector: MetricsCollector | None = None
 topology_manager = TopologyManager()
 scenario_runner = ScenarioRunner()
 telemetry_manager = TelemetryManager()
+mainnet_feed = MainnetFeed()
 gossip_metrics = GossipMetrics()
 # OTel-out is opt-in: set OTEL_EXPORTER_OTLP_ENDPOINT (e.g. http://localhost:4318) to enable.
 _otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT") or os.environ.get(
@@ -60,6 +68,8 @@ _initial_edges: list[tuple[str, str]] = []
 _sim_cancel_scope: trio.CancelScope | None = None
 _sim_thread: threading.Thread | None = None
 _launch_gen = 0  # bumped on every scenario launch/clear so WS clients get a fresh scenario frame
+# One global lock: reconfigure is a whole-process teardown, so serialising it is the point
+_reconfigure_lock = asyncio.Lock()
 
 
 def _run_simulation_in_trio(
@@ -130,6 +140,10 @@ async def lifespan(app: FastAPI):
     _build_simulation(n_nodes)
     _start_sim_thread()
     telemetry_manager.start()
+    mainnet_feed.emit = _emit_from_asyncio
+    mainnet_feed.sim_time = lambda: engine.clock.time if engine else 0.0
+    if os.environ.get("LUMINAR_MAINNET_FEED") == "1":
+        mainnet_feed.start()
     if otlp_exporter is not None:
         otlp_exporter.start()
         logger.info("OTLP trace export → %s", otlp_exporter.endpoint)
@@ -138,12 +152,39 @@ async def lifespan(app: FastAPI):
     yield
 
     telemetry_manager.stop()
+    mainnet_feed.stop()
     if otlp_exporter is not None:
         otlp_exporter.stop()
     engine.clock.stop()
 
 
 app = FastAPI(title="Luminar P2P Simulator", version="0.1.0", lifespan=lifespan)
+
+# Admin gate: when LUMINAR_ADMIN_TOKEN is set, every mutating request (and the telemetry
+# WS) must carry it; unset (the laptop default) leaves the API fully open as before.
+_ADMIN_TOKEN = os.environ.get("LUMINAR_ADMIN_TOKEN", "")
+
+
+def _token_ok(token: str | None) -> bool:
+    return not _ADMIN_TOKEN or hmac.compare_digest((token or "").encode(), _ADMIN_TOKEN.encode())
+
+
+def _ws_token_ok(ws: WebSocket) -> bool:
+    """Admin token for WebSocket handshakes: header only, so it never lands in URL/access logs.
+    Browsers cannot set WS headers, which is fine: the UI never records and never ingests."""
+    return _token_ok(ws.headers.get("x-luminar-token"))
+
+
+@app.middleware("http")
+async def _admin_gate(request: Request, call_next):
+    if request.method not in ("GET", "HEAD", "OPTIONS") and not _token_ok(
+        request.headers.get("x-luminar-token")
+    ):
+        return Response(
+            b'{"detail":"X-Luminar-Token required"}', status_code=403, media_type="application/json"
+        )
+    return await call_next(request)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -152,6 +193,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(_request, exc: RequestValidationError) -> Response:
+    """FastAPI's default 422 body is json.dumps'd and raises when the rejected input is
+    inf/nan (e.g. `"ms": 1e400`), turning the rejection into a 500; orjson emits null."""
+    body = orjson.dumps({"detail": jsonable_encoder(exc.errors())})
+    return Response(body, status_code=422, media_type="application/json")
 
 
 # --- WebSocket ---
@@ -176,7 +225,7 @@ async def websocket_events(ws: WebSocket):
     # (never set it on a public deploy).
     recorder = (
         ReelRecorder.open_if_valid(ws.query_params.get("record"))
-        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1"
+        if os.environ.get("LUMINAR_ALLOW_RECORD") == "1" and _ws_token_ok(ws)
         else None
     )
     logger.info("WS client connected%s", f" (recording {recorder.path})" if recorder else "")
@@ -233,10 +282,7 @@ async def websocket_events(ws: WebSocket):
                 # Nothing in the UI reads per-snapshot traces (/api/trace/* serves them) and
                 # they are ~60% of a reel's bytes, so the WS frame omits them.
                 snap["gossip"].pop("recent_traces", None)
-                telem = telemetry_manager.get_nodes_as_peer_dicts()
-                if telem:
-                    snap["nodes"] = snap["nodes"] + telem
-                    snap["node_count"] = len(snap["nodes"])
+                _merge_real_peers(snap)
                 await send(snap)
 
             # ── Metrics + Analytics (every 40 ticks = 2s) ──
@@ -258,6 +304,7 @@ async def websocket_events(ws: WebSocket):
                 try:
                     telem_status = telemetry_manager.get_status()
                     telem_status["type"] = "telemetry_status"
+                    telem_status["mainnet"] = mainnet_feed.get_status()
                     telem_status["otel"] = (
                         otlp_exporter.status() if otlp_exporter else {"enabled": False}
                     )
@@ -295,12 +342,29 @@ async def sim_pause():
     return {"state": engine.state}
 
 
-@app.post("/api/sim/reset")
-async def sim_reset():
-    if engine is None:
-        raise HTTPException(status_code=503, detail="Simulation not initialized")
+async def _reset_run() -> None:
+    """Fresh run on the existing pool: clear faults, restart clock/bus/gossip, re-mesh at t=0.
+
+    clear_all runs on the trio thread (it emits FaultCleared and strips attacker ids from
+    meshes); the clock/bus reset afterwards so those events do not linger in the new run.
+    """
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
     engine.clock.reset()
     engine.event_bus.clear()
+    engine.node_pool.gossip.reset()
+    engine.node_pool.reset()
+    engine.node_pool.wire_topology(_initial_edges)  # re-graft every mesh member at t=0
+    engine.new_run()  # fresh trace-id scope for the exporter
+    if otlp_exporter is not None:
+        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
+
+
+@app.post("/api/sim/reset")
+async def sim_reset():
+    if engine is None or fault_injector is None:
+        raise HTTPException(status_code=503, detail="Simulation not initialized")
+    await _reset_run()
     return {"state": engine.state}
 
 
@@ -311,35 +375,36 @@ class ReconfigureRequest(BaseModel):
 @app.post("/api/sim/reconfigure")
 async def sim_reconfigure(req: ReconfigureRequest):
     """Tear down the current simulation and restart with a new node count."""
-    global _sim_thread, _sim_cancel_scope, _trio_token
+    global _sim_thread, _sim_cancel_scope, _trio_token, _launch_gen
 
     n = max(2, min(500, req.n_nodes))
     loop = asyncio.get_running_loop()
 
-    # Cancel the running trio nursery from a thread-pool worker
-    if _sim_cancel_scope is not None and _trio_token is not None:
-        try:
-            await loop.run_in_executor(
-                None,
-                lambda: trio.from_thread.run_sync(_sim_cancel_scope.cancel, trio_token=_trio_token),
-            )
-        except Exception as exc:
-            logger.warning("Error cancelling trio nursery: %s", exc)
+    async with _reconfigure_lock:
+        # Capture locally: the executor lambda must not read a global a later call replaced
+        scope, token, thread = _sim_cancel_scope, _trio_token, _sim_thread
+        if scope is not None and token is not None:
+            try:
+                await loop.run_in_executor(
+                    None, lambda: trio.from_thread.run_sync(scope.cancel, trio_token=token)
+                )
+            except Exception as exc:
+                logger.warning("Error cancelling trio nursery: %s", exc)
 
-    # Wait for the old thread to stop (max 5 s)
-    if _sim_thread and _sim_thread.is_alive():
-        _sim_thread.join(timeout=5)
+        # Wait for the old thread to stop (max 5 s) without blocking the asyncio loop
+        if thread and thread.is_alive():
+            await loop.run_in_executor(None, thread.join, 5)
+        _sim_cancel_scope = None
 
-    # Clear active scenario before rebuilding
-    scenario_runner.set_scenario(None)
-    global _launch_gen
-    _launch_gen += 1
+        # Clear active scenario before rebuilding
+        scenario_runner.set_scenario(None)
+        _launch_gen += 1
 
-    # Rebuild simulation with new node count and start fresh trio thread
-    _build_simulation(n)
-    _start_sim_thread()
-    logger.info("Reconfigured: %d nodes, %d edges", n, len(_initial_edges))
-    return {"n_nodes": n, "edge_count": len(_initial_edges)}
+        # Rebuild simulation with new node count and start fresh trio thread
+        _build_simulation(n)
+        _start_sim_thread()
+        logger.info("Reconfigured: %d nodes, %d edges", n, len(_initial_edges))
+        return {"n_nodes": n, "edge_count": len(_initial_edges)}
 
 
 class SpeedRequest(BaseModel):
@@ -366,11 +431,20 @@ async def sim_seek(req: SeekRequest):
     return {"time": engine.clock.time}
 
 
+def _merge_real_peers(snap: dict) -> dict:
+    """Append telemetry peers and mainnet observers; node_count stays the simulated pool."""
+    telem = telemetry_manager.get_nodes_as_peer_dicts()
+    live = mainnet_feed.get_nodes_as_peer_dicts()
+    if telem or live:
+        snap["nodes"] = snap["nodes"] + telem + live
+    return snap
+
+
 @app.get("/api/sim/snapshot")
 async def sim_snapshot():
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
-    return engine.get_snapshot()
+    return _merge_real_peers(engine.get_snapshot())
 
 
 # --- Nodes ---
@@ -403,12 +477,26 @@ async def topology_list():
 
 class TopologyRequest(BaseModel):
     topo_type: str = "random"
-    n_nodes: int = 20
-    p: float = 0.15
-    m: int = 3
-    n_clusters: int = 3
-    intra_p: float = 0.3
-    inter_p: float = 0.01
+    n_nodes: int = Field(20, ge=2, le=500)  # same ceiling as /api/sim/reconfigure
+    p: float = Field(0.15, ge=0.0, le=1.0)
+    m: int = Field(3, ge=1, le=500)
+    n_clusters: int = Field(3, ge=1, le=500)  # 0 -> ZeroDivisionError in _clustered
+    intra_p: float = Field(0.3, ge=0.0, le=1.0)
+    inter_p: float = Field(0.01, ge=0.0, le=1.0)
+
+
+def _topology_config(req: TopologyRequest) -> TopologyConfig:
+    if req.topo_type not in TopologyManager.SUPPORTED_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown topology: {req.topo_type}")
+    return TopologyConfig(**req.model_dump())
+
+
+def _build_topology(config: TopologyConfig, layout: bool):
+    """Worker-thread helper: networkx is seconds of CPU at 500 nodes; keep it off the loop."""
+    graph = topology_manager.generate(config)
+    edges = topology_manager.graph_to_edges(graph)
+    positions = topology_manager.graph_layout(graph) if layout else {}
+    return edges, positions, topology_manager.compute_metrics(graph)
 
 
 @app.post("/api/topology/apply")
@@ -416,11 +504,10 @@ async def topology_apply(req: TopologyRequest):
     global _initial_edges
     if engine is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
-    config = TopologyConfig(**req.model_dump())
-    graph = topology_manager.generate(config)
-    edges = topology_manager.graph_to_edges(graph)
-    positions = topology_manager.graph_layout(graph)
-    metrics = topology_manager.compute_metrics(graph)
+    config = _topology_config(req)
+    config.n_nodes = engine.node_pool.node_count  # topology must match the live pool
+    loop = asyncio.get_running_loop()
+    edges, positions, metrics = await loop.run_in_executor(None, _build_topology, config, True)
 
     # Actually rewire the live simulation
     engine.wire_topology(edges, positions)
@@ -438,10 +525,9 @@ async def topology_apply(req: TopologyRequest):
 @app.post("/api/topology/preview")
 async def topology_preview(req: TopologyRequest):
     """Generate topology and return metrics without applying to the live simulation."""
-    config = TopologyConfig(**req.model_dump())
-    graph = topology_manager.generate(config)
-    edges = topology_manager.graph_to_edges(graph)
-    metrics = topology_manager.compute_metrics(graph)
+    config = _topology_config(req)
+    loop = asyncio.get_running_loop()
+    edges, _, metrics = await loop.run_in_executor(None, _build_topology, config, False)
     return {
         "node_count": config.n_nodes,
         "edge_count": len(edges),
@@ -479,6 +565,15 @@ async def topology_metrics():
 # we use a sync wrapper: mutate state directly, emit events via a helper.
 
 
+async def _emit_from_asyncio(event) -> None:
+    """Publish an event on the simulation bus from the asyncio side (live feeds)."""
+    if engine is None or _trio_token is None:
+        return
+    loop = asyncio.get_running_loop()
+    bus = engine.event_bus
+    await loop.run_in_executor(None, lambda: _run_trio_coro(bus.emit, event))
+
+
 def _run_trio_coro(async_fn, *args):
     """Run a trio-async fault method from the asyncio thread.
 
@@ -497,10 +592,12 @@ def _run_trio_coro(async_fn, *args):
 
 
 class LatencyRequest(BaseModel):
+    # NaN here reaches trio.sleep(nan) in the relay task and kills the simulation thread
+    model_config = ConfigDict(allow_inf_nan=False)
     peer_a: str
     peer_b: str
-    ms: float
-    jitter_ms: float = 0.0
+    ms: float = Field(ge=0, le=60_000)
+    jitter_ms: float = Field(default=0.0, ge=0, le=60_000)
 
 
 @app.post("/api/fault/latency")
@@ -539,7 +636,7 @@ async def fault_partition(req: PartitionRequest):
 
 
 class SybilRequest(BaseModel):
-    n_attackers: int
+    n_attackers: int = Field(ge=1, le=50)
     target_topic: str = "lumina/blocks/1.0"
 
 
@@ -557,7 +654,7 @@ async def fault_sybil(req: SybilRequest):
 
 class EclipseRequest(BaseModel):
     target_peer_id: str
-    n_attackers: int
+    n_attackers: int = Field(ge=1, le=50)
 
 
 @app.post("/api/fault/eclipse")
@@ -682,6 +779,25 @@ async def trace_recent(limit: int = 50):
     return {"traces": engine.node_pool.gossip.get_recent_traces(limit)}
 
 
+class MainnetFeedRequest(BaseModel):
+    enabled: bool
+
+
+@app.get("/api/live/mainnet")
+async def live_mainnet_status():
+    return mainnet_feed.get_status()
+
+
+@app.post("/api/live/mainnet")
+async def live_mainnet_toggle(req: MainnetFeedRequest):
+    """Opt in/out of the mainnet block-arrival feed (ethPandaOps public data, ~2.5 min lag)."""
+    if req.enabled:
+        mainnet_feed.start()
+    else:
+        mainnet_feed.stop()
+    return mainnet_feed.get_status()
+
+
 @app.get("/metrics", response_class=PlainTextResponse)
 async def prometheus_metrics():
     """Prometheus text exposition (Lighthouse gossipsub metric names). Counters-only pre-boot."""
@@ -714,7 +830,7 @@ async def topology_edges():
     return {"edges": _initial_edges}
 
 
-# --- Export / Import ---
+# --- Export ---
 
 
 @app.get("/api/export/events")
@@ -725,9 +841,17 @@ async def export_events(format: str = "jsonl", since: float = 0.0):
     events = engine.event_bus.events_since(since)
 
     if format == "json":
-        data = orjson.dumps([e.to_dict() for e in events])
+        # Streamed like jsonl: a full 500k ring dumped to one list is ~500 MB peak RSS
+        def generate_json():
+            yield b"["
+            for i, event in enumerate(events):
+                if i:
+                    yield b","
+                yield event.to_json()
+            yield b"]"
+
         return StreamingResponse(
-            io.BytesIO(data),
+            generate_json(),
             media_type="application/json",
             headers={"Content-Disposition": "attachment; filename=luminar-events.json"},
         )
@@ -774,20 +898,6 @@ async def export_full_snapshot():
     )
 
 
-class ImportEventsRequest(BaseModel):
-    events: list[dict]
-
-
-@app.post("/api/import/events")
-async def import_events(req: ImportEventsRequest):
-    """Import events into the event log for replay visualization.
-
-    Events are returned as-is — they don't replay through the simulation
-    engine. This enables loading saved traces for analysis.
-    """
-    return {"imported": len(req.events), "events": req.events}
-
-
 # --- Scenarios ---
 
 
@@ -815,15 +925,9 @@ async def launch_scenario(scenario_id: str, req: LaunchScenarioRequest | None = 
     if fault_injector is None:
         raise HTTPException(status_code=503, detail="Simulation not initialized")
 
-    # 1. Clear existing faults properly (removes attacker ids from meshes/subscriptions),
-    #    then reset the clock and bus so the FaultCleared events do not linger.
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, lambda: _run_trio_coro(fault_injector.clear_all))
-    engine.clock.reset()
-    engine.event_bus.clear()
-    engine.new_run()  # fresh trace-id scope for the exporter
-    if otlp_exporter is not None:
-        otlp_exporter.on_new_run()  # sim clock restarted: drop the phase sampling boost
+    # 1. Fresh run (faults cleared, clock/bus/gossip reset); wire_topology below re-meshes
+    #    again on the scenario topology.
+    await _reset_run()
 
     # 3. Apply scenario topology
     topo_config = TopologyConfig(
@@ -878,6 +982,9 @@ async def websocket_telemetry(ws: WebSocket):
 
     Peers send JSON payloads and receive {"ok": true} acknowledgements.
     """
+    if not _ws_token_ok(ws):
+        await ws.close(code=1008)  # before accept() → HTTP 403 handshake
+        return
     await ws.accept()
     logger.info("Telemetry WS peer connected")
     try:

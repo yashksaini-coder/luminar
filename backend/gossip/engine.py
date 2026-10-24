@@ -14,12 +14,14 @@ from __future__ import annotations
 
 import logging
 import random
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 import trio
 
 from backend.gossip.scoring import PeerScoreTracker
+from backend.peers import is_attacker, is_honest
 
 if TYPE_CHECKING:
     from backend.events.bus import EventBus
@@ -36,7 +38,7 @@ HEARTBEAT_INTERVAL = 1.0  # Seconds between heartbeats
 SCORE_THRESHOLD_GRAFT = -5.0  # Don't graft peers with score below this
 SCORE_THRESHOLD_PRUNE = -10.0  # Prune peers with score below this (regardless of mesh size)
 HISTORY_WINDOW = 50  # Number of recent msg_ids to track for IHAVE/IWANT
-MAX_TRACES = 5000  # Maximum number of message traces to retain
+MAX_TRACES = 2000  # Max traces retained; ~444 B/hop × ~N hops × 2000 ≈ 180 MB at 200 nodes
 MAX_SEEN_PER_PEER = 2000  # Maximum seen msg_ids per peer
 
 
@@ -53,6 +55,9 @@ class MessageTrace:
     first_delivery_peer: str | None = None
     fully_propagated_at: float | None = None
     duplicates: int = 0  # arrivals at peers that had already seen the message
+    # Running mesh-hop stats so get_analytics never re-walks every hop list
+    _mesh_hops: int = 0
+    _last_mesh_time: float = 0.0
 
     def add_hop(
         self,
@@ -63,22 +68,28 @@ class MessageTrace:
         from_peer: str | None = None,
         via: str = "mesh",
     ):
+        via = "origin" if hop_index == 0 and from_peer is None else via
         self.hops.append(
             {
                 "peer": peer_id,
                 "from": from_peer,
-                "via": "origin" if hop_index == 0 and from_peer is None else via,
+                "via": via,
                 "time": received_at,
                 "latency_ms": relay_latency_ms,
                 "hop": hop_index,
             }
         )
+        if via != "iwant":
+            self._mesh_hops += 1
+            self._last_mesh_time = max(self._last_mesh_time, received_at)
         if peer_id != self.origin and self.first_delivery_peer is None:
             self.first_delivery_peer = peer_id
         self.delivered_to.add(peer_id)
 
-    def delivery_ratio(self, total_nodes: int) -> float:
-        return len(self.delivered_to) / max(total_nodes, 1)
+    def delivery_ratio(self, honest: set[str]) -> float:
+        """Share of `honest` peers reached. Numerator and denominator are the same set by
+        construction, so attackers that received relays can never push this above 1."""
+        return len(self.delivered_to & honest) / max(len(honest), 1)
 
     def propagation_latency_ms(self) -> float:
         """Mesh end-to-end: publish → last arrival over mesh/flood hops, in ms.
@@ -86,10 +97,9 @@ class MessageTrace:
         IWANT fulfilment hops are stamped at heartbeat granularity, so they are
         excluded here and reported separately by propagation_incl_gossip_ms().
         """
-        mesh_times = [h["time"] for h in self.hops if h["via"] != "iwant"]
-        if len(mesh_times) < 2:
+        if self._mesh_hops < 2:
             return 0.0
-        return round((max(mesh_times) - self.created_at) * 1000.0, 3)
+        return round((self._last_mesh_time - self.created_at) * 1000.0, 3)
 
     def propagation_incl_gossip_ms(self) -> float:
         """Publish → last arrival by any route (mesh or IHAVE/IWANT pull), in ms."""
@@ -109,7 +119,7 @@ class MessageTrace:
             "origin": self.origin,
             "created_at": self.created_at,
             "hops": self.hops,
-            "delivered_count": len(self.delivered_to),
+            "delivered_count": len(self.delivered_to),  # every receiver, attackers included
             "first_delivery_peer": self.first_delivery_peer,
             "propagation_latency_ms": round(self.propagation_latency_ms(), 1),
             "propagation_incl_gossip_ms": round(self.propagation_incl_gossip_ms(), 1),
@@ -139,8 +149,11 @@ class GossipEngine:
         self._topology: dict[str, set[str]] = {}
         # Message traces
         self._traces: dict[str, MessageTrace] = {}
-        # peer_id → set of msg_ids already seen (dedup)
-        self._seen: dict[str, set[str]] = {}
+        # peer_id → msg_ids already seen (dedup). Insertion-ordered dict used as a FIFO set
+        # so the MAX_SEEN_PER_PEER cap evicts the oldest id, not a hash-random one.
+        self._seen: dict[str, dict[str, None]] = {}
+        # peer_id → messages received (relay or IWANT); unlike len(_seen) it never shrinks
+        self.received: Counter[str] = Counter()
         # peer_id → list of recent msg_ids (for IHAVE gossip, bounded)
         self._history: dict[str, list[str]] = {}
         # peer_id → set of msg_ids wanted (pending IWANT requests)
@@ -155,6 +168,27 @@ class GossipEngine:
     def traces(self) -> dict[str, MessageTrace]:
         return self._traces
 
+    def reset(self) -> None:
+        """Forget every message and score. Called when the sim clock restarts (reset /
+        scenario launch); otherwise the analytics window keeps the previous run's traces
+        because created_at restarts from 0 and the old ones sort last."""
+        self._traces.clear()
+        self._seen.clear()
+        self._history.clear()
+        self._iwant_pending.clear()
+        self.received.clear()
+        self._msg_counter = 0
+        self._spam_counter = 0
+        self.scorer = PeerScoreTracker()
+        # Meshes survive a reset; re-graft them so P1 restarts at the new t=0 instead of
+        # every peer sitting at in_mesh=False until a later heartbeat re-grafts it.
+        now = self._clock.time
+        for topic, mesh in self._mesh.items():
+            for peer, mesh_peers in mesh.items():
+                self.scorer.on_graft(topic, peer, now)
+                for mp in mesh_peers:
+                    self.scorer.on_graft(topic, mp, now)
+
     def set_topology(self, edges: list[tuple[str, str]]) -> None:
         """Load the network topology from edge list."""
         self._topology.clear()
@@ -165,7 +199,7 @@ class GossipEngine:
     def subscribe(self, peer_id: str, topic: str) -> None:
         """Subscribe a peer to a topic and build initial mesh."""
         self._subscriptions.setdefault(topic, set()).add(peer_id)
-        self._seen.setdefault(peer_id, set())
+        self._seen.setdefault(peer_id, {})
         self._history.setdefault(peer_id, [])
 
         if topic not in self._mesh:
@@ -186,7 +220,7 @@ class GossipEngine:
         """Subscribe all peers to a topic, then build meshes."""
         for pid in peer_ids:
             self._subscriptions.setdefault(topic, set()).add(pid)
-            self._seen.setdefault(pid, set())
+            self._seen.setdefault(pid, {})
             self._history.setdefault(pid, [])
 
         for pid in peer_ids:
@@ -225,7 +259,7 @@ class GossipEngine:
             for k in keys[: len(keys) - MAX_TRACES]:
                 del self._traces[k]
 
-        self._seen.setdefault(origin, set()).add(msg_id)
+        self._seen.setdefault(origin, {})[msg_id] = None
         self._add_history(origin, msg_id)
 
         await self._event_bus.emit(
@@ -245,6 +279,27 @@ class GossipEngine:
 
         return msg_id
 
+    def _link_blocked(self, peer_a: str, peer_b: str) -> bool:
+        """True when a fault (dropped endpoint or partition) cuts the link between two peers.
+
+        Used by relay, heartbeat GRAFT/IHAVE and IWANT fulfilment alike, so a partition
+        cannot leak through the lazy gossip path. Duck-typed: tests pass partial injectors.
+        """
+        fi = self._fault_injector
+        if fi is None:
+            return False
+        failed = getattr(fi, "is_peer_failed", None)
+        if failed is not None and (failed(peer_a) or failed(peer_b)):
+            return True
+        partitioned = getattr(fi, "is_partitioned", None)
+        return partitioned is not None and partitioned(peer_a, peer_b)
+
+    def _eclipsed(self, peer_a: str, peer_b: str) -> bool:
+        """True when an eclipse cuts honest<->target. Blocks mesh relay and GRAFT only:
+        IHAVE/IWANT still reach the target, so it stays alive at heartbeat latency."""
+        eclipsed = getattr(self._fault_injector, "is_eclipsed", None)
+        return eclipsed is not None and eclipsed(peer_a, peer_b)
+
     async def _relay_message(
         self,
         msg_id: str,
@@ -259,12 +314,15 @@ class GossipEngine:
 
         fi = self._fault_injector
 
+        # A reset (sim reset / scenario launch) evicts every trace: a relay scheduled before
+        # it must not write the old run's msg_id into the new run's seen sets.
+        trace = self._traces.get(msg_id)
+        if trace is None:
+            return
+
         # Fault checks: a blocked relay is reported as a dropped hop so the UI can show
         # the particle fizzle instead of the message silently vanishing.
-        blocked = (fi and hasattr(fi, "is_peer_failed") and fi.is_peer_failed(to_peer)) or (
-            fi and hasattr(fi, "is_partitioned") and fi.is_partitioned(from_peer, to_peer)
-        )
-        if blocked:
+        if self._link_blocked(from_peer, to_peer) or self._eclipsed(from_peer, to_peer):
             await self._event_bus.emit(
                 GossipMessage(
                     at=self._clock.time,
@@ -279,26 +337,20 @@ class GossipEngine:
             return
 
         # Check dedup
-        seen = self._seen.setdefault(to_peer, set())
+        seen = self._seen.setdefault(to_peer, {})
         if msg_id in seen:
-            trace = self._traces.get(msg_id)
-            if trace is not None:
-                trace.duplicates += 1
+            trace.duplicates += 1
             return
-        seen.add(msg_id)
-        # Bound seen set per peer to prevent unbounded growth
+        seen[msg_id] = None
+        self.received[to_peer] += 1
+        # Bound seen set per peer: evict the oldest id (dict keeps insertion order)
         if len(seen) > MAX_SEEN_PER_PEER:
-            seen_list = list(seen)
-            self._seen[to_peer] = set(seen_list[-MAX_SEEN_PER_PEER:])
+            del seen[next(iter(seen))]
         self._add_history(to_peer, msg_id)
 
         # Clear any pending IWANT for this message
         pending = self._iwant_pending.get(to_peer, set())
         pending.discard(msg_id)
-
-        trace = self._traces.get(msg_id)
-        if trace is None:
-            return
 
         # Simulate network latency (5-50ms base)
         latency_ms = random.uniform(5.0, 50.0)
@@ -306,6 +358,8 @@ class GossipEngine:
             latency_ms += fi.get_latency(from_peer, to_peer)
 
         await trio.sleep(latency_ms / 1000.0 / max(self._clock.speed, 0.1))
+        if self._traces.get(msg_id) is not trace:
+            return  # reset while in flight (or a new run already reused this id)
 
         sim_time = self._clock.time
         trace.add_hop(to_peer, sim_time, latency_ms, hop, from_peer=from_peer)
@@ -352,12 +406,17 @@ class GossipEngine:
         await self._misbehave(topic, mesh, subscribers, sim_time)
 
         for peer_id in list(subscribers):
-            # Skip fake peers (sybil/eclipse) — they do no mesh maintenance of their own
-            if peer_id.startswith(("sybil-", "eclipse-")):
+            # Skip fake peers (sybil/eclipse) and crashed peers — no mesh maintenance
+            if is_attacker(peer_id) or self._link_blocked(peer_id, peer_id):
                 continue
 
             peer_mesh = mesh.get(peer_id, set())
-            neighbors = self._topology.get(peer_id, set()) & subscribers
+            # A failed peer or a partition cuts the link for GRAFT and IHAVE too, not just relay
+            neighbors = {
+                n
+                for n in self._topology.get(peer_id, set()) & subscribers
+                if not self._link_blocked(peer_id, n)
+            }
 
             # PRUNE: remove low-score peers first, then excess. prunee → reason
             to_prune: dict[str, str] = {}
@@ -389,7 +448,7 @@ class GossipEngine:
 
             # GRAFT: if mesh too small, add highest-scored candidates
             if len(peer_mesh) < D_LOW:
-                candidates = list(neighbors - peer_mesh)
+                candidates = [c for c in neighbors - peer_mesh if not self._eclipsed(peer_id, c)]
                 # Filter by graft threshold and sort by score (compute once per candidate)
                 scored = [
                     (c, s)
@@ -424,7 +483,7 @@ class GossipEngine:
                 gossip_targets = list(neighbors - peer_mesh)[:D_LAZY]
                 for target in gossip_targets:
                     # Only send IHAVE for messages the target hasn't seen
-                    target_seen = self._seen.get(target, set())
+                    target_seen = self._seen.get(target, {})
                     unseen = [mid for mid in recent if mid not in target_seen]
                     if unseen:
                         await self._event_bus.emit(
@@ -454,7 +513,7 @@ class GossipEngine:
         for attacker in [p for p in subscribers if p.startswith("sybil-")]:
             self.scorer.on_invalid_message(topic, attacker)
             for honest, peers in mesh.items():
-                if attacker in peers and not honest.startswith(("sybil-", "eclipse-")):
+                if attacker in peers and is_honest(honest):
                     self._spam_counter += 1
                     await self._event_bus.emit(
                         GossipMessage(
@@ -478,13 +537,19 @@ class GossipEngine:
 
             neighbors = self._topology.get(peer_id, set())
             for msg_id in list(wanted):
-                # Find a neighbor who has this message
+                trace = self._traces.get(msg_id)
+                if trace is None:  # evicted or reset: nothing left to pull
+                    wanted.discard(msg_id)
+                    continue
+                # Find a neighbor who has this message and can still reach us
                 for neighbor in neighbors:
-                    if msg_id in self._seen.get(neighbor, set()):
+                    if self._link_blocked(neighbor, peer_id):
+                        continue
+                    if msg_id in self._seen.get(neighbor, {}):
                         # Deliver via IWANT fulfillment
-                        trace = self._traces.get(msg_id)
-                        if trace and peer_id not in trace.delivered_to:
-                            self._seen.setdefault(peer_id, set()).add(msg_id)
+                        if peer_id not in trace.delivered_to:
+                            self._seen.setdefault(peer_id, {})[msg_id] = None
+                            self.received[peer_id] += 1
                             self._add_history(peer_id, msg_id)
                             trace.add_hop(
                                 peer_id,
@@ -542,8 +607,7 @@ class GossipEngine:
         traces = [t for t in self._traces.values() if t.topic == topic]
         subscribers = self._subscriptions.get(topic, set())
         # Filter out fake peers for stats
-        honest_subscribers = {p for p in subscribers if not p.startswith(("sybil-", "eclipse-"))}
-        n = len(honest_subscribers)
+        honest_subscribers = {p for p in subscribers if is_honest(p)}
 
         if not traces:
             return {
@@ -559,11 +623,11 @@ class GossipEngine:
             }
 
         # Delivery ratios
-        ratios = [t.delivery_ratio(n) for t in traces]
+        ratios = [t.delivery_ratio(honest_subscribers) for t in traces]
         avg_ratio = sum(ratios) / len(ratios) if ratios else 0
 
         # Propagation latencies
-        latencies = [t.propagation_latency_ms() for t in traces if t.propagation_latency_ms() > 0]
+        latencies = [lat for t in traces if (lat := t.propagation_latency_ms()) > 0]
         avg_latency = sum(latencies) / len(latencies) if latencies else 0
 
         # Average hops
@@ -581,7 +645,7 @@ class GossipEngine:
         # Delivery ratio distribution (last 20 messages). The windowed mean is what a
         # 60 s reel can move; the lifetime mean above barely budges after thousands of msgs.
         recent_ratios = [
-            {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(n), 3)}
+            {"msg_id": t.msg_id, "ratio": round(t.delivery_ratio(honest_subscribers), 3)}
             for t in sorted(traces, key=lambda t: t.created_at)[-20:]
         ]
         recent_delivery_ratio = sum(r["ratio"] for r in recent_ratios) / max(len(recent_ratios), 1)

@@ -9,6 +9,7 @@ from __future__ import annotations
 import bisect
 import contextlib
 import logging
+import os
 from collections import deque
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -20,8 +21,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Max events kept in the ring buffer (500k ≈ 200MB worst case)
-DEFAULT_RING_SIZE = 500_000
+# Max events kept in the ring buffer. 50k ≈ 12 MB (~18 min at 20 nodes); the laptop
+# can raise it, a 512 MB deploy should not (500k was ~200 MB worst case).
+DEFAULT_RING_SIZE = int(os.environ.get("LUMINAR_RING_SIZE", "50000"))
 
 
 class EventBus:
@@ -81,17 +83,18 @@ class EventBus:
 
     def events_since(self, t: float) -> list[BaseEvent]:
         """Return all buffered events with `at >= t`. Uses bisect for O(log n) lookup."""
-        ring = self._ring
+        # Atomic copy: list(deque) is a C loop, so the trio thread cannot append mid-iteration
+        # ("deque mutated during iteration") the way it can during a Python-level loop.
+        ring = list(self._ring)
         if not ring:
             return []
         # Binary search on the time-ordered ring buffer
         times = [e.at for e in ring]
-        idx = bisect.bisect_left(times, t)
-        return list(ring)[idx:]
+        return ring[bisect.bisect_left(times, t) :]
 
     def events_between(self, t_start: float, t_end: float) -> list[BaseEvent]:
         """Return buffered events in [t_start, t_end]."""
-        return [e for e in self._ring if t_start <= e.at <= t_end]
+        return [e for e in list(self._ring) if t_start <= e.at <= t_end]
 
     def clear(self) -> None:
         """Clear the ring buffer and reset count."""

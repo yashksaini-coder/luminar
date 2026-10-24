@@ -18,25 +18,46 @@ interface ForceNode extends SimulationNodeDatum {
 interface ForceLink extends SimulationLinkDatum<ForceNode> {
   source: string | ForceNode
   target: string | ForceNode
+  weak?: boolean  // pruned attacker → last victim: keeps it beside the cluster, not in it
 }
+
+/** Edge list entry: [source, target, weak?] */
+/** One provenance per view: Geo draws real observers only; Force and Radial draw the
+ *  simulation only. Shared by the renderer, fitView and the layouts so hidden nodes never
+ *  take part in physics, ring packing or the fit either. */
+export function isSimPeer(nd: { is_real?: boolean; is_telemetry?: boolean }): boolean {
+  return !nd.is_real && !nd.is_telemetry
+}
+export function isNodeVisible(mode: LayoutMode, nd: { is_real?: boolean; is_telemetry?: boolean } | undefined): boolean {
+  if (!nd) return false
+  return mode === 'geo' ? !isSimPeer(nd) : isSimPeer(nd)
+}
+
+/** Degrees → canvas units for the Geo layout; must match backend/live/mainnet.py GEO_SCALE. */
+export const GEO_SCALE = 2.5
+
+export type LayoutEdge = [string, string] | [string, string, true]
 
 let liveSim: Simulation<ForceNode, ForceLink> | null = null
 let liveNodes: ForceNode[] = []
 let onTickCallback: ((positions: [number, number][]) => void) | null = null
-let currentNodeCount = 0
 
 /** Start or restart the live force simulation. Call once on topology change. */
 export function startLiveForce(
-  nodes: PeerNode[],
-  edges: [string, string][],
+  allNodes: PeerNode[],
+  edges: LayoutEdge[],
   onTick: (positions: [number, number][]) => void,
 ) {
   // Stop any existing simulation
   if (liveSim) liveSim.stop()
   onTickCallback = onTick
 
+  // Only nodes drawn in Force take part: hidden ones get no charge, no slot, no centroid
+  // weight, and are reported at the origin so the positions array stays index-aligned.
+  const visibleIdx = allNodes.map((nd, i) => (isNodeVisible('force', nd) ? i : -1)).filter(i => i >= 0)
+  const nodes = visibleIdx.map(i => allNodes[i])
   const n = nodes.length
-  if (n === 0) { onTick([]); return }
+  if (n === 0) { onTick(allNodes.map(() => [0, 0])); return }
 
   const baseDist = Math.max(40, 400 / Math.sqrt(n))
   const initRadius = Math.min(300, n * 6)
@@ -55,15 +76,24 @@ export function startLiveForce(
       fy: existing?.fy,
     }
   })
-  currentNodeCount = n
 
-  const links: ForceLink[] = edges.map(([s, t]) => ({ source: s, target: t }))
+  const visibleIds = new Set(nodes.map(nd => nd.peer_id))
+  const links: ForceLink[] = edges
+    .filter(([s, t]) => visibleIds.has(s) && visibleIds.has(t))
+    .map(([s, t, weak]) => ({ source: s, target: t, weak: weak === true }))
+
+  const emit = () => {
+    if (!onTickCallback) return
+    const full: [number, number][] = allNodes.map(() => [0, 0])
+    liveNodes.forEach((fn, k) => { full[visibleIdx[k]] = [fn.x, fn.y] })
+    onTickCallback(full)
+  }
 
   liveSim = forceSimulation<ForceNode, ForceLink>(liveNodes)
     .force('link', forceLink<ForceNode, ForceLink>(links)
       .id(d => d.id)
-      .strength(0.4)
-      .distance(baseDist))
+      .strength(l => l.weak ? 0.2 : 0.4)
+      .distance(l => l.weak ? baseDist * 1.6 : baseDist))
     .force('charge', forceManyBody<ForceNode>()
       .strength(-800)
       .distanceMax(baseDist * 6)
@@ -72,11 +102,7 @@ export function startLiveForce(
     .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
     .alphaDecay(0.01)        // Slow decay — keeps nodes slightly alive
     .velocityDecay(0.35)     // Springy feel like Obsidian
-    .on('tick', () => {
-      if (onTickCallback) {
-        onTickCallback(liveNodes.map(fn => [fn.x, fn.y]))
-      }
-    })
+    .on('tick', emit)
 
   // Warm up with a quick burst so initial layout isn't chaotic — unless most nodes
   // already had positions (attackers appearing), in which case just nudge gently.
@@ -102,58 +128,27 @@ export function isLiveForceActive(): boolean {
   return liveSim !== null
 }
 
-// ── Static layout computation (for Grid and Radial modes) ────────────
+// ── Static layout computation (Radial and Geo modes) ─────────────────
 
 export function computeLayout(
   mode: LayoutMode,
   nodes: PeerNode[],
-  _edges: [string, string][],
+  _edges: LayoutEdge[],
 ): LayoutResult {
   switch (mode) {
     case 'force': return { positions: [] }  // Force uses live sim, not static
-    case 'grid': return layoutGrid(nodes)
+    // Producers project y down (y = −lat·2.5); the orthographic view's y points up, so flip once here
+    case 'geo': return { positions: nodes.map(n => [n.x, -n.y] as [number, number]) }
     case 'radial': return layoutRadial(nodes, _edges)
   }
 }
 
-// ── Grid layout ───────────────────────────────────────────────────────
-function layoutGrid(nodes: PeerNode[]): LayoutResult {
-  const n = nodes.length
-  if (n === 0) return { positions: [] }
-
-  const stateOrder: Record<string, number> = {
-    origin: 0, receiving: 1, decoded: 2, joining: 3,
-    idle: 4, failed: 5, error: 6,
-  }
-  const sorted = nodes.map((nd, i) => ({ idx: i, order: stateOrder[nd.state] ?? 4 }))
-    .sort((a, b) => a.order - b.order || a.idx - b.idx)
-
-  const spacing = Math.max(14, Math.min(28, 600 / Math.sqrt(n)))
-  const cols = Math.ceil(Math.sqrt(n * 1.3))
-  const rowH = spacing * 0.866
-
-  const positions: [number, number][] = new Array(n)
-  const totalW = (cols - 1) * spacing
-  const totalRows = Math.ceil(n / cols)
-  const totalH = (totalRows - 1) * rowH
-
-  for (let rank = 0; rank < sorted.length; rank++) {
-    const row = Math.floor(rank / cols)
-    const col = rank % cols
-    const stagger = (row % 2 === 1) ? spacing * 0.5 : 0
-    positions[sorted[rank].idx] = [
-      col * spacing + stagger - totalW / 2,
-      row * rowH - totalH / 2,
-    ]
-  }
-
-  return { positions }
-}
-
 // ── Radial layout ─────────────────────────────────────────────────────
-function layoutRadial(nodes: PeerNode[], edges: [string, string][]): LayoutResult {
+function layoutRadial(allNodes: PeerNode[], edges: LayoutEdge[]): LayoutResult {
+  const visibleIdx = allNodes.map((nd, i) => (isNodeVisible('radial', nd) ? i : -1)).filter(i => i >= 0)
+  const nodes = visibleIdx.map(i => allNodes[i])
   const n = nodes.length
-  if (n === 0) return { positions: [] }
+  if (n === 0) return { positions: allNodes.map(() => [0, 0] as [number, number]) }
 
   const degree = new Map<string, number>()
   for (const nd of nodes) degree.set(nd.peer_id, 0)
@@ -176,7 +171,8 @@ function layoutRadial(nodes: PeerNode[], edges: [string, string][]): LayoutResul
   while (placed < n) {
     const radius = baseRadius + (ring - 1) * ringGap
     const circumference = 2 * Math.PI * radius
-    const maxInRing = Math.max(6, Math.floor(circumference / (ringGap * 0.55)))
+    // One node diameter (~11 units at 50 nodes) plus a gap per slot; 0.55 overlapped circles
+    const maxInRing = Math.max(6, Math.floor(circumference / ringGap))
     const inThisRing = Math.min(maxInRing, n - placed)
 
     for (let i = 0; i < inThisRing; i++) {
@@ -190,5 +186,7 @@ function layoutRadial(nodes: PeerNode[], edges: [string, string][]): LayoutResul
     ring++
   }
 
-  return { positions }
+  const full: [number, number][] = allNodes.map(() => [0, 0])
+  visibleIdx.forEach((orig, k) => { full[orig] = positions[k] })
+  return { positions: full }
 }

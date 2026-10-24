@@ -4,16 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Luminar P2P Network Monitor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="app">
     <!-- TOOLBAR (top bar) -->
     <div id="toolbar">
-      <span id="brand">LUMINAR</span>
-      <span class="tb-sep"></span>
+      <div class="lm-brand">
+        <span id="brand">LUMINAR</span>
+        <span class="lm-brand-sub">gossipsub v1.1</span>
+      </div>
       <span id="connection-status">
         <span id="status-dot" class="dot-offline"></span>
         <span id="status-label">OFFLINE</span>
@@ -21,61 +20,63 @@
       <button id="telemetry-badge" class="tb-telem-badge" style="display:none" title="Toggle telemetry panel">
         <span class="tb-telem-dot"></span>TELEMETRY <span id="telem-count">0</span>
       </button>
+      <button id="mainnet-badge" class="tb-telem-badge" title="Live mainnet block arrivals at ~150 real observer nodes (ethPandaOps public data, ~2.5 min lag)"><span class="tb-telem-dot"></span>MAINNET</button>
       <span class="tb-sep"></span>
 
-      <!-- Scenario picker -->
-      <div id="scenario-picker" class="dd-wrap">
-        <button class="tb-btn" id="scenario-btn">Scenarios &#9662;</button>
-        <div id="scenario-dropdown" class="dd-dropdown" style="display:none"></div>
-      </div>
+      <div class="lm-dd-group">
+        <!-- Scenario picker -->
+        <div id="scenario-picker" class="dd-wrap">
+          <button class="tb-btn" id="scenario-btn">Scenarios<span class="lm-caret"></span></button>
+          <div id="scenario-dropdown" class="dd-dropdown" style="display:none"></div>
+        </div>
 
-      <!-- Reels: recorded runs replayed offline -->
-      <div id="reel-picker" class="dd-wrap">
-        <button class="tb-btn" id="reel-btn">Reels &#9662;</button>
-        <div id="reel-dropdown" class="dd-dropdown" style="display:none"></div>
-      </div>
+        <!-- Reels: recorded runs replayed offline -->
+        <div id="reel-picker" class="dd-wrap">
+          <button class="tb-btn" id="reel-btn">Reels<span class="lm-caret"></span></button>
+          <div id="reel-dropdown" class="dd-dropdown" style="display:none"></div>
+        </div>
 
-      <span class="tb-sep"></span>
-
-      <!-- Fault injection -->
-      <div id="fault-picker" class="dd-wrap">
-        <button class="tb-btn" id="fault-btn">Inject Fault &#9662;</button>
-        <div id="fault-dropdown" class="dd-dropdown" style="display:none">
-          <button class="dd-item" data-fault="partition"><span class="dd-icon" style="color:oklch(0.72 0.14 60)">||</span> Network Partition</button>
-          <button class="dd-item" data-fault="sybil"><span class="dd-icon" style="color:oklch(0.65 0.20 25)">S</span> Sybil Attack</button>
-          <button class="dd-item" data-fault="eclipse"><span class="dd-icon" style="color:oklch(0.72 0.14 300)">E</span> Eclipse Attack</button>
-          <button class="dd-item" data-fault="drop"><span class="dd-icon" style="color:oklch(0.65 0.20 25)">x</span> Drop Peer</button>
-          <div class="dd-divider"></div>
-          <button class="dd-item dd-danger" data-fault="clear-all">Clear All Faults</button>
+        <!-- Fault injection -->
+        <div id="fault-picker" class="dd-wrap">
+          <button class="tb-btn" id="fault-btn">Inject Fault<span class="lm-caret"></span></button>
+          <div id="fault-dropdown" class="dd-dropdown" style="display:none">
+            <button class="dd-item" data-fault="partition"><span class="dd-icon lm-ico-fg2">&#8741;</span><span class="lm-dd-name">Network Partition</span><span class="lm-dd-aside">split in half</span></button>
+            <button class="dd-item" data-fault="sybil"><span class="dd-icon lm-ico-danger">S</span><span class="lm-dd-name">Sybil Attack</span><span class="lm-dd-aside">5 peers</span></button>
+            <button class="dd-item" data-fault="eclipse"><span class="dd-icon lm-ico-origin">E</span><span class="lm-dd-name">Eclipse Attack</span><span class="lm-dd-aside">on selected</span></button>
+            <button class="dd-item" data-fault="drop"><span class="dd-icon lm-ico-danger">&times;</span><span class="lm-dd-name">Drop Peer</span><span class="lm-dd-aside">select a node</span></button>
+            <div class="dd-divider"></div>
+            <button class="dd-item dd-danger" data-fault="clear-all"><span class="dd-icon lm-ico-fg2">&#8634;</span><span class="lm-dd-name">Clear all faults</span></button>
+          </div>
         </div>
       </div>
 
-      <div style="flex:1"></div>
+      <div class="lm-spacer"></div>
 
       <!-- Duration presets -->
-      <label class="tb-label">Duration</label>
-      <div id="duration-presets" class="preset-group">
-        <button class="preset-btn" data-duration="60">1m</button>
-        <button class="preset-btn" data-duration="120">2m</button>
-        <button class="preset-btn active" data-duration="300">5m</button>
-        <button class="preset-btn" data-duration="600">10m</button>
+      <div class="lm-preset-wrap">
+        <span class="tb-label">Duration</span>
+        <div id="duration-presets" class="preset-group">
+          <button class="preset-btn" data-duration="60">1m</button>
+          <button class="preset-btn" data-duration="120">2m</button>
+          <button class="preset-btn active" data-duration="300">5m</button>
+          <button class="preset-btn" data-duration="600">10m</button>
+        </div>
       </div>
-
-      <span class="tb-sep"></span>
 
       <!-- Node count presets -->
-      <label class="tb-label">Nodes</label>
-      <div id="node-presets" class="preset-group">
-        <button class="preset-btn active" data-nodes="20">20</button>
-        <button class="preset-btn" data-nodes="50">50</button>
-        <button class="preset-btn" data-nodes="100">100</button>
-        <button class="preset-btn" data-nodes="200">200</button>
-        <button class="preset-btn" data-nodes="500">500</button>
+      <div class="lm-preset-wrap">
+        <span class="tb-label">Nodes</span>
+        <div id="node-presets" class="preset-group">
+          <button class="preset-btn active" data-nodes="20">20</button>
+          <button class="preset-btn" data-nodes="50">50</button>
+          <button class="preset-btn" data-nodes="100">100</button>
+          <button class="preset-btn" data-nodes="200">200</button>
+          <button class="preset-btn" data-nodes="500">500</button>
+        </div>
       </div>
 
       <span class="tb-sep"></span>
-      <span id="sim-time" class="tb-value">0.00s</span>
-      <span class="tb-sep"></span>
+      <span class="lm-clock"><span class="lm-clock-k">T+</span><span id="sim-time" class="tb-value">0.0s</span></span>
       <a href="https://github.com/yashksaini-coder/luminar" target="_blank" rel="noopener" class="tb-gh-link" title="View on GitHub">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-label="GitHub">
           <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.603-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
@@ -87,9 +88,7 @@
     <div id="main">
       <!-- LEFT: Stats Panel -->
       <div id="stats-panel">
-        <h2>Statistics</h2>
         <div id="stats-content"></div>
-        <div id="charts-section"></div>
       </div>
 
       <!-- CENTER: Map/Graph -->
@@ -108,6 +107,7 @@
           </div>
           <div id="tp-summary" class="tp-summary">No peers connected — waiting for reports…</div>
           <div class="tp-hint">
+            <div class="lm-label">Report a peer</div>
             <code>curl -X POST /api/telemetry/submit -d '{"peer_id":"…"}'</code>
           </div>
           <div class="tp-section-title">Live peers</div>
@@ -116,34 +116,51 @@
           <div id="tp-feed" class="tp-feed"></div>
         </div>
 
-        <!-- Mode switcher (Force/Hops/Latency) -->
+        <!-- Layout switcher (Force/Radial/Geo) -->
         <div id="mode-switcher">
           <button class="mode-tab active" data-mode="force">Force</button>
-          <button class="mode-tab" data-mode="grid">Grid</button>
           <button class="mode-tab" data-mode="radial">Radial</button>
+          <button class="mode-tab" data-mode="geo" title="Place nodes by latitude/longitude (real observers)">Geo</button>
         </div>
 
         <!-- Node legend (top-right) -->
         <div id="node-legend" style="display:none">
           <div class="nl-titlebar">
-            <span>Legend</span>
-            <button id="settings-btn" class="tb-icon-btn" title="Settings">&#9881;</button>
+            <span class="lm-legend-title">Legend</span>
+            <button id="settings-btn" class="tb-icon-btn" title="Settings">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
           </div>
           <div id="legend-fills"></div>
           <div id="legend-rings"></div>
           <div id="settings-panel" style="display:none"></div>
         </div>
 
+        <!-- Provenance card: shown while real-network data is on the canvas -->
+        <div id="provenance" style="display:none"></div>
+
         <!-- Narrator: caption card + hero ticker -->
-        <div id="caption" aria-live="polite"></div>
+        <div id="caption" aria-live="polite">
+          <div class="lm-cap-body">
+            <span class="lm-cap-kicker"></span>
+            <span class="lm-cap-text"></span>
+          </div>
+          <div class="lm-cap-track"><div class="lm-cap-fill"></div></div>
+        </div>
         <div id="ticker"></div>
 
         <!-- Node tooltip (hidden) -->
         <div id="tooltip" style="display:none"></div>
 
-        <!-- Active faults indicator -->
-        <div id="active-faults" style="display:none">
-          <div id="faults-list"></div>
+        <!-- Keyboard hints (bottom-left) -->
+        <div id="lm-kbd">
+          <span><kbd>SPACE</kbd>play</span>
+          <span><kbd>F</kbd>fit</span>
+          <span><kbd>T</kbd>stage</span>
+          <span><kbd>H</kbd>hero</span>
         </div>
 
         <!-- Timeline bar (bottom, floating) -->
@@ -155,10 +172,10 @@
               </svg>
             </button>
             <button id="btn-play" class="tb-icon-btn" title="Play/Pause (Space)">
-              <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <svg id="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="6,3 20,12 6,21"/>
               </svg>
-              <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <svg id="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:none">
                 <rect x="5" y="3" width="4" height="18"/>
                 <rect x="15" y="3" width="4" height="18"/>
               </svg>
@@ -166,50 +183,65 @@
           </div>
 
           <div id="tl-scrubber">
-            <input type="range" id="timeline" min="0" max="1000000" value="0" step="1">
+            <div class="lm-tl-track"></div>
             <div id="tl-markers"></div>
+            <div class="lm-tl-fill"></div>
+            <div class="lm-tl-head"></div>
+            <div class="lm-tl-bubble">0.0s</div>
+            <input type="range" id="timeline" min="0" max="1000000" value="0" step="1" aria-label="Timeline">
           </div>
 
           <div id="tl-right">
-            <span id="tl-current">0.000s</span>
-            <span class="tb-sep-small">/</span>
-            <span id="tl-total">0s</span>
-            <span class="tb-sep"></span>
+            <span class="lm-tl-time">
+              <span id="tl-current">0.0s</span>
+              <span class="tb-sep-small">/</span>
+              <span id="tl-total">0s</span>
+            </span>
             <div id="speed-presets" class="preset-group">
-              <button class="preset-btn speed-btn" data-speed="0.5">0.5x</button>
-              <button class="preset-btn speed-btn active" data-speed="1">1x</button>
-              <button class="preset-btn speed-btn" data-speed="2">2x</button>
-              <button class="preset-btn speed-btn" data-speed="3">3x</button>
-              <button class="preset-btn speed-btn" data-speed="5">5x</button>
-              <button class="preset-btn speed-btn" data-speed="10">10x</button>
+              <button class="preset-btn speed-btn" data-speed="0.5">.5&times;</button>
+              <button class="preset-btn speed-btn active" data-speed="1">1&times;</button>
+              <button class="preset-btn speed-btn" data-speed="2">2&times;</button>
+              <button class="preset-btn speed-btn" data-speed="3">3&times;</button>
+              <button class="preset-btn speed-btn" data-speed="5">5&times;</button>
+              <button class="preset-btn speed-btn" data-speed="10">10&times;</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PEER INSPECTOR (slide-in drawer, overlays event log when a node is selected) -->
+      <!-- PEER INSPECTOR (slide-in drawer, overlays the event log when a node is selected) -->
       <div id="peer-inspector">
         <div class="pi-header">
           <div class="pi-title">
-            <span id="pi-name" class="pi-name">—</span>
-            <span id="pi-state" class="pi-state-badge">idle</span>
+            <div class="lm-pi-name-row">
+              <span class="lm-pi-dot"></span>
+              <span id="pi-name" class="pi-name">—</span>
+            </div>
+            <div class="lm-pi-badges">
+              <span id="pi-state" class="pi-state-badge">idle</span>
+              <span class="lm-badge-attacker" hidden>attacker</span>
+            </div>
+            <div id="pi-peer-id" class="pi-peer-id">—</div>
           </div>
-          <button id="pi-close" class="pi-close" title="Close (click canvas to deselect)">&#10005;</button>
+          <span class="lm-pi-close-wrap">
+            <kbd class="lm-kbd">ESC</kbd>
+            <button id="pi-close" class="pi-close" title="Close (Esc, or click the canvas)">&#10005;</button>
+          </span>
         </div>
-        <div id="pi-peer-id" class="pi-peer-id">—</div>
-        <div class="pi-metrics">
-          <span id="pi-sent" class="pi-metric pi-sent">↑0</span>
-          <span class="pi-sep">·</span>
-          <span id="pi-recv" class="pi-metric pi-recv">↓0</span>
-          <span class="pi-sep">·</span>
-          <span id="pi-score" class="pi-metric pi-score">0.000</span>
-          <span class="pi-sep">·</span>
-          <span id="pi-peer-count" class="pi-metric">0 peers</span>
+        <div class="lm-pi-metrics">
+          <div class="lm-pi-metric"><span class="lm-label">Sent</span><span id="pi-sent" class="value">0</span></div>
+          <div class="lm-pi-metric"><span class="lm-label">Recv</span><span id="pi-recv" class="value">0</span></div>
+          <div class="lm-pi-metric"><span class="lm-label">Score</span><span id="pi-score" class="value">0.00</span></div>
+          <div class="lm-pi-metric"><span class="lm-label">Peers</span><span id="pi-peer-count" class="value">0</span></div>
         </div>
-        <div class="pi-section-title">Score history</div>
-        <div class="pi-spark-wrap"><canvas id="pi-score-spark"></canvas></div>
-        <div class="pi-section-title">Connected peers</div>
-        <div id="pi-peers" class="pi-peers"></div>
+        <div class="lm-sec">
+          <div class="lm-sec-head"><span class="lm-label">Score history</span><span class="lm-sec-meta"></span></div>
+          <div class="pi-spark-wrap"><canvas id="pi-score-spark"></canvas></div>
+        </div>
+        <div class="lm-sec">
+          <div class="lm-label">Connected peers</div>
+          <div id="pi-peers" class="pi-peers"></div>
+        </div>
         <div class="pi-section-title">Live events</div>
         <div id="pi-events" class="pi-events"></div>
       </div>
@@ -218,6 +250,7 @@
       <div id="event-log">
         <div id="event-log-header">
           <h2>Event log</h2>
+          <span id="lm-ev-meta"></span>
           <button id="clear-filter-btn" class="tb-icon-btn" style="display:none" title="Clear filter">&#10005;</button>
         </div>
         <div id="event-type-filter"></div>

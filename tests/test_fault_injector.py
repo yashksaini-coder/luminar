@@ -78,24 +78,45 @@ async def test_partition_blocks_relay(fault_injector, node_pool, event_bus):
         await trio.sleep(0.2)
 
     trace = gossip.get_trace(msg_id)
-    # peer-3,4,5 should NOT be in delivered
-    delivered = trace["hops"]
-    delivered_peers = {h["peer"] for h in delivered}
-    assert "peer-3" not in delivered_peers or fault_injector.is_partitioned("peer-1", "peer-3")
+    delivered_peers = {h["peer"] for h in trace["hops"]}
+    assert delivered_peers <= {"peer-0", "peer-1"}
 
 
-async def test_drop_peer_marks_failed(fault_injector, node_pool):
-    """Dropping a peer sets its state to FAILED and removes it from meshes."""
+async def test_partition_holds_across_heartbeats(fault_injector, node_pool, clock):
+    """Heartbeat GRAFT and IHAVE/IWANT must not re-link or leak across a partition."""
+    gossip = node_pool.gossip
+    topic = "lumina/blocks/1.0"
+    group_a, group_b = ["peer-0", "peer-1"], ["peer-2", "peer-3", "peer-4", "peer-5"]
+    await fault_injector.inject_partition(group_a=group_a, group_b=group_b)
+
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-0", topic, nursery)
+        await trio.sleep(0.2)
+    for _ in range(3):
+        clock._time += 1.0
+        await gossip.heartbeat(topic)
+
+    mesh = gossip.get_mesh_state(topic)
+    assert not any(b in mesh[a] for a in group_a for b in group_b), mesh
+    assert not any(a in mesh[b] for b in group_b for a in group_a), mesh
+    delivered = {h["peer"] for h in gossip.get_trace(msg_id)["hops"]}
+    assert delivered <= set(group_a), delivered
+
+
+async def test_drop_peer_marks_failed(fault_injector, node_pool, clock):
+    """Dropping a peer sets it FAILED and keeps it out of every mesh across heartbeats."""
     await fault_injector.drop_peer("peer-2")
     node = node_pool.get_node("peer-2")
     assert node.state == NodeState.FAILED
     assert node.gossip_score == 0.0
 
-    # peer-2 should be removed from other peers' meshes
+    # A crashed peer neither re-grafts nor gets grafted on the next heartbeat
+    clock._time += 1.0
+    await node_pool.gossip.heartbeat("lumina/blocks/1.0")
     mesh = node_pool.gossip.get_mesh_state("lumina/blocks/1.0")
+    assert mesh["peer-2"] == []
     for peer_id, peers in mesh.items():
-        if peer_id != "peer-2":
-            assert "peer-2" not in peers, f"peer-2 still in {peer_id}'s mesh"
+        assert "peer-2" not in peers, f"peer-2 still in {peer_id}'s mesh"
 
 
 async def test_drop_peer_blocks_relay(fault_injector, node_pool):
@@ -163,6 +184,10 @@ async def test_eclipse_replaces_mesh(fault_injector, node_pool):
     for p in target_mesh:
         assert p.startswith("eclipse-"), f"Honest peer {p} still in eclipsed peer-2's mesh"
     assert len(target_mesh) == 3
+    # Meshes are asymmetric: no honest peer may still hold the target either
+    for p, m in mesh.items():
+        if not p.startswith("eclipse-"):
+            assert "peer-2" not in m, f"{p} still holds eclipsed peer-2"
 
 
 async def test_clear_eclipse_removes_attackers(fault_injector, node_pool):
@@ -275,6 +300,24 @@ async def test_eclipse_stays_until_clear(fault_injector, node_pool, clock):
     assert not any(p.startswith("eclipse-") for p in gossip.get_mesh_state(TOPIC).get("peer-2", []))
 
 
+async def test_eclipse_blocks_mesh_relay_and_regraft(fault_injector, node_pool, clock):
+    """Honest peers cannot relay to or GRAFT an eclipsed peer; only IHAVE/IWANT reaches it."""
+    gossip = node_pool.gossip
+    await fault_injector.inject_eclipse("peer-2", 3)
+    async with trio.open_nursery() as nursery:
+        msg_id = await gossip.publish("peer-1", TOPIC, nursery)  # topology neighbour of peer-2
+        await trio.sleep(0.2)
+    assert "peer-2" not in {h["peer"] for h in gossip.get_trace(msg_id)["hops"]}
+
+    clock._time += 1.0
+    await gossip.heartbeat(TOPIC)
+    hops = [h for h in gossip.get_trace(msg_id)["hops"] if h["peer"] == "peer-2"]
+    assert hops and all(h["via"] == "iwant" for h in hops)
+    mesh = gossip.get_mesh_state(TOPIC)
+    assert all(p.startswith("eclipse-") for p in mesh["peer-2"])
+    assert not any("peer-2" in m for p, m in mesh.items() if not p.startswith("eclipse-"))
+
+
 async def test_prune_reason_defaults_to_overflow(event_bus):
     from backend.events.types import GossipPrune
 
@@ -307,6 +350,10 @@ async def test_snapshot_includes_attackers_as_nodes():
         assert n["index"] >= 20000
         assert isinstance(n["x"], float) and isinstance(n["gossip_score"], float)
     assert nodes["eclipse-0"]["connected_peers"] == ["peer-3"]
+    assert nodes["eclipse-0"]["last_targets"] == ["peer-3"]
+    # victims at injection ⊇ current meshes (the eclipse above rewrote peer-3's mesh)
+    assert set(nodes["sybil-0"]["connected_peers"]) <= set(nodes["sybil-0"]["last_targets"])
+    assert len(nodes["sybil-0"]["last_targets"]) > 0
 
     await fi.clear_fault(fid)
     ids = {n["peer_id"] for n in engine.get_snapshot()["nodes"]}
