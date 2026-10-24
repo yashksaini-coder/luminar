@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke
+.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -44,6 +44,20 @@ build: ## Build frontend for production
 	cd frontend && npm run build
 
 check: lint test typecheck build ## Run all checks (lint + test + types + build)
+
+# ── Web (Next.js overhaul) ─────────────────────────────
+
+web: ## Start the Next.js web dev server (:3000)
+	cd web && npm run dev
+
+web-build: ## Build the web static export (web/out)
+	cd web && npm run build
+
+web-test: ## Run web unit tests (vitest)
+	cd web && npx vitest run
+
+web-check: ## Web checks (tsc + lint + vitest)
+	cd web && npx tsc --noEmit && npm run lint && npx vitest run
 
 # ── Docker ─────────────────────────────────────────────
 
