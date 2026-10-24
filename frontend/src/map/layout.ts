@@ -1,4 +1,4 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, forceRadial, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type SimulationNodeDatum, type SimulationLinkDatum } from 'd3-force'
 import type { LayoutMode, PeerNode } from '../types'
 
 export interface LayoutResult {
@@ -43,7 +43,7 @@ export const GEO_SCALE = 2.5
 export type LayoutEdge = [string, string] | [string, string, true]
 
 const placed = new Map<string, [number, number]>()  // last frozen position per peer id
-let placedTopology = ''  // the edge-set key those positions were computed for
+let placedTopology: string | null = null  // the edge-set key those positions were computed for
 
 function layoutForce(allNodes: PeerNode[], edges: LayoutEdge[], topologyKey: string): [number, number][] {
   const full: [number, number][] = allNodes.map(() => [0, 0])
@@ -53,7 +53,11 @@ function layoutForce(allNodes: PeerNode[], edges: LayoutEdge[], topologyKey: str
   const n = visibleIdx.length
   if (n === 0) return full
 
-  const cold = topologyKey !== placedTopology
+  // Cold when the edge set changed, or when most nodes are new: a node-count change can
+  // reach us before its edges frame (or the reverse), and pinning the old pool while the
+  // rest piles onto the ring would freeze that half-arrived state on screen.
+  const known = visibleIdx.filter(i => placed.has(allNodes[i].peer_id)).length
+  const cold = topologyKey !== placedTopology || known * 2 < n
   if (cold) placed.clear()
   const visibleIds = new Set(visibleIdx.map(i => allNodes[i].peer_id))
   const links: ForceLink[] = edges
@@ -80,27 +84,41 @@ function layoutForce(allNodes: PeerNode[], edges: LayoutEdge[], topologyKey: str
       : { id, x: initRadius * Math.cos(a), y: initRadius * Math.sin(a) }
   })
 
-  const sim = forceSimulation<ForceNode, ForceLink>(nodes)
-    .force('link', forceLink<ForceNode, ForceLink>(links)
-      .id(d => d.id)
-      .strength(l => l.weak ? 0.2 : 0.4)
-      .distance(l => l.weak ? baseDist * 1.6 : baseDist))
-    .force('charge', forceManyBody<ForceNode>()
-      .strength(-800)
-      .distanceMax(baseDist * 6)
-      .theta(0.9))
-    .force('center', forceCenter(0, 0).strength(0.03))
-    // A node with no links has nothing holding it and charge flings it to the corner, which
-    // makes the fit zoom out for one dot: keep isolated nodes on the cluster's rim instead.
-    .force('rim', forceRadial<ForceNode>(initRadius, 0, 0).strength(d => firstNeighbour.has(d.id) ? 0 : 0.3))
-    .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
-    .stop()
-  // ponytail: synchronous ticks; ~50 ms at 50 nodes, about a second at 500 (cold only)
-  const ticks = cold ? (n > 200 ? 150 : 300) : 60
-  sim.alpha(cold ? 1 : 0.5)
-  for (let i = 0; i < ticks; i++) sim.tick()
+  // Nothing to settle (every node pinned, or no links yet to pull anything): skip the ticks.
+  const fresh = nodes.filter(nd => nd.fx == null).length
+  if (fresh > 0 && links.length > 0) {
+    const sim = forceSimulation<ForceNode, ForceLink>(nodes)
+      .force('link', forceLink<ForceNode, ForceLink>(links)
+        .id(d => d.id)
+        .strength(l => l.weak ? 0.2 : 0.4)
+        .distance(l => l.weak ? baseDist * 1.6 : baseDist))
+      .force('charge', forceManyBody<ForceNode>()
+        .strength(-800)
+        .distanceMax(baseDist * 6)
+        .theta(0.9))
+      .force('center', forceCenter(0, 0).strength(0.03))
+      .force('collide', forceCollide<ForceNode>(baseDist * 0.25).iterations(2))
+      .stop()
+    // ponytail: synchronous ticks; ~50 ms at 50 nodes, about a second at 500 (cold only)
+    const ticks = cold ? (n > 200 ? 150 : 300) : 60
+    sim.alpha(cold ? 1 : 0.5)
+    for (let i = 0; i < ticks; i++) sim.tick()
+  }
 
+  // A node with no links has nothing holding it and charge flings it to the corner, which
+  // makes the fit zoom out for one dot: park isolated newcomers just outside the cluster.
+  let rim = 0
+  for (const nd of nodes) if (firstNeighbour.has(nd.id) || nd.fx != null) rim = Math.max(rim, Math.hypot(nd.x, nd.y))
+  rim = (rim || initRadius) + baseDist
+  nodes.forEach((nd, k) => {
+    if (nd.fx != null || firstNeighbour.has(nd.id)) return
+    const a = (2 * Math.PI * k) / n
+    nd.x = rim * Math.cos(a); nd.y = rim * Math.sin(a)
+  })
+
+  // Remember only the nodes still here, so a re-used id (sybil-0 after clear all) is new again.
   placedTopology = topologyKey
+  placed.clear()
   nodes.forEach((fn, k) => {
     placed.set(fn.id, [fn.x, fn.y])
     full[visibleIdx[k]] = [fn.x, fn.y]

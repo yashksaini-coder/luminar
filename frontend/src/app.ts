@@ -21,12 +21,12 @@ import type { AppEvent, LayoutMode } from './types'
 // ── Topology fingerprint ──
 let topoKey = ''
 /** One key format for every site, so an edges frame followed by a same-topology snapshot recomputes once. */
+const edgesKey = () => store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
 function currentTopoKey(): string {
   // Only nodes drawn in this view count (observers arriving per slot must not restart Force),
   // keyed with their index because nodePositions is index-aligned with store.nodes
   const ids = store.nodes.map((n, i) => isNodeVisible(store.layoutMode, n) ? `${i}:${n.peer_id}` : '').filter(Boolean).join(',')
-  const edges = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  return `${ids}|${edges}|${store.layoutMode}`
+  return `${ids}|${edgesKey()}|${store.layoutMode}`
 }
 
 // ── Milestone computation ──
@@ -80,8 +80,7 @@ function recomputeLayout() {
 
   // Every layout is computed once and frozen; Force keeps known nodes in place while the
   // topology (store.edges) is unchanged, so only new attackers get placed.
-  const topologyKey = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
-  const result = computeLayout(store.layoutMode, store.nodes, layoutEdges, topologyKey)
+  const result = computeLayout(store.layoutMode, store.nodes, layoutEdges, edgesKey())
   store.nodePositions = result.positions
   renderLayers()
   requestAnimationFrame(() => fitView())
@@ -104,21 +103,12 @@ function reelGuard(): boolean {
   return true
 }
 
-async function fetchSnapshot() {
-  const snap = await api.simSnapshot()
+/** Edges land before the snapshot is applied, so the one layout that follows sees both halves. */
+async function fetchTopology() {
+  const [snap, result] = await Promise.all([api.simSnapshot(), api.topologyEdges()])
+  if (result) store.edges = result.edges
   if (snap) handleWsSnapshot(snap)
-}
-
-async function fetchEdges() {
-  const result = await api.topologyEdges()
-  if (!result) return
-  store.edges = result.edges
-
-  const fullKey = currentTopoKey()
-  if (fullKey !== topoKey) {
-    topoKey = fullKey
-    recomputeLayout()
-  }
+  else if (result) handleWsEdges(result)
 }
 
 async function fetchScenarios() {
@@ -147,8 +137,7 @@ function buildScenarioDropdown() {
       if (reelGuard()) return
       leaveGeoForSim()
       await api.scenarioLaunch(s.id, store.simSpeed)
-      await fetchSnapshot()
-      await fetchEdges()
+      await fetchTopology()
     })
     dropdown.appendChild(btn)
   }
@@ -573,8 +562,7 @@ function initPresets() {
       // Reconfigure backend
       topoKey = ''
       await api.simReconfigure(n)
-      await fetchSnapshot()
-      await fetchEdges()
+      await fetchTopology()
     })
   })
 }
@@ -784,8 +772,7 @@ async function main() {
     ws.connect()
 
     // Initial data fetch (one-time, then WS takes over)
-    await fetchSnapshot()
-    await fetchEdges()
+    await fetchTopology()
     applyUrlMoment()
   }
   await fetchScenarios()
