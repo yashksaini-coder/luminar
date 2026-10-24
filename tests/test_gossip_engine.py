@@ -373,4 +373,7 @@ async def test_heartbeat_loop_counts_received_not_seen_size(event_bus, clock, mo
             await trio.sleep(0.02)
         await trio.sleep(0.35)  # heartbeat loop ticks every 0.1 s at speed 10
         nursery.cancel_scope.cancel()
-    assert pool.get_node("peer-1").messages_received == 3
+    # >= because the spawned peers also publish on their own schedule (NodePool._node_loop
+    # staggers the first one by 0.1–2 s wall), which occasionally lands inside this window;
+    # a frozen counter would read 1 (the cap), so 3 or more is the property under test.
+    assert pool.get_node("peer-1").messages_received >= 3
