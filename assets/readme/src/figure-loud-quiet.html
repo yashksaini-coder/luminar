@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8"><title>loud vs quiet</title><style>
+@font-face{font-family:Geist;src:url(../../../frontend/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:Geist;src:url(../../../frontend/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2) format("woff2");font-weight:600}
+@font-face{font-family:"Geist Mono";src:url(../../../frontend/node_modules/@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:"Geist Mono";src:url(../../../frontend/node_modules/@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2) format("woff2");font-weight:500}
+html,body{margin:0;background:#111113}
+.f{position:relative;width:1600px;height:900px;background:#111113;color:#ededef;font-family:Geist,system-ui,sans-serif;overflow:hidden}
+h1{position:absolute;left:72px;top:56px;margin:0;font-size:44px;font-weight:600;letter-spacing:-0.03em}
+h1 small{display:block;margin-top:10px;font-size:20px;font-weight:500;color:#8a8a8f;letter-spacing:0}
+.p{position:absolute;top:170px;width:700px;height:600px;border:1px solid #2d2d30;border-radius:18px;background:#161618}
+.l{left:72px}.r{left:828px}
+.p h2{margin:0;position:absolute;left:32px;top:28px;font-size:26px;font-weight:600;letter-spacing:-0.02em}
+.p h2 span{font-family:"Geist Mono",monospace;font-size:13px;font-weight:500;color:#8a8a8f;margin-left:12px;letter-spacing:0;vertical-align:middle}
+.p svg{position:absolute;left:0;top:70px}
+.k{position:absolute;left:32px;bottom:28px;right:32px;font-family:"Geist Mono",monospace;font-size:15px;line-height:1.7;color:#b4b4b8}
+.k b{font-weight:500;color:#ededef}
+.a{color:oklch(80% 0.117 60)}.d{color:oklch(78% 0.15 22)}.g{color:#34d399}
+.wm{position:absolute;right:72px;top:70px;font-family:"Geist Mono",monospace;font-size:14px;color:#8a8a8f;letter-spacing:.12em}
+.foot{position:absolute;left:72px;bottom:44px;font-size:22px;font-weight:500;color:#b4b4b8}
+.foot b{color:#ededef;font-weight:600}
+</style></head><body><div class="f">
+<h1>Scoring catches the loud attack and misses the quiet one<small>Same GossipSub v1.1 mechanism as a beacon node, toy constants: D=6, prune at −10, heartbeat 1 s.</small></h1>
+<div class="wm">LUMINAR</div>
+<div class="p l"><h2>Sybil flood<span>5 attackers · T+10 s</span></h2><svg id="s1" width="700" height="400"></svg>
+<div class="k"><b>Each invalid message</b> → P4 <span class="d">−10</span> · score <span class="d">−15</span> in two heartbeats<br><b>Mesh reacts</b> → <span class="a">PRUNE reason=score</span> · attackers leave the mesh<br><b>Delivery</b> → <span class="g">back to 100 %</span></div></div>
+<div class="p r"><h2>Eclipse<span>4 attackers around peer-10 · T+16 s</span></h2><svg id="s2" width="700" height="400"></svg>
+<div class="k"><b>Attackers send nothing</b> → P4 stays 0 · only a P3 deficit, floor <span class="d">−0.25</span><br><b>Mesh reacts</b> → nothing · score never crosses −10<br><b>Delivery</b> → <span class="d">peer-10 goes dark</span> while the rest stays green</div></div>
+<div class="foot"><b>What talks gets scored. What stays quiet does not.</b> That is why Luminar shows both, in the same mesh, in the same minute.</div>
+<script>
+const ns='http://www.w3.org/2000/svg',amber='oklch(72% 0.166 60)',red='oklch(64% 0.245 25)',grey='#3b3b3e',cream='#d4d4d8';
+let s=11;const rnd=()=>{s=(s*16807)%2147483647;return (s-1)/2147483646};
+function mesh(svg,cx,cy,n,r){const N=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+rnd()*0.3,rr=r*(0.55+rnd()*0.45);N.push({x:cx+Math.cos(a)*rr*1.3,y:cy+Math.sin(a)*rr})}
+ const E=[];for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const d=Math.hypot(N[i].x-N[j].x,N[i].y-N[j].y);if(d<r*0.95&&rnd()<0.5)E.push([i,j])}return {N,E}}
+function el(t,a,p){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e}
+function line(p,a,b,c,w,o,dash){el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:c,'stroke-width':w,'stroke-opacity':o,...(dash?{'stroke-dasharray':dash}:{})},p)}
+function node(p,n,c,r,hollow){if(hollow){el('circle',{cx:n.x,cy:n.y,r:r,fill:'none',stroke:cream,'stroke-width':2},p)}else{el('circle',{cx:n.x,cy:n.y,r:r*2.2,fill:c,'fill-opacity':0.12},p);el('circle',{cx:n.x,cy:n.y,r:r,fill:c},p)}}
+function text(p,x,y,t,c,sz,anchor){const e=el('text',{x,y,fill:c||'#8a8a8f','font-family':'Geist Mono, monospace','font-size':sz||13,'text-anchor':anchor||'start'},p);e.textContent=t}
+// left: sybil flood
+{const svg=document.getElementById('s1');const {N,E}=mesh(svg,350,215,18,150);for(const [i,j] of E)line(svg,N[i],N[j],amber,1.2,0.7);
+ const S=[{x:95,y:60},{x:640,y:70},{x:70,y:380},{x:650,y:380},{x:360,y:30}];S.forEach((a,k)=>{const t=[N[k*3%18],N[(k*5+2)%18],N[(k*7+4)%18]];t.forEach(n=>line(svg,a,n,red,1.4,0.55));
+  // flood particles
+  t.forEach(n=>{for(let q=0.2;q<1;q+=0.25){el('circle',{cx:a.x+(n.x-a.x)*q,cy:a.y+(n.y-a.y)*q,r:2.6,fill:red,'fill-opacity':0.9},svg)}});
+  node(svg,a,red,8,k<2);text(svg,a.x+(a.x>350?-14:14),a.y+5,'sybil-'+k+(k<2?' · pruned':''),k<2?cream:red,13,a.x>350?'end':'start')});
+ N.forEach(n=>node(svg,n,cream,7));}
+// right: eclipse
+{const svg=document.getElementById('s2');const {N,E}=mesh(svg,350,215,18,150);for(const [i,j] of E)line(svg,N[i],N[j],amber,1.2,0.7);
+ const v=N[6];v.x=350;v.y=215;const A=[{x:220,y:120},{x:480,y:110},{x:215,y:320},{x:490,y:320}];
+ // victim's honest links: drawn as cut
+ N.filter((n,i)=>i!==6&&Math.hypot(n.x-v.x,n.y-v.y)<170).slice(0,4).forEach(n=>line(svg,v,n,grey,1.2,0.9,'4 5'));
+ A.forEach((a,k)=>{line(svg,a,v,red,1.6,0.8);node(svg,a,red,8);text(svg,a.x+(a.x>350?14:-14),a.y+5,'eclipse-'+k,red,13,a.x>350?'start':'end')});
+ N.forEach((n,i)=>i!==6&&node(svg,n,cream,7));el('circle',{cx:v.x,cy:v.y,r:22,fill:'none',stroke:red,'stroke-width':1,'stroke-opacity':0.5},svg);node(svg,v,'#8a8a8f',9);text(svg,v.x,v.y+42,'peer-10',cream,13,'middle');
+ }
+</script></div></body></html>
