@@ -437,8 +437,6 @@ def _merge_real_peers(snap: dict) -> dict:
     live = mainnet_feed.get_nodes_as_peer_dicts()
     if telem or live:
         snap["nodes"] = snap["nodes"] + telem + live
-        snap["telemetry_count"] = len(telem)
-        snap["observer_count"] = len(live)
     return snap
 
 

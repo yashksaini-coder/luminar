@@ -25,9 +25,12 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
 /** One provenance per view: Geo draws real observers only; Force and Radial draw the
  *  simulation only. Shared by the renderer, fitView and the layouts so hidden nodes never
  *  take part in physics, ring packing or the fit either. */
-export function isNodeVisible(mode: LayoutMode, nd: { is_real?: boolean } | undefined): boolean {
+export function isSimPeer(nd: { is_real?: boolean; is_telemetry?: boolean }): boolean {
+  return !nd.is_real && !nd.is_telemetry
+}
+export function isNodeVisible(mode: LayoutMode, nd: { is_real?: boolean; is_telemetry?: boolean } | undefined): boolean {
   if (!nd) return false
-  return mode === 'geo' ? !!nd.is_real : !nd.is_real
+  return mode === 'geo' ? !isSimPeer(nd) : isSimPeer(nd)
 }
 
 /** Degrees → canvas units for the Geo layout; must match backend/live/mainnet.py GEO_SCALE. */

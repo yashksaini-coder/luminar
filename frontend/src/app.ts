@@ -5,7 +5,7 @@ import { ws } from './api/websocket'
 import { loadReel, stopReel, reelPlaying, seekReelToSimTime, type ReelMeta } from './api/replay'
 import { initRenderer, resizeRenderer, renderLayers, fitView, spawnParticle, startAnimationLoop, getViewState } from './map/renderer'
 import { initOverlay, resizeOverlay } from './map/overlay'
-import { computeLayout, startLiveForce, stopLiveForce, isNodeVisible, type LayoutEdge } from './map/layout'
+import { computeLayout, startLiveForce, stopLiveForce, isNodeVisible, isSimPeer, type LayoutEdge } from './map/layout'
 import { initStatsPanel, updateStatsPanel } from './ui/stats-panel'
 import { initEventsPanel, appendEvents } from './ui/events-panel'
 import { initPeerInspector, refreshPeerInspector, appendPeerInspectorEvents } from './ui/peer-inspector'
@@ -22,8 +22,9 @@ import type { AppEvent, LayoutMode } from './types'
 let topoKey = ''
 /** One key format for every site, so an edges frame followed by a same-topology snapshot recomputes once. */
 function currentTopoKey(): string {
-  // Only nodes drawn in this view count: observers arriving per slot must not restart Force
-  const ids = store.nodes.filter(n => isNodeVisible(store.layoutMode, n)).map(n => n.peer_id).sort().join(',')
+  // Only nodes drawn in this view count (observers arriving per slot must not restart Force),
+  // keyed with their index because nodePositions is index-aligned with store.nodes
+  const ids = store.nodes.map((n, i) => isNodeVisible(store.layoutMode, n) ? `${i}:${n.peer_id}` : '').filter(Boolean).join(',')
   const edges = store.edges.map(([s, t]) => `${s}-${t}`).sort().join(',')
   return `${ids}|${edges}|${store.layoutMode}`
 }
@@ -57,6 +58,7 @@ function computeMilestones() {
 let fitTimers: ReturnType<typeof setTimeout>[] = []
 
 function recomputeLayout() {
+  for (const t of fitTimers) clearTimeout(t)  // a pending Force fit must not land on another layout
   // Rebuild node index first (needed by both paths)
   store.nodeIndex.clear()
   for (let i = 0; i < store.nodes.length; i++) {
@@ -89,7 +91,6 @@ function recomputeLayout() {
     // Initial fitView after warm-up settles
     // Fit once after the warm-up and again once the live sim has settled (it keeps expanding
     // for ~1 s after a cold start), so a layout switch never leaves the graph half framed.
-    for (const t of fitTimers) clearTimeout(t)
     fitTimers = [setTimeout(() => fitView(), 200), setTimeout(() => fitView(), 1400)]
   } else {
     // Static layouts (grid, radial) — compute once, no physics
@@ -120,35 +121,7 @@ function reelGuard(): boolean {
 
 async function fetchSnapshot() {
   const snap = await api.simSnapshot()
-  if (!snap) return
-
-  store.simState = snap.state
-  store.simTime = snap.time
-  store.simSpeed = snap.speed
-  store.nodeCount = snap.node_count
-  syncNodePreset(snap.node_count)
-  store.eventCount = snap.event_count
-  store.nodes = snap.nodes
-  store.mesh = snap.gossip?.mesh ?? {}
-  store.playing = snap.state === 'running'
-
-  // Auto-pause when duration limit is reached
-  if (store.maxDuration > 0 && store.simTime >= store.maxDuration && store.playing) {
-    await api.simPause()
-    store.playing = false
-    store.simState = 'paused'
-  }
-
-  const newTopoKey = currentTopoKey()
-
-  if (newTopoKey !== topoKey) {
-    topoKey = newTopoKey
-    recomputeLayout()
-  } else {
-    renderLayers()
-  }
-
-  updatePlaybackUI()
+  if (snap) handleWsSnapshot(snap)
 }
 
 async function fetchEdges() {
@@ -444,7 +417,7 @@ function initDropdowns() {
       // Fire-and-forget — don't await, don't block UI
       switch (action) {
         case 'partition': {
-          const peers = store.nodes.filter(n => !n.is_real && !n.is_telemetry).map(n => n.peer_id)
+          const peers = store.nodes.filter(isSimPeer).map(n => n.peer_id)
           const mid = Math.floor(peers.length / 2)
           api.faultPartition(peers.slice(0, mid), peers.slice(mid))
             .then(() => showFaultFlash('Network Partition injected'))
@@ -456,14 +429,14 @@ function initDropdowns() {
           break
         case 'eclipse': {
           const sel = store.nodes[store.selectedNode]
-          const t = sel && !sel.is_real ? sel.peer_id : store.nodes.find(n => !n.is_real)?.peer_id
+          const t = sel && isSimPeer(sel) ? sel.peer_id : store.nodes.find(isSimPeer)?.peer_id
           if (t) api.faultEclipse(t, 4)
             .then(() => showFaultFlash(`Eclipse on ${t}`))
           break
         }
         case 'drop': {
           const sel = store.nodes[store.selectedNode]
-          const t = sel && !sel.is_real && !sel.is_telemetry ? sel.peer_id : null
+          const t = sel && isSimPeer(sel) ? sel.peer_id : null
           if (t) api.faultDrop(t)
             .then(() => showFaultFlash(`Dropped ${t}`))
           break
@@ -491,6 +464,9 @@ function handleWsSnapshot(snap: any) {
   store.nodeCount = snap.node_count
   syncNodePreset(snap.node_count)
   store.eventCount = snap.event_count
+  // Selection is remembered by id from the store itself, so every site that clears or sets
+  // store.selectedNode (Escape, inspector close, event row, Reset) is honoured on the next frame
+  const selectedPeerId = store.selectedNode >= 0 ? store.nodes[store.selectedNode]?.peer_id ?? null : null
   store.nodes = snap.nodes
   store.mesh = snap.gossip?.mesh ?? {}
   // In reel mode the recorded state says nothing about the player; a seek replays a
@@ -509,10 +485,7 @@ function handleWsSnapshot(snap: any) {
     if (resolved === undefined) { store.highlightPeers = []; document.dispatchEvent(new CustomEvent('luminar:nodeselect')) }
   }
   // Geo availability follows the node set; the feed auto-selects Geo once observers exist
-  if (store.mainnet?.enabled && hasRealNodes() && !geoAutoDone) {
-    geoAutoDone = true
-    if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
-  }
+  maybeAutoGeo()
   updateGeoAvailability()
 
   // Auto-pause at duration limit (live only)
@@ -653,10 +626,7 @@ function applyMainnetStatus(m: any) {
       prov.append(k, v)
     }
   }
-  if (on && !was && hasRealNodes() && !geoAutoDone) {
-    geoAutoDone = true
-    if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
-  }
+  if (on && !was) maybeAutoGeo()
   if (!on && was) { geoAutoDone = false; updateGeoAvailability() }
   renderTicker()
 }
@@ -671,25 +641,25 @@ function setLayoutMode(mode: LayoutMode) {
     store.highlightPeers = []
     document.dispatchEvent(new CustomEvent('luminar:nodeselect'))
   }
-  topoKey = ''
   recomputeLayout()
+  topoKey = currentTopoKey()  // already laid out: the next snapshot must not recompute again
   if (store.mainnet?.enabled) applyMainnetStatus(store.mainnet)
 }
 
-// Selection is remembered by peer id so a changing node set (feed on/off, reel, preset)
-// cannot leave a stale index behind.
-let selectedPeerId: string | null = null
-document.addEventListener('luminar:nodeselect', () => {
-  selectedPeerId = store.selectedNode >= 0 ? (store.nodes[store.selectedNode]?.peer_id ?? null) : null
-})
-
-/** Real observers (mainnet feed, real-trace reel) are the only nodes with coordinates. */
+/** Placed nodes (mainnet observers, real-trace reel, telemetry peers) are the only ones with coordinates. */
 function hasRealNodes(): boolean {
-  return store.nodes.some(n => n.is_real)
+  return store.nodes.some(n => !isSimPeer(n))
 }
 
 let layoutBeforeGeo: LayoutMode | null = null
 let geoAutoDone = false  // the feed auto-selects Geo once per feed-on, never on later snapshots
+
+/** The feed picks Geo once, as soon as observers exist; a manual pick afterwards wins. */
+function maybeAutoGeo() {
+  if (!store.mainnet?.enabled || !hasRealNodes() || geoAutoDone) return
+  geoAutoDone = true
+  if (store.layoutMode !== 'geo') { layoutBeforeGeo = store.layoutMode; setLayoutMode('geo') }
+}
 
 /** Called whenever the node set or the feed changes: Geo is offered only while real
  *  observers exist, and leaving that state restores the layout the user had before. */
@@ -778,9 +748,9 @@ async function main() {
   handleResize()
 
   // Mode switcher
-  initModeSwitcher(() => {
+  initModeSwitcher((mode) => {
     layoutBeforeGeo = null  // a manual pick replaces the remembered layout
-    setLayoutMode(store.layoutMode)
+    setLayoutMode(mode)
   })
 
   // Keyboard events
