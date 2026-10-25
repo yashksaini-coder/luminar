@@ -1,0 +1,40 @@
+/* Text surface: no dither (spec §7). */
+.card {
+  position: absolute;
+  left: var(--s-4);
+  bottom: calc(36px + var(--strip-h) + var(--s-6));
+  z-index: 2;
+  max-width: 420px;
+  pointer-events: none;
+}
+.card[data-visible] {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+}
+
+.kicker {
+  font: 600 var(--t-label)/1 var(--font-ui);
+  letter-spacing: .12em;
+  padding: var(--s-3) var(--s-4) 0;
+  color: var(--fg-2);
+}
+.kicker[data-healed] { color: var(--signal-text); }
+
+.sentence {
+  margin: 0;
+  padding: var(--s-2) var(--s-4) var(--s-3);
+  font: italic 400 var(--t-narr)/var(--lh-tight) var(--font-display);
+  color: var(--fg);
+}
+
+.drain {
+  height: 2px;
+  background: var(--fg-2);
+  animation: drain var(--d-caption) linear forwards;
+}
+
+@keyframes drain { from { width: 100% } to { width: 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  .drain { animation: none; width: 100% }
+}

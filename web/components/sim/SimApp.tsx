@@ -13,6 +13,7 @@ import Inspector from './Inspector'
 import Legend from './Legend'
 import LogRail from './LogRail'
 import ModeSwitcher from './ModeSwitcher'
+import Narrator from './Narrator'
 import Provenance from './Provenance'
 import styles from './SimApp.module.css'
 import StatsRail from './StatsRail'
@@ -54,6 +55,7 @@ export default function SimApp() {
         <ModeSwitcher />
         <Provenance />
         <Legend />
+        <Narrator />
         <CommandStrip manifest={manifest} onDrawer={() => {}} />
         <Toasts />
       </main>
