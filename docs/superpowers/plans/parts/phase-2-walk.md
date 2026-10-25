@@ -144,3 +144,67 @@ The bench runs slower than the in-page measure because it sits in a separate pro
 
 - change the scenario or backend in a later phase so that a victim's score goes negative;
 - or drop "halos go flame" from the acceptance line and the talk copy.
+
+## Review round 2 re-measure (2026-10-25 14:04–14:15 IST, at `97c58d5`)
+
+**Conditions, recorded with commands:**
+
+- **Power:** on AC. `ADP*/online` read `1` and the battery read `Charging`.
+- **CPU:** governor `powersave`, cores at 2.3–3.7 GHz.
+- **Background load:** the owner's `enlisted` game still ran at about 425–440 % CPU, with load average 6.5–8.3. I cannot close it.
+- **GPU contention:** Chrome renders on the Intel iGPU (`--render-node-override=/dev/dri/renderD129`, which is `card2`). The game runs on the RTX 5050 at 99 % (`nvidia-smi`). It also holds `card2`, because the built-in panel is wired to the iGPU.
+
+So this run is still **not a clean gate run**. It is the best these conditions allow, and it changes three things from round 1:
+
+1. **Production build, not `next dev`.**
+   - Built with `NEXT_PUBLIC_API_URL=http://localhost:8000 npm run build` and served with `uv run python -m http.server 3000 -d web/out`.
+   - On :3000 the socket goes to `ws://localhost:8000` (`wsUrl`). REST goes to `API_BASE`.
+   - The walk scripts now call `http://localhost:8000/api/...` directly (CORS is `*`), so the same scripts run against `next dev` or the static export.
+2. **Real drawing-buffer DPR, not emulated.**
+   - CDP's `deviceScaleFactor` emulation does **not** change deck's WebGL buffer. At emulated ×1.5 the canvas stayed at `1440×856`, with `devicePixelContentBoxSize` 1440 and `gl.drawingBufferWidth` 1440, because luma sizes the buffer from the physical `devicePixelContentBoxSize`. **So every "emulated DPR" number before this section was really DPR 1.**
+   - To measure a real ×1.5 and ×2 buffer, I set `useDevicePixels: 1.5` or `2` on the `Deck` in a local, **uncommitted** build, together with the matching emulated DPR so the atlas is built at the same ratio. I checked the buffers at `2160×1284` and `2880×1712`, then reverted the patch (`git status` clean for `renderer.ts`).
+3. **Venue DPR from the spec.** Spec §7 (line 458) names "DPR 1.5 on the venue laptop". This laptop's panel is 1920×1080 at Hyprland scale 1, so it runs at **DPR 1** and is not the venue configuration as it stands. ×1.5 is therefore the gate row and ×2 (the renderer's cap) is the bound.
+
+| check (prod build, 200 nodes) | DPR 1 (buffer 1440×856) | DPR 1.5 (2160×1284) | DPR 2 (2880×1712) |
+|---|---|---|---|
+| cold layout, final `layout` measure, `cold200.js` | 290, 293, 285, 308, 273 ms ✔ | n/a (layout is CPU-only, unaffected by DPR) | 222, 227, 230, 222, 241 ms ✔ |
+| first frame with 200 discs after the reconfigure response | 674, 550, 456, 387, 744 ms ✔ | n/a | 308, 708, 631, 523, 444 ms ✔ |
+| Sybil burst fps per second, `burst.js` | 55, 57, 58, 57, 58, 58 ✔ | 36, 39, 35, 38, 42, 37 and 31, 30, 40, 38, 33, 30 (≥ 30, marginal) | 34, 32, 40, 38, 33, 34 and 30, 30, 32, **28**, 35, **24** ✘ |
+| burst frame gap p50 / p95 | 17.5 / 18.3 ms | 17.8 / 166.6 and 17.5 / 183.3 ms | 17.7 / 166.7 and 17.4 / 216.7 ms |
+| running with no fault, 6 s | (not separately measured) | 37.8 fps | 29.5 fps, p95 250 ms |
+| idle (paused, faults cleared), `idle.js` | 59.7 fps, 0 long tasks, 0 commits ✔ | n/a | 59.3 fps, 0 long tasks, 0 commits ✔ |
+| React commits during the burst | 57, all one component (minified `g`, 10 Hz, the `Clock`) | 53 and 57, same component | 56 and 59, same component |
+
+Notes on the table:
+
+- The second DPR 2 burst ran with 20 attackers, because I did not clear the first 10.
+- The first frame waits for the backend's next 500 ms snapshot, so its spread (300–750 ms) is mostly snapshot cadence, not render time.
+
+**Where the DPR ≥ 1.5 drops come from.** The only main-thread long task is the one Sybil-arrival relayout, 125–197 ms. The 160–300 ms frame gaps carry **no** long task. A 4.4 s trace at ×1.5 (scratchpad `run-dpr15.json`, not committed) shows:
+
+- `CrGpuMain` busy for **3 371 ms of 4 460 ms**, with fourteen `RunTask` slices of 150–303 ms;
+- `CrRendererMain` busy for 1 826 ms, of which `FireAnimationFrame` took 1 122 ms, about 7 ms per frame.
+
+So the drop sits in the GPU process, on the iGPU that also scans out the game's frames. With the game running, I cannot tell how much of it the canvas causes and how much comes from contention. DPR 1 at the same moment holds 55–58 fps. **I made no `renderer.ts` change.** Every per-frame cost the brief lists (`updateTriggers`, `topologyKey`, atlas rebuilds, `haloCells`) is already off the frame path. A speculative GPU-side change without a clean measurement would be guesswork.
+
+**Gate status: still OPEN, but narrowed.**
+
+- **Met, even under load:** cold layout ≤ 400 ms (10 of 10 runs), first paint ≤ 1 s (10 of 10), 60 fps idle, and no React re-render per frame. These hold at DPR 1 and DPR 2.
+- **Unproven at the venue DPR:** ≥ 30 fps in a Sybil burst. It is marginal at ×1.5 (30–42 fps) and fails at ×2 (24–40 fps), both with the game on the shared iGPU.
+- **The run that closes the gate:** on the venue laptop, or this one with Hyprland `monitor=eDP-1,preferred,auto,1.5` so the physical DPR is 1.5, on AC with the game closed, run `cold200.js` ×5, `burst.js` ×2 and `idle.js` against the production export.
+- **If the burst still drops below 30 fps there:** that is a renderer GPU-cost finding for a follow-up task. The likely levers are the 1.5× atlas size and per-frame particle buffer uploads. The other option is the spec's fallback (a Bayer shader in place of the pre-dithered atlas).
+
+**Halos go flame: re-checked live, still impossible with the current backend.**
+
+- **Check:** `demo_sybil_eclipse` at speed 1, with every honest `peer-*` `gossip_score` polled from `/api/sim/snapshot` every 0.5 s for 45 s.
+- **Result:**
+  - n=20: minimum honest score **0.45** (`peer-0` at T+1.4), first negative `None`;
+  - n=50: minimum **0.45**, first negative `None`;
+  - n=200: minimum **0.45**, first negative `None`.
+- **Why the renderer cannot help:**
+  - Spec §6.2 gives halos only to honest discs. Attackers are "never dithered".
+  - The only honest-score terms that can go negative are P3 (mesh delivery deficit) and P4, and the scenario drives neither below zero for an honest peer.
+  - The backend is out of bounds before phase 7.
+- **Ruling needed (owner or controller):** either change the scenario or scoring constants in phase 7 so that a victim goes negative, or drop "halos go flame" from the spec §11 acceptance line and the talk copy. Band-0 flame rendering itself is covered by Task 2.5's injected-snapshot evidence (`band0.png`) and the atlas tests.
+
+**Console:** one error across the prod-build walk, `GET /favicon.ico 404` from the static server. The app ships no favicon yet, and that is outside this task. No warnings.

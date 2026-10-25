@@ -1,6 +1,6 @@
 async () => {
   const L = window.__luminar
-  const post = (p, b) => fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })
+  const post = (p, b) => fetch('http://localhost:8000' + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })
   await post('/api/sim/reconfigure', { n_nodes: 50 })
   await new Promise(r => setTimeout(r, 3000))
   performance.clearMeasures('layout'); performance.mark('t0')

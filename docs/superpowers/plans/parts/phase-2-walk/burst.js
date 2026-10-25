@@ -6,7 +6,7 @@ async () => {
   po.observe({ type: 'longtask' })
   let run = true; const loop = t => { frames.push(t); if (run) requestAnimationFrame(loop) }; requestAnimationFrame(loop)
   const t0 = performance.now(); window.__rendered = {}; const nc0 = (window.__commits || []).length
-  await fetch('/api/fault/sybil', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n_attackers: 10, target_topic: 'lumina/blocks/1.0' }) })
+  await fetch('http://localhost:8000/api/fault/sybil', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n_attackers: 10, target_topic: 'lumina/blocks/1.0' }) })
   await new Promise(r => setTimeout(r, 6000)); run = false; po.disconnect()
   const per = {}; for (const f of frames) { const s = Math.floor((f - t0) / 1000); per[s] = (per[s] || 0) + 1 }
   const gaps = frames.slice(1).map((f, i) => f - frames[i]).sort((a, b) => a - b)
