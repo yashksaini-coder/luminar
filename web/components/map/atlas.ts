@@ -127,7 +127,7 @@ export function buildAtlas(opts: { nodePx: number; cellPx: number; dpr: number; 
       circle(nodePx, undefined, pal.paper0, 2)                // ring at 2 r
       ctx.beginPath()
       for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) { ctx.moveTo(dx * nodePx, dy * nodePx); ctx.lineTo(dx * (nodePx + 4), dy * (nodePx + 4)) }
-      ctx.strokeStyle = css(pal.paper0); ctx.lineWidth = 1; ctx.stroke()
+      ctx.strokeStyle = css(pal.paper0); ctx.lineWidth = 2; ctx.stroke()      // 2 px [spec §6.2]: a 1 px tick on an integer centre smears over 2 px at dpr 1
     },
   }
   for (const [id, fn] of Object.entries(draw) as [GlyphId, () => void][]) {
