@@ -107,8 +107,10 @@ let captionSeq = 0
 const caption = (text: string, kind: Caption['kind'], at: number): Caption => ({ text, kind, at, seq: ++captionSeq })
 
 type Patch = Partial<AppState>
+// Compares against the pre-batch state; a later write back to that value drops the earlier one from the patch.
 function put<K extends keyof AppState>(s: AppState, p: Patch, k: K, v: AppState[K]) {
-  if (!Object.is(s[k], v)) p[k] = v
+  if (Object.is(s[k], v)) delete p[k]
+  else p[k] = v
 }
 
 function resetNarratorPatch(s: AppState, p: Patch) {

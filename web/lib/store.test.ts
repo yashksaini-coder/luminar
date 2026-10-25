@@ -27,6 +27,16 @@ test('ClockTick moves simTime; SimulationStateChanged applies live and is ignore
   S().applyEvents([{ at: 4, event_type: 'SimulationStateChanged', category: 'simulation', state: 'running', speed: 2 }])
   expect(S().playing).toBe(false); expect(S().simSpeed).toBe(1)
 })
+test('a batch that changes a field and reverts it ends on the last value', () => {
+  S().applyEvents([{ at: 1, event_type: 'SimulationStateChanged', category: 'simulation', state: 'running', speed: 1 }])
+  S().applyEvents([
+    { at: 2, event_type: 'SimulationStateChanged', category: 'simulation', state: 'paused', speed: 2 },
+    { at: 2.1, event_type: 'SimulationStateChanged', category: 'simulation', state: 'running', speed: 1 },
+    { at: 2.2, event_type: 'ClockTick', category: 'clock' },
+    { at: 0, event_type: 'ClockTick', category: 'clock' },
+  ])
+  expect(S().simState).toBe('running'); expect(S().playing).toBe(true); expect(S().simSpeed).toBe(1); expect(S().simTime).toBe(0)
+})
 test('applySnapshot rebuilds nodeById, drops a vanished selection, samples score history, honours reel guard', () => {
   S().selectPeer('peer-1')
   S().applySnapshot(snapWith(['peer-0', 'peer-1'])); expect(S().scoreHistory).toEqual([{ t: 0, v: 1 }]); expect(S().nodeById.get('peer-1')?.index).toBe(1)
