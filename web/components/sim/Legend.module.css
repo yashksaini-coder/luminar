@@ -1,0 +1,81 @@
+/* Top-right over the canvas; solid panel, hairline, square corners. No dither on text or attackers (spec §7). */
+.legend {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  z-index: 2;
+  width: 176px;
+  background: var(--panel);
+  border: var(--hair-w) solid var(--hair);
+  font: 400 var(--t-micro)/1.4 var(--font-mono);
+  color: var(--fg-2);
+}
+
+.head { display: flex; align-items: center; gap: var(--s-1); padding: var(--s-1) var(--s-1) var(--s-1) var(--s-2); }
+.title { flex: 1; font: 600 var(--t-label)/1 var(--font-ui); letter-spacing: .12em; color: var(--fg); }
+
+.btn {
+  width: 20px; height: 20px; padding: 0;
+  background: none; border: 0; border-radius: var(--r-0);
+  color: var(--paper-1); font: 400 12px/1 var(--font-mono); cursor: pointer;
+}
+.btn:hover { color: var(--paper-0); }
+.btn[aria-pressed="true"] { color: var(--paper-0); background: var(--pitch-3); }
+.btn:focus-visible, .switch:focus-visible, .input:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
+
+.body {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin: 0;
+  padding: var(--s-1) var(--s-2) var(--s-2);
+  border-top: var(--hair-w) solid var(--hair);
+}
+.body dt { display: flex; justify-content: center; }
+.body dd { margin: 0; }
+.note { grid-column: 1 / -1; color: var(--fg-3); font-size: var(--t-micro); }
+
+.line { display: block; width: 16px; height: 0; border-top: 1px solid; }
+.line[data-line="topology"] { border-top-style: dotted; border-color: var(--paper-1); }
+.line[data-line="mesh"] { border-color: var(--link-mesh); }
+.line[data-line="attack"] { border-top-style: dashed; border-color: var(--flame); }
+.line[data-line="message"] { width: 4px; height: 4px; border: 0; background: var(--paper-0); }
+
+form.body { grid-template-columns: 1fr; gap: var(--s-2); }
+.row { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 2px var(--s-2); cursor: pointer; }
+.row:has(:disabled) { cursor: not-allowed; }
+.label { color: var(--fg); }
+.hint { grid-column: 2; color: var(--fg-3); }
+
+.switch {
+  appearance: none;
+  position: relative;
+  width: 28px; height: 16px; margin: 0;
+  background: var(--pitch-3);
+  border-radius: 0;
+  cursor: inherit;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 12px; height: 12px;
+  background: var(--paper-0);
+  transition: transform var(--d-fast);
+}
+.switch:checked { background: var(--paper-1); }
+.switch:checked::after { transform: translateX(12px); }
+.switch:disabled { opacity: .5; }
+
+.token { display: grid; gap: 2px; padding-top: var(--s-2); border-top: var(--hair-w) solid var(--hair); }
+.token .hint { grid-column: 1; }
+.input {
+  width: 100%;
+  padding: 2px var(--s-1);
+  background: var(--pitch-0);
+  border: var(--hair-w) solid var(--hair-strong);
+  border-radius: 0;
+  color: var(--fg);
+  font: inherit;
+}

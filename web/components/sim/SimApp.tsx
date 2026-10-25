@@ -10,6 +10,7 @@ import { useStore } from '@/lib/store'
 import type { Beat, ReelManifest } from '@/lib/types'
 import CommandStrip from './CommandStrip'
 import Inspector from './Inspector'
+import Legend from './Legend'
 import LogRail from './LogRail'
 import ModeSwitcher from './ModeSwitcher'
 import Provenance from './Provenance'
@@ -52,6 +53,7 @@ export default function SimApp() {
         <DeckCanvas />
         <ModeSwitcher />
         <Provenance />
+        <Legend />
         <CommandStrip manifest={manifest} onDrawer={() => {}} />
         <Toasts />
       </main>
