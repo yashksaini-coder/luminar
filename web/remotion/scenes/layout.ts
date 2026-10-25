@@ -51,7 +51,7 @@ export const LAYOUT: Record<SceneId, Record<Orientation, SceneLayout>> = {
   },
   heal: { wide: wide({ mesh: W_MESH, caption: W_CAPTION, readout: W_READOUT }), tall: tall({ mesh: T_MESH, caption: T_CAPTION, readout: T_READOUT }) },
   'same-names': { wide: wide({ caption: W_CAPTION }), tall: tall({ mesh: { x: 40, y: 560, w: 1000, h: 600 }, caption: T_CAPTION }) },
-  mainnet: { wide: wide({ caption: W_CAPTION }), tall: tall({ caption: T_CAPTION }) },
+  mainnet: { wide: wide({ caption: { x: 680, y: 930, w: 1200, h: 110 } }), tall: tall({ caption: T_CAPTION }) },   // wide caption: the provenance line needs the width
   honesty: { wide: wide({ headlinePx: 56, stamp: { anchor: 'c', inset: [0, 300] } }), tall: tall({ headlinePx: 44, monoPx: 44, stamp: { anchor: 'c', inset: [0, 400] } }) },
   end: {
     wide: wide({ mesh: W_MESH, headlinePx: 160, stamp: { anchor: 'tr', inset: [96, 96] } }),

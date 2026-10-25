@@ -36,7 +36,7 @@ export const FIG: Partial<Record<SceneId, string>> = {
   eclipse: 'Four silent attackers. No invalid messages, so no P4. Only a P3 deficit, floored at −0.25. The mesh never reacts; peer-10 lives on gossip pulls, a heartbeat late.',
   heal: 'Faults cleared; the mesh re-grafts and delivery is back within two heartbeats.',
   'same-names': `Seven of ${SAME_NAMES}, so the same dashboard queries work on both. Not the same numbers.`,
-  mainnet: `Real mainnet: one slot's block, ${ARRIVAL}. ${PROVENANCE}`,
+  mainnet: `Real mainnet: one slot's block, ${ARRIVAL}.\n${PROVENANCE}`,
 }
 
 export const FIG_N: Partial<Record<SceneId, number>> = {

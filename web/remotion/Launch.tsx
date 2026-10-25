@@ -10,6 +10,8 @@ import Sybils from './scenes/04-Sybils'
 import Pruned from './scenes/05-Pruned'
 import Eclipse from './scenes/06-Eclipse'
 import Heal from './scenes/07-Heal'
+import SameNames from './scenes/08-SameNames'
+import Mainnet from './scenes/09-Mainnet'
 import type { SceneProps } from './scenes/types'
 import { timeline, type SceneId } from './timeline'
 
@@ -27,8 +29,8 @@ const SCENES: Record<SceneId, FC<SceneProps>> = {
   pruned: Pruned,
   eclipse: Eclipse,
   heal: Heal,
-  'same-names': Placeholder,
-  mainnet: Placeholder,
+  'same-names': SameNames,
+  mainnet: Mainnet,
   honesty: Placeholder,
   end: Placeholder,
 }

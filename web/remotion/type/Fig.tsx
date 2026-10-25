@@ -16,7 +16,7 @@ export function Fig({ n, children, orientation, box, at }: { n: number; children
       }}
     >
       <span style={{ font: '600 14px var(--font-ui)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Fig. {n}</span>
-      <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: tall ? 30 : 28, lineHeight: 1.2, color: 'var(--fg-2)' }}>{children}</span>
+      <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: tall ? 30 : 28, lineHeight: 1.2, color: 'var(--fg-2)', whiteSpace: 'pre-line' }}>{children}</span>
     </figcaption>
   )
 }

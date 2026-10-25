@@ -37,8 +37,9 @@ function advances(path: string): (ch: string) => number {
 
 const em = advances('node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff')
 
-/** Greedy word wrap, as the browser does for normal white-space. */
+/** Greedy word wrap with forced breaks at '\n', as the browser does for white-space: pre-line. */
 function lines(text: string, px: number, width: number): number {
+  if (text.includes('\n')) return text.split('\n').reduce((n, part) => n + lines(part, px, width), 0)
   const w = (s: string) => [...s].reduce((sum, ch) => sum + em(ch) * px, 0)
   let n = 1, cur = ''
   for (const word of text.split(' ')) {
