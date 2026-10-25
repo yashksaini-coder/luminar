@@ -17,6 +17,10 @@
 > duplicated colour tables; OTLP badge in the toolbar; gzip for reels.
 > Paths under frontend/ in the tables below describe the pre-overhaul tree (git tag
 > pre-overhaul, eb26490); the shipped frontend is web/ since the swap in 00bb473 (25 Oct).
+> 2026-10-25 (`feat/ui-overhaul`, 03a571a): motion/responsive pass T1–T10 shipped; final walk in
+> docs/superpowers/plans/parts/motion-walk/README.md (54 route × viewport cells, no horizontal
+> scroll; reduced-motion 0 running animations; Lighthouse a11y .96/1.0/1.0; landing mobile perf .73
+> is an open hand-off — reveal gate delays LCP — with `NEXT_PUBLIC_SITE_URL` at deploy build time).
 
 Verified against commit `a2d8a76` on 2026-10-09; external facts re-verified the same day by a second pass (see §11). All paths relative to `/home/yks/Projects/luminar`. Base proposal: **Stage-Demo First** (favoured by 2 of 3 judges), with grafts from the Ethereum-credibility, Observability and Lessons proposals and the fatal flaws the judges named removed. Effort estimates are full-day equivalents for one developer.
 
