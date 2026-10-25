@@ -46,7 +46,8 @@ htmlcov/
 .coverage
 
 # AI assistant config
-.claude/
+.claude/*
+!.claude/CLAUDE.md
 
 # Reel recordings (raw); shipped reels live in web/public/reels/
 recordings/
