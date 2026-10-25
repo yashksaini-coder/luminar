@@ -4,7 +4,7 @@
   grid-template:
     "toolbar toolbar toolbar" var(--toolbar-h)
     "rail-l canvas rail-r" 1fr
-    / var(--rail-l) 1fr var(--rail-r);
+    / var(--rail-l) minmax(0, 1fr) var(--rail-r);   /* minmax(0): a long pill must not widen the shell */
   height: 100dvh;
   overflow: hidden;
   background: var(--bg);
@@ -18,10 +18,10 @@
 .contents { display: contents; }   /* hero-hide wrappers that stay out of layout */
 
 /* hero: rails are display:none (data-hero-hide), so the grid drops their columns too */
-:global(:root[data-hero="1"]) .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / 1fr; }
+:global(:root[data-hero="1"]) .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / minmax(0, 1fr); }
 
 @media (max-width: 1024px) {
-  .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / 1fr; }
+  .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / minmax(0, 1fr); }
   .railL, .railR {
     position: fixed;
     top: var(--toolbar-h);

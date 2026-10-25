@@ -35,6 +35,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* the flex item that actually truncates (REEL · long title) */
 
 /* R7: flame-dim text is 3.1:1 and fails AA; --flame-text is 6.3:1 */
 .pill[data-state="offline"] { color: var(--flame-text); padding: 3px var(--s-2); border: 1px solid var(--hair); }
