@@ -30,8 +30,8 @@
 }
 .row {
   display: grid; grid-template-columns: 7ch 8ch 3ch minmax(0, 1fr); align-items: center; gap: var(--s-2);
-  height: 22px; padding: 0 var(--s-3);
-  font: 400 var(--t-label)/22px var(--font-mono); font-variant-numeric: tabular-nums;
+  height: var(--row-h); padding: 0 var(--s-3);
+  font: 400 var(--t-label)/var(--row-h) var(--font-mono); font-variant-numeric: tabular-nums;
   color: var(--fg-2); cursor: pointer;
 }
 .row:hover { background: var(--hair); }

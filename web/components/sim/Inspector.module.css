@@ -56,8 +56,8 @@
 }
 .row {
   display: grid; grid-template-columns: 7ch 3ch 2ch minmax(0, 1fr); gap: var(--s-2);
-  height: 22px; padding: 0 var(--s-3);
-  font: 400 var(--t-label)/22px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg-2);
+  height: var(--row-h); padding: 0 var(--s-3);
+  font: 400 var(--t-label)/var(--row-h) var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg-2);
 }
 .at { color: var(--fg-3); }
 .detail { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

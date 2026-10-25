@@ -1,6 +1,7 @@
 import { test, expect, beforeEach, vi } from 'vitest'
 import { useStore } from '@/lib/store'
 import { applyDomPrefs, initPrefs, loadPrefs, persistPrefs, reducedMotion } from '@/lib/prefs'
+import { runKey } from '@/lib/actions'
 
 beforeEach(() => {
   useStore.setState(useStore.getInitialState(), true)
@@ -37,4 +38,12 @@ test('persistPrefs keeps ?t and ?peer', () => {
   history.replaceState(null, '', '/reels/sybil-eclipse/?t=12.4&peer=sybil-0')
   persistPrefs({ stageTheme: true, hero: false }); expect(location.search).toBe('?t=12.4&peer=sybil-0&theme=stage')
   persistPrefs({ stageTheme: false, hero: true }); expect(location.search).toBe('?t=12.4&peer=sybil-0&hero=1')
+})
+test('initPrefs: URL wins, store scale follows, DOM and storage mirror, key t toggles', () => {
+  localStorage.setItem('luminar.prefs', JSON.stringify({ stageTheme: false, hero: true })); history.replaceState(null, '', '/sim/?theme=stage')
+  const off = initPrefs()
+  expect(useStore.getState().stageTheme).toBe(true); expect(useStore.getState().hero).toBe(true); expect(useStore.getState().scale).toEqual({ node: 1.4, particle: 1.8, edgeAlpha: 1.6 })
+  expect(document.documentElement.dataset.stage).toBe('1'); expect(document.documentElement.dataset.hero).toBe('1')
+  expect(JSON.parse(localStorage.getItem('luminar.prefs')!)).toEqual({ stageTheme: true, hero: true })      // storage caught up with the URL
+  runKey('toggleStage'); expect(document.documentElement.dataset.stage).toBeUndefined(); expect(location.search).toBe('?hero=1'); expect(useStore.getState().scale).toEqual({ node: 1, particle: 1, edgeAlpha: 1 }); off()
 })
