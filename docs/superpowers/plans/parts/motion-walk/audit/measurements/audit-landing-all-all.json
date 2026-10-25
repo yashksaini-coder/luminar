@@ -1,0 +1,4789 @@
+[
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 3821,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "path",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "circle",
+    "l": 303,
+    "r": 398
+   }
+  ],
+  "small": [
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 61,
+    "iy": 88
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3454,
+    "w": 390,
+    "h": 368,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 390,
+    "h": 3270,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 16,
+    "y": 120,
+    "w": 358,
+    "h": 103,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "390x844",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 3821,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "path",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "circle",
+    "l": 303,
+    "r": 398
+   }
+  ],
+  "small": [
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 61,
+    "iy": 88
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3454,
+    "w": 390,
+    "h": 368,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 390,
+    "h": 788,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 390,
+    "h": 3270,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 16,
+    "y": 120,
+    "w": 358,
+    "h": 103,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "390x844",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 4100,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 751,
+    "r": 847
+   },
+   {
+    "sel": "path",
+    "l": 751,
+    "r": 847
+   },
+   {
+    "sel": "circle",
+    "l": 751,
+    "r": 846
+   }
+  ],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SYBIL FLOOD · T+10S\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 136,
+    "iy": 196
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 844,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3810,
+    "w": 844,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 844,
+    "h": 3626,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 112,
+    "y": 120,
+    "w": 620,
+    "h": 210,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 516,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "844x390",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 4100,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 751,
+    "r": 847
+   },
+   {
+    "sel": "path",
+    "l": 751,
+    "r": 847
+   },
+   {
+    "sel": "circle",
+    "l": 751,
+    "r": 846
+   }
+  ],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SYBIL FLOOD · T+10S\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 136,
+    "iy": 196
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 844,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3810,
+    "w": 844,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 844,
+    "h": 334,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 844,
+    "h": 3626,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 112,
+    "y": 120,
+    "w": 620,
+    "h": 210,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 516,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "844x390",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 3924,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 677,
+    "r": 773
+   },
+   {
+    "sel": "path",
+    "l": 677,
+    "r": 773
+   },
+   {
+    "sel": "circle",
+    "l": 677,
+    "r": 772
+   }
+  ],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 124,
+    "iy": 179
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3635,
+    "w": 768,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 768,
+    "h": 3451,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 74,
+    "y": 120,
+    "w": 620,
+    "h": 191,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 442,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "768x1024",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 3924,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 677,
+    "r": 773
+   },
+   {
+    "sel": "path",
+    "l": 677,
+    "r": 773
+   },
+   {
+    "sel": "circle",
+    "l": 677,
+    "r": 772
+   }
+  ],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Simulator›\"",
+    "b": "a._1CICJq_route \"Figure›\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Figure›\"",
+    "b": "a._1CICJq_route \"Source›\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 124,
+    "iy": 179
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3635,
+    "w": 768,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 768,
+    "h": 968,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 768,
+    "h": 3451,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 74,
+    "y": 120,
+    "w": 620,
+    "h": 191,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 442,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "768x1024",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 4516,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 165,
+    "iy": 238
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1024,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 12,
+    "y": 4227,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1024,
+    "h": 4043,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 202,
+    "y": 120,
+    "w": 620,
+    "h": 254,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 692,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "1024x768",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 4516,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Simulator›\"",
+    "b": "a._1CICJq_route \"Figure›\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Figure›\"",
+    "b": "a._1CICJq_route \"Source›\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 165,
+    "iy": 238
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1024,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 12,
+    "y": 4227,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 1024,
+    "h": 712,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1024,
+    "h": 4043,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 202,
+    "y": 120,
+    "w": 620,
+    "h": 254,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 692,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "1024x768",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 4881,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1280,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 140,
+    "y": 4592,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1280,
+    "h": 4408,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 330,
+    "y": 120,
+    "w": 620,
+    "h": 318,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 941,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "1280x720",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 4881,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 59,
+    "h": 18
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 69,
+    "h": 18
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 43,
+    "h": 18
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Simulator›\"",
+    "b": "a._1CICJq_route \"Figure›\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Figure›\"",
+    "b": "a._1CICJq_route \"Source›\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1280,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 140,
+    "y": 4592,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 1280,
+    "h": 664,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1280,
+    "h": 4408,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 330,
+    "y": 120,
+    "w": 620,
+    "h": 318,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 941,
+    "y": 19,
+    "w": 222,
+    "h": 18,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "1280x720",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 5028,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 62,
+    "h": 19
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 73,
+    "h": 19
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 45,
+    "h": 19
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 164,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 130,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 220,
+    "y": 4739,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1440,
+    "h": 4555,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 410,
+    "y": 120,
+    "w": 620,
+    "h": 358,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 1086,
+    "y": 18,
+    "w": 231,
+    "h": 19,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "1440x900",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 5028,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 62,
+    "h": 19
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 73,
+    "h": 19
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 45,
+    "h": 19
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 164,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 130,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Simulator›\"",
+    "b": "a._1CICJq_route \"Figure›\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Figure›\"",
+    "b": "a._1CICJq_route \"Source›\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 220,
+    "y": 4739,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 1440,
+    "h": 844,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1440,
+    "h": 4555,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 410,
+    "y": 120,
+    "w": 620,
+    "h": 358,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 1086,
+    "y": 18,
+    "w": 231,
+    "h": 19,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "1440x900",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 5168,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 66,
+    "h": 19
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 77,
+    "h": 19
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 48,
+    "h": 19
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 172,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 137,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 11,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 11,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 14.5,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 14.5,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1920,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 460,
+    "y": 4879,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1920,
+    "h": 4695,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 650,
+    "y": 120,
+    "w": 620,
+    "h": 383,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 1553,
+    "y": 18,
+    "w": 242,
+    "h": 19,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "1920x1080",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 5168,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 66,
+    "h": 19
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 77,
+    "h": 19
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 48,
+    "h": 19
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 172,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 137,
+    "h": 42
+   }
+  ],
+  "gaps": [
+   {
+    "a": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+    "b": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"2Partition → HealT+15s the m\"",
+    "b": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_reel \"3Healthy meshScale-free topo\"",
+    "b": "a._1CICJq_reel \"4Mainnet block wave (real)Re\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Simulator›\"",
+    "b": "a._1CICJq_route \"Figure›\"",
+    "gap": 1
+   },
+   {
+    "a": "a._1CICJq_route \"Figure›\"",
+    "b": "a._1CICJq_route \"Source›\"",
+    "gap": 1
+   }
+  ],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 11,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Recordings\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "kbd \"1\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+10s five Sybils graft in a\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"2\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"T+15s the mesh is split in t\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"3\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Scale-free topology, no faul\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "kbd \"4\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_line \"Real mainnet block arrivals,\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "span._1CICJq_tag \"REAL\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "h2._1CICJq_label \"Routes\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 11,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 11,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 13,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 14.5,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 14.5,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 11,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1920,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 460,
+    "y": 4879,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 0,
+    "y": 56,
+    "w": 1920,
+    "h": 1024,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1920,
+    "h": 4695,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 650,
+    "y": 120,
+    "w": 620,
+    "h": 383,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 1553,
+    "y": 18,
+    "w": 242,
+    "h": 19,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "a._1CICJq_reel \"1Sybil → EclipseT+10s five S\"",
+  "route": "landing",
+  "vp": "1920x1080",
+  "scenario": "menu",
+  "stepErr": null
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 3821,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "path",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "circle",
+    "l": 303,
+    "r": 398
+   }
+  ],
+  "small": [
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 158,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 123,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.iZBupa_inner \"SORTER No. 6\"",
+    "fs": 10,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 61,
+    "iy": 88
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 0,
+    "y": 3454,
+    "w": 390,
+    "h": 368,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 390,
+    "h": 3270,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 16,
+    "y": 120,
+    "w": 358,
+    "h": 103,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "390x844@2x",
+  "scenario": "default",
+  "stepErr": null
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 5028,
+  "hscroll": false,
+  "overflowers": [],
+  "small": [
+   {
+    "sel": "a \"Simulator\"",
+    "w": 62,
+    "h": 19
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "w": 73,
+    "h": 19
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "w": 45,
+    "h": 19
+   },
+   {
+    "sel": "a.btn.btn-primary \"Open the simulator\"",
+    "w": 164,
+    "h": 42
+   },
+   {
+    "sel": "a.chev \"Watch a recording ›\"",
+    "w": 130,
+    "h": 42
+   }
+  ],
+  "gaps": [],
+  "text": [
+   {
+    "sel": "span._1CICJq_sub \"gossipsub v1.1\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "dt \"PEERS\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"SYBIL\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"PRUNED\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "dt \"T+\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "ui"
+   },
+   {
+    "sel": "span.Dk33zW_play \"Play ›\"",
+    "fs": 10.4,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_counts\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_churn_ev\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_mesh_peer_inclusio\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_score_per_mesh\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_iwant_msgs\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_publishe\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "li \"gossipsub_topic_msg_recv_cou\"",
+    "fs": 12.2,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "a.chev \"Watch the recorded block wav\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "span \"›\"",
+    "fs": 13.7,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p._5eMK_W_credit \"arrival at observer nodes, n\"",
+    "fs": 10.4,
+    "body": true,
+    "font": "mono"
+   },
+   {
+    "sel": "p.VUkswa_mark \"LUMINAR\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Landing\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Simulator\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Recordings\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"Figure\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"GitHub\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "a \"MIT licence\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "li \"data: ethPandaOps (CC BY 4.0\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   },
+   {
+    "sel": "p.VUkswa_copy \"© 2026 Luminar Contributors\"",
+    "fs": 14,
+    "body": true,
+    "font": "ui"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 1440,
+    "h": 56,
+    "vis": true,
+    "inert": false
+   },
+   "footer": {
+    "x": 220,
+    "y": 4739,
+    "w": 1000,
+    "h": 290,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 56,
+    "w": 1440,
+    "h": 4555,
+    "vis": true,
+    "inert": false
+   },
+   "h1": {
+    "x": 410,
+    "y": 120,
+    "w": 620,
+    "h": 358,
+    "vis": true,
+    "inert": false
+   },
+   "nav": {
+    "x": 1086,
+    "y": 18,
+    "w": 231,
+    "h": 19,
+    "vis": true,
+    "inert": false
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "body \"LUMINAR gossipsub v1.1Simula\"",
+  "route": "landing",
+  "vp": "1440x900@2x",
+  "scenario": "default",
+  "stepErr": null
+ }
+]

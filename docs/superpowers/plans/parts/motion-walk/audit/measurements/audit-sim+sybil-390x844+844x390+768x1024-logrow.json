@@ -1,0 +1,4137 @@
+[
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -144,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "w": 42,
+    "h": 20
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Fault\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Health\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Clock\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Sim\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.vgSswa_label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_meta \"50 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div.k_Rz1G_switch \"Layout\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "aside.SfQQda_legend \"Legend\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 300,
+    "iy": 166
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 106,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 202,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 366,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 675,
+    "w": 164,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 800,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 78,
+    "y": 44,
+    "w": 312,
+    "h": 800,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 78,
+    "y": 44,
+    "w": 312,
+    "h": 800,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 390,
+    "h": 800,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 233,
+    "y": 779,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 727,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 390,
+    "h": 800,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 21,
+    "y": 779,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.vgSswa_chip \"All\"",
+  "route": "reels-sybil-eclipse",
+  "vp": "390x844",
+  "scenario": "logrow",
+  "stepErr": "click [aria-label=\"Event log\"] [role=button]: missing"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -144,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "w": 42,
+    "h": 20
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Fault\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Health\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Clock\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Sim\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.vgSswa_label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_meta \"50 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "aside.SfQQda_legend \"Legend\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 300,
+    "iy": 114
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 844,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 333,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 656,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 820,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 273,
+    "w": 618,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 346,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 532,
+    "y": 44,
+    "w": 312,
+    "h": 346,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 532,
+    "y": 44,
+    "w": 312,
+    "h": 346,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 844,
+    "h": 346,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 561,
+    "y": 325,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 325,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 844,
+    "h": 346,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 349,
+    "y": 325,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.vgSswa_chip \"All\"",
+  "route": "reels-sybil-eclipse",
+  "vp": "844x390",
+  "scenario": "logrow",
+  "stepErr": "click [aria-label=\"Event log\"] [role=button]: missing"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -144,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "w": 42,
+    "h": 20
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"All\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"None\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Gossip\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Conn\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Stream\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Fault\"",
+    "b": "button.vgSswa_chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Health\"",
+    "b": "button.vgSswa_chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Clock\"",
+    "b": "button.vgSswa_chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.vgSswa_chip \"Sim\"",
+    "b": "button.vgSswa_chip \"Live\"",
+    "gap": 4
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.vgSswa_label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_meta \"50 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.vgSswa_chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.vgSswa_hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div.k_Rz1G_switch \"Layout\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 17,
+    "iy": 18
+   },
+   {
+    "a": "aside.SfQQda_legend \"Legend\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "b": "aside.L9z7cG_railR \"Log\"",
+    "ix": 300,
+    "iy": 114
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 295,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 580,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 744,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 907,
+    "w": 542,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 980,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 456,
+    "y": 44,
+    "w": 312,
+    "h": 980,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 456,
+    "y": 44,
+    "w": 312,
+    "h": 980,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 768,
+    "h": 980,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 561,
+    "y": 959,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 959,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 768,
+    "h": 980,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 349,
+    "y": 959,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.vgSswa_chip \"All\"",
+  "route": "reels-sybil-eclipse",
+  "vp": "768x1024",
+  "scenario": "logrow",
+  "stepErr": "click [aria-label=\"Event log\"] [role=button]: missing"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -150,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n0cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "w": 311,
+    "h": 22
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n0cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "gap": 0
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.LogRail-module__vgSswa__label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__meta \"20 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__at \"0.00\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n0\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__code \"cn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n2\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n3\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n4\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n5\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n6\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n7\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n8\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n9\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n10\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n11\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n12\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n13\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n14\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n15\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n16\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n17\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n18\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n19\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 300,
+    "iy": 166
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 106,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 202,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 366,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 675,
+    "w": 170,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "inspector": {
+    "x": 0,
+    "y": 844,
+    "w": 390,
+    "h": 376,
+    "vis": true,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 800,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 78,
+    "y": 44,
+    "w": 312,
+    "h": 800,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 78,
+    "y": 44,
+    "w": 312,
+    "h": 800,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 390,
+    "h": 800,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 233,
+    "y": 779,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 727,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 390,
+    "h": 800,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 21,
+    "y": 779,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.LogRail-module__vgSswa__chip \"All\"",
+  "route": "sim",
+  "vp": "390x844",
+  "scenario": "logrow",
+  "stepErr": null
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -150,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "w": 311,
+    "h": 22
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.SimApp-module__L9z7cG__scrim \"Close panel\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "gap": 6.4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 7.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 5.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 5.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 5.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 5.6
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 5.6
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "gap": 0
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.LogRail-module__vgSswa__label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__meta \"20 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__at \"0.00\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n0\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__code \"cn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n2\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n3\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n4\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n5\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n6\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n7\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n8\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n9\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n10\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n11\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n12\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n13\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n14\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n15\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n16\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n17\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n18\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n19\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 300,
+    "iy": 114
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 844,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 333,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 656,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 820,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 273,
+    "w": 624,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "inspector": {
+    "x": 0,
+    "y": 390,
+    "w": 844,
+    "h": 273,
+    "vis": true,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 346,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 532,
+    "y": 44,
+    "w": 312,
+    "h": 346,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 532,
+    "y": 44,
+    "w": 312,
+    "h": 346,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 844,
+    "h": 346,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 561,
+    "y": 325,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 325,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 844,
+    "h": 346,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 349,
+    "y": 325,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.LogRail-module__vgSswa__chip \"All\"",
+  "route": "sim",
+  "vp": "844x390",
+  "scenario": "logrow",
+  "stepErr": null
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -25,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -208
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -150,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -70
+   }
+  ],
+  "small": [
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "w": 54,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "w": 48,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "w": 36,
+    "h": 20
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "w": 42,
+    "h": 20
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n0cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "w": 311,
+    "h": 22
+   },
+   {
+    "sel": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "w": 311,
+    "h": 22
+   }
+  ],
+  "gaps": [
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"None\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"All\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"None\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "gap": 4
+   },
+   {
+    "a": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "b": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "gap": 4
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n0cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n1cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n2cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n3cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n4cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n5cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n6cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n7cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n8cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n9cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n10cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n11cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n12cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n13cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n14cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n15cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n16cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n17cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "gap": 0
+   },
+   {
+    "a": "div.LogRail-module__vgSswa__row \"0.00n18cn\"",
+    "b": "div.LogRail-module__vgSswa__row \"0.00n19cn\"",
+    "gap": 0
+   }
+  ],
+  "text": [
+   {
+    "sel": "span.LogRail-module__vgSswa__label \"EVENT LOG\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__meta \"20 · following\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"All\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"None\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Gossip\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Conn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Stream\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"DHT\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Fault\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Health\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Clock\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Sim\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "button.LogRail-module__vgSswa__chip \"Live\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__hint \"⌥-click isolates\"",
+    "fs": 9,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__at \"0.00\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n0\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__code \"cn\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n1\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n2\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n3\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n4\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n5\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n6\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n7\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n8\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n9\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n10\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n11\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n12\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n13\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n14\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n15\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n16\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n17\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n18\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   },
+   {
+    "sel": "span.LogRail-module__vgSswa__node \"n19\"",
+    "fs": 10,
+    "body": false,
+    "font": "mono"
+   }
+  ],
+  "overlaps": [
+   {
+    "a": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 17,
+    "iy": 18
+   },
+   {
+    "a": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 176,
+    "iy": 30
+   },
+   {
+    "a": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "b": "aside.SimApp-module__L9z7cG__railR \"Log\"",
+    "ix": 300,
+    "iy": 114
+   }
+  ],
+  "clipped": [],
+  "rects": {
+   "toolbar": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "modes": {
+    "x": 295,
+    "y": 56,
+    "w": 177,
+    "h": 18,
+    "vis": true,
+    "inert": true
+   },
+   "legend": {
+    "x": 580,
+    "y": 88,
+    "w": 176,
+    "h": 30,
+    "vis": true,
+    "inert": true
+   },
+   "narrator": {
+    "x": 12,
+    "y": 136,
+    "w": 744,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "range": {
+    "x": 125,
+    "y": 907,
+    "w": 548,
+    "h": 44,
+    "vis": false,
+    "inert": true
+   },
+   "kbd": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "vis": false,
+    "inert": true
+   },
+   "inspector": {
+    "x": 0,
+    "y": 1024,
+    "w": 768,
+    "h": 376,
+    "vis": true,
+    "inert": true
+   },
+   "railL": {
+    "x": -264,
+    "y": 44,
+    "w": 264,
+    "h": 980,
+    "vis": false,
+    "inert": true
+   },
+   "railR": {
+    "x": 456,
+    "y": 44,
+    "w": 312,
+    "h": 980,
+    "vis": true,
+    "inert": false
+   },
+   "menu": {
+    "x": 456,
+    "y": 44,
+    "w": 312,
+    "h": 980,
+    "vis": true,
+    "inert": false
+   },
+   "main": {
+    "x": 0,
+    "y": 44,
+    "w": 768,
+    "h": 980,
+    "vis": true,
+    "inert": true
+   },
+   "faultBtn": {
+    "x": 561,
+    "y": 959,
+    "w": 102,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "speed10": {
+    "x": 241,
+    "y": 959,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   },
+   "canvasCol": {
+    "x": 0,
+    "y": 44,
+    "w": 768,
+    "h": 980,
+    "vis": true,
+    "inert": true
+   },
+   "logBtn": {
+    "x": 349,
+    "y": 959,
+    "w": 44,
+    "h": 44,
+    "vis": true,
+    "inert": true
+   }
+  },
+  "inert": [],
+  "focusOutline": null,
+  "canvasFree": null,
+  "active": "button.LogRail-module__vgSswa__chip \"All\"",
+  "route": "sim",
+  "vp": "768x1024",
+  "scenario": "logrow",
+  "stepErr": null
+ }
+]

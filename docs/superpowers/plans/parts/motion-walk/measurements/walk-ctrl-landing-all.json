@@ -1,0 +1,61 @@
+[
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 7455,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 184,
+    "iy": 265
+   }
+  ],
+  "anims": 4,
+  "animNames": [
+   "Dk33zW_ringScale@span.Dk33zW_play \"Play ›\"",
+   "Dk33zW_ringFade@span.Dk33zW_play \"Play ›\"",
+   "_5eMK_W_obsScale@span._5eMK_W_observer",
+   "_5eMK_W_obsFade@span._5eMK_W_observer"
+  ],
+  "route": "landing",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 6228,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "path",
+    "l": 302,
+    "r": 398
+   },
+   {
+    "sel": "circle",
+    "l": 303,
+    "r": 398
+   }
+  ],
+  "overlaps": [],
+  "anims": 4,
+  "animNames": [
+   "Dk33zW_ringScale@span.Dk33zW_play \"Play ›\"",
+   "Dk33zW_ringFade@span.Dk33zW_play \"Play ›\"",
+   "_5eMK_W_obsScale@span._5eMK_W_observer",
+   "_5eMK_W_obsFade@span._5eMK_W_observer"
+  ],
+  "route": "landing",
+  "vp": "390x844"
+ }
+]

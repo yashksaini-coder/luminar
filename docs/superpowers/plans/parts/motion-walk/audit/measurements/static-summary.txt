@@ -1,0 +1,279 @@
+== hscroll / overflowers / clipped / errors
+landing 390x844 default  sw=390 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 302, 'r': 398}
+   over {'sel': 'path', 'l': 302, 'r': 398}
+   over {'sel': 'circle', 'l': 303, 'r': 398}
+landing 390x844 menu  sw=390 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 302, 'r': 398}
+   over {'sel': 'path', 'l': 302, 'r': 398}
+   over {'sel': 'circle', 'l': 303, 'r': 398}
+landing 844x390 default  sw=844 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 751, 'r': 847}
+   over {'sel': 'path', 'l': 751, 'r': 847}
+   over {'sel': 'circle', 'l': 751, 'r': 846}
+landing 844x390 menu  sw=844 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 751, 'r': 847}
+   over {'sel': 'path', 'l': 751, 'r': 847}
+   over {'sel': 'circle', 'l': 751, 'r': 846}
+landing 768x1024 default  sw=768 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 677, 'r': 773}
+   over {'sel': 'path', 'l': 677, 'r': 773}
+   over {'sel': 'circle', 'l': 677, 'r': 772}
+landing 768x1024 menu  sw=768 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 677, 'r': 773}
+   over {'sel': 'path', 'l': 677, 'r': 773}
+   over {'sel': 'circle', 'l': 677, 'r': 772}
+landing 390x844@2x default  sw=390 
+   over {'sel': 'svg.jDvLKa_halo', 'l': 302, 'r': 398}
+   over {'sel': 'path', 'l': 302, 'r': 398}
+   over {'sel': 'circle', 'l': 303, 'r': 398}
+reels-mainnet-block-wave 390x844 default  sw=390 
+   over {'sel': 'div.tyRD1W_rail "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'section.tyRD1W_section "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'div.tyRD1W_kpis "Delivery—Propagation—Avg hop"', 'l': -252, 'r': -13}
+   over {'sel': 'div.tyRD1W_kpi "Delivery—"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiLabel "Delivery"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiValue "—"', 'l': -252, 'r': -138}
+   over {'sel': 'div.tyRD1W_kpi "Propagation—"', 'l': -126, 'r': -13}
+   over {'sel': 'span.tyRD1W_kpiLabel "Propagation"', 'l': -126, 'r': -13}
+reels-mainnet-block-wave 844x390 default  sw=844 
+   over {'sel': 'div.tyRD1W_rail "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'section.tyRD1W_section "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'div.tyRD1W_kpis "Delivery—Propagation—Avg hop"', 'l': -252, 'r': -13}
+   over {'sel': 'div.tyRD1W_kpi "Delivery—"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiLabel "Delivery"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiValue "—"', 'l': -252, 'r': -138}
+   over {'sel': 'div.tyRD1W_kpi "Propagation—"', 'l': -126, 'r': -13}
+   over {'sel': 'span.tyRD1W_kpiLabel "Propagation"', 'l': -126, 'r': -13}
+reels-mainnet-block-wave 768x1024 default  sw=768 
+   over {'sel': 'div.tyRD1W_rail "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'section.tyRD1W_section "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'div.tyRD1W_kpis "Delivery—Propagation—Avg hop"', 'l': -252, 'r': -13}
+   over {'sel': 'div.tyRD1W_kpi "Delivery—"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiLabel "Delivery"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiValue "—"', 'l': -252, 'r': -138}
+   over {'sel': 'div.tyRD1W_kpi "Propagation—"', 'l': -126, 'r': -13}
+   over {'sel': 'span.tyRD1W_kpiLabel "Propagation"', 'l': -126, 'r': -13}
+reels-mainnet-block-wave 390x844@2x default  sw=390 
+   over {'sel': 'div.tyRD1W_rail "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'section.tyRD1W_section "Delivery—Propagation—Avg hop"', 'l': -264, 'r': -1}
+   over {'sel': 'div.tyRD1W_kpis "Delivery—Propagation—Avg hop"', 'l': -252, 'r': -13}
+   over {'sel': 'div.tyRD1W_kpi "Delivery—"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiLabel "Delivery"', 'l': -252, 'r': -138}
+   over {'sel': 'span.tyRD1W_kpiValue "—"', 'l': -252, 'r': -138}
+   over {'sel': 'div.tyRD1W_kpi "Propagation—"', 'l': -126, 'r': -13}
+   over {'sel': 'span.tyRD1W_kpiLabel "Propagation"', 'l': -126, 'r': -13}
+
+== overlaps (fixed/abs pairs)
+landing 390x844 default {'a': 'div._5eMK_W_stillA', 'b': 'div._5eMK_W_stillB', 'ix': 61, 'iy': 88}
+landing 390x844 menu {'a': 'div._5eMK_W_stillA', 'b': 'div._5eMK_W_stillB', 'ix': 61, 'iy': 88}
+reels-mainnet-block-wave 390x844 default {'a': 'div.k_Rz1G_switch "Layout"', 'b': 'aside.LaCa9a_card "Data provenance"', 'ix': 177, 'iy': 18}
+reels-mainnet-block-wave 390x844 default {'a': 'aside.LaCa9a_card "Data provenance"', 'b': 'aside.SfQQda_legend "Legend"', 'ix': 130, 'iy': 30}
+reels-mainnet-block-wave 1024x768 default {'a': 'div', 'b': 'div.k_Rz1G_switch "Layout"', 'ix': 177, 'iy': 18}
+reels-mainnet-block-wave 1024x768 default {'a': 'div', 'b': 'aside.LaCa9a_card "Data provenance"', 'ix': 320, 'iy': 73}
+reels-mainnet-block-wave 1024x768 default {'a': 'div', 'b': 'aside.SfQQda_legend "Legend"', 'ix': 176, 'iy': 371}
+reels-mainnet-block-wave 1024x768 default {'a': 'div', 'b': 'div.LtaFMq_strip "⟲▶0.0s / 1:36.5×1×2×3×5×10×S"', 'ix': 360, 'iy': 52}
+reels-mainnet-block-wave 1024x768 default {'a': 'div', 'b': 'div.LtaFMq_kbd.kbdHint "SPACE play · F fit · T stage"', 'ix': 358, 'iy': 17}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.fill', 'b': 'div.k_Rz1G_switch "Layout"', 'ix': 177, 'iy': 18}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.fill', 'b': 'aside.LaCa9a_card "Data provenance"', 'ix': 320, 'iy': 73}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.fill', 'b': 'aside.SfQQda_legend "Legend"', 'ix': 176, 'iy': 371}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.fill', 'b': 'div.LtaFMq_strip "⟲▶0.0s / 1:36.5×1×2×3×5×10×S"', 'ix': 360, 'iy': 52}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.fill', 'b': 'div.LtaFMq_kbd.kbdHint "SPACE play · F fit · T stage"', 'ix': 358, 'iy': 17}
+reels-mainnet-block-wave 1024x768 default {'a': 'div.k_Rz1G_switch "Layout"', 'b': 'aside.SfQQda_legend "Legend"', 'ix': 53, 'iy': 18}
+
+== small targets (phone/tablet only, deduped by selector; w×h)
+landing | a.btn.btn-primary "Open the simulator" | 158x42 | landing 390x844 default
+landing | a.chev "Watch a recording ›" | 123x42 | landing 390x844 default
+landing | a "Simulator" | 59x18 | landing 844x390 default
+landing | a "Recordings" | 69x18 | landing 844x390 default
+landing | a "GitHub" | 43x18 | landing 844x390 default
+404 | a "Home" | 36x18 | 404 390x844 default
+404 | a "Simulator" | 60x18 | 404 390x844 default
+reels | button.XoY7za_menuBtn "Menu +" | 53x36 | reels-mainnet-block-wave 390x844 default
+reels | button.k_Rz1G_tab "FORCE" | 62x18 | reels-mainnet-block-wave 390x844 default
+reels | button.k_Rz1G_tab "RADIAL" | 67x18 | reels-mainnet-block-wave 390x844 default
+reels | button.k_Rz1G_tab "GEO" | 49x18 | reels-mainnet-block-wave 390x844 default
+reels | button.SfQQda_btn "Collapse legend" | 20x20 | reels-mainnet-block-wave 390x844 default
+reels | button.SfQQda_btn "Settings" | 20x20 | reels-mainnet-block-wave 390x844 default
+reels | button.XoY7za_badge "MAINNET" | 70x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "1m" | 30x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "2m" | 29x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "5m" | 29x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "10m" | 35x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "20" | 30x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "50" | 29x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "100" | 35x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "200" | 35x20 | reels-mainnet-block-wave 1024x768 default
+reels | a.XoY7za_link "GitHub" | 59x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_btn "Reset (R)" | 24x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_btn "Play (Space)" | 24x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed ".5×" | 32x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed "1×" | 25x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed "2×" | 25x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed "3×" | 25x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed "5×" | 25x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.LtaFMq_speed "10×" | 31x24 | reels-mainnet-block-wave 1024x768 default
+reels | button._4tWGjW_trigger "Scenarios ▾" | 84x24 | reels-mainnet-block-wave 1024x768 default
+reels | button._4tWGjW_trigger "Reels ▾" | 60x24 | reels-mainnet-block-wave 1024x768 default
+reels | button._4tWGjW_trigger "Inject fault ▾" | 102x24 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "All" | 36x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "None" | 42x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Gossip" | 54x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Conn" | 42x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Stream" | 54x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "DHT" | 36x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Fault" | 48x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Health" | 54x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Clock" | 48x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Sim" | 36x20 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Live" | 42x20 | reels-mainnet-block-wave 1024x768 default
+
+== gaps < 8px (phone/tablet, deduped)
+landing | a._1CICJq_reel "1Sybil → Eclip → a._1CICJq_reel "2Partition → H | 1 | landing 390x844 menu
+landing | a._1CICJq_reel "2Partition → H → a._1CICJq_reel "3Healthy meshS | 1 | landing 390x844 menu
+landing | a._1CICJq_reel "3Healthy meshS → a._1CICJq_reel "4Mainnet block | 1 | landing 390x844 menu
+landing | a._1CICJq_route "Simulator›" → a._1CICJq_route "Figure›" | 1 | landing 768x1024 menu
+landing | a._1CICJq_route "Figure›" → a._1CICJq_route "Source›" | 1 | landing 768x1024 menu
+reels | button.XoY7za_menuBtn "Menu +" → canvas.gWioSG_canvas | 4.5 | reels-mainnet-block-wave 390x844 default
+reels | button.k_Rz1G_tab "FORCE" → button.k_Rz1G_tab "RADIAL" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.k_Rz1G_tab "RADIAL" → button.k_Rz1G_tab "GEO" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.SfQQda_btn "Collapse le → button.SfQQda_btn "Settings" | 4 | reels-mainnet-block-wave 390x844 default
+reels | button.LtaFMq_speed ".5×" → button.LtaFMq_speed "1×" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.LtaFMq_speed "1×" → button.LtaFMq_speed "2×" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.LtaFMq_speed "2×" → button.LtaFMq_speed "3×" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.LtaFMq_speed "3×" → button.LtaFMq_speed "5×" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.LtaFMq_speed "5×" → button.LtaFMq_speed "10×" | 0 | reels-mainnet-block-wave 390x844 default
+reels | button.XoY7za_preset "1m" → button.XoY7za_preset "2m" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "2m" → button.XoY7za_preset "5m" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "5m" → button.XoY7za_preset "10m" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "20" → button.XoY7za_preset "50" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "50" → button.XoY7za_preset "100" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.XoY7za_preset "100" → button.XoY7za_preset "200" | 0 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "All" → button.vgSswa_chip "None" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "All" → button.vgSswa_chip "Fault" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "None" → button.vgSswa_chip "Gossip" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "None" → button.vgSswa_chip "Fault" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "None" → button.vgSswa_chip "Health" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Gossip" → button.vgSswa_chip "Conn" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Gossip" → button.vgSswa_chip "Health" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Gossip" → button.vgSswa_chip "Clock" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Conn" → button.vgSswa_chip "Stream" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Conn" → button.vgSswa_chip "Clock" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Conn" → button.vgSswa_chip "Sim" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Stream" → button.vgSswa_chip "DHT" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Stream" → button.vgSswa_chip "Sim" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Stream" → button.vgSswa_chip "Live" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Fault" → button.vgSswa_chip "Health" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Health" → button.vgSswa_chip "Clock" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Clock" → button.vgSswa_chip "Sim" | 4 | reels-mainnet-block-wave 1024x768 default
+reels | button.vgSswa_chip "Sim" → button.vgSswa_chip "Live" | 4 | reels-mainnet-block-wave 1024x768 default
+
+== small text at 390 (deduped)
+landing | span._1CICJq_sub "gossipsub v1.1" | 10 px  | mono | default
+landing | dt "PEERS" | 10 px  | ui | default
+landing | dt "SYBIL" | 10 px  | ui | default
+landing | dt "PRUNED" | 10 px  | ui | default
+landing | dt "T+" | 10 px  | ui | default
+landing | span.iZBupa_inner "SORTER No. 6" | 10 px  | ui | default
+landing | span.Dk33zW_play "Play ›" | 10 px  | mono | default
+landing | li "gossipsub_mesh_peer_counts" | 12 px | body | mono | default
+landing | li "gossipsub_mesh_peer_churn_ev" | 12 px | body | mono | default
+landing | li "gossipsub_mesh_peer_inclusio" | 12 px | body | mono | default
+landing | li "gossipsub_score_per_mesh" | 12 px | body | mono | default
+landing | li "gossipsub_topic_iwant_msgs" | 12 px | body | mono | default
+landing | li "gossipsub_topic_msg_publishe" | 12 px | body | mono | default
+landing | li "gossipsub_topic_msg_recv_cou" | 12 px | body | mono | default
+landing | a.chev "Watch the recorded block wav" | 13 px | body | ui | default
+landing | span "›" | 13 px | body | ui | default
+landing | p._5eMK_W_credit "arrival at observer no | 10 px | body | mono | default
+landing | p.VUkswa_mark "LUMINAR" | 14 px | body | ui | default
+landing | a "Landing" | 14 px | body | ui | default
+landing | a "Simulator" | 14 px | body | ui | default
+landing | a "Recordings" | 14 px | body | ui | default
+landing | a "Figure" | 14 px | body | ui | default
+landing | a "GitHub" | 14 px | body | ui | default
+landing | a "MIT licence" | 14 px | body | ui | default
+landing | li "data: ethPandaOps (CC BY 4.0" | 14 px | body | ui | default
+landing | p.VUkswa_copy "© 2026 Luminar Contributo | 14 px | body | ui | default
+landing | h2._1CICJq_label "Recordings" | 10 px  | ui | menu
+landing | kbd "1" | 10 px | body | mono | menu
+landing | span._1CICJq_line "T+10s five Sybils gra | 12 px | body | mono | menu
+landing | span "›" | 12 px | body | mono | menu
+landing | kbd "2" | 10 px | body | mono | menu
+landing | span._1CICJq_line "T+15s the mesh is spl | 12 px | body | mono | menu
+landing | kbd "3" | 10 px | body | mono | menu
+landing | span._1CICJq_line "Scale-free topology,  | 12 px | body | mono | menu
+landing | kbd "4" | 10 px | body | mono | menu
+landing | span._1CICJq_line "Real mainnet block ar | 12 px | body | mono | menu
+landing | span._1CICJq_tag "REAL" | 10 px | body | mono | menu
+landing | h2._1CICJq_label "Routes" | 10 px  | ui | menu
+404 | a "Home" | 13 px | body | ui | default
+404 | p.t-ui "Home · Simulator" | 13 px | body | ui | default
+404 | a "Simulator" | 13 px | body | ui | default
+reels | span.XoY7za_pill "REEL · Mainnet block w | 10 px  | ui | default
+reels | button.XoY7za_menuBtn "Menu +" | 10 px  | ui | default
+reels | button.k_Rz1G_tab "FORCE" | 10 px  | ui | default
+reels | button.k_Rz1G_tab "RADIAL" | 10 px  | ui | default
+reels | button.k_Rz1G_tab "GEO" | 10 px  | ui | default
+reels | p.LaCa9a_kicker "RECORDED MAINNET" | 10 px | body | ui | default
+reels | p.LaCa9a_body "slot 15466393 · recorded  | 9 px | body | mono | default
+reels | span.SfQQda_title "LEGEND" | 10 px  | ui | default
+reels | button.LtaFMq_btn "Reset (R)" | 10 px  | mono | default
+reels | button.LtaFMq_btn "Play (Space)" | 10 px  | mono | default
+reels | span.LtaFMq_time "0.0s / 1:36" | 10 px  | mono | default
+reels | button.LtaFMq_speed ".5×" | 10 px  | mono | default
+reels | button.LtaFMq_speed "1×" | 10 px  | mono | default
+reels | button.LtaFMq_speed "2×" | 10 px  | mono | default
+reels | button.LtaFMq_speed "3×" | 10 px  | mono | default
+reels | button.LtaFMq_speed "5×" | 10 px  | mono | default
+reels | button.LtaFMq_speed "10×" | 10 px  | mono | default
+reels | button.LtaFMq_btn.LtaFMq_drawerBtn "Stat | 10 px  | mono | default
+reels | button.LtaFMq_btn.LtaFMq_drawerBtn "Log" | 10 px  | mono | default
+reels | button._4tWGjW_trigger "Scenarios ▾" | 10 px  | mono | default
+reels | button._4tWGjW_trigger "Reels ▾" | 10 px  | mono | default
+reels | button._4tWGjW_trigger "Inject fault ▾" | 10 px  | mono | default
+
+== rects
+landing 390x844 default {"toolbar": {"x": 0, "y": 0, "w": 390, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 390, "h": 3270, "vis": true, "inert": false}, "h1": {"x": 16, "y": 120, "w": 358, "h": 103, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 390x844 menu {"toolbar": {"x": 0, "y": 0, "w": 390, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 390, "h": 788, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 390, "h": 3270, "vis": true, "inert": false}, "h1": {"x": 16, "y": 120, "w": 358, "h": 103, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 844x390 default {"toolbar": {"x": 0, "y": 0, "w": 844, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 844, "h": 3626, "vis": true, "inert": false}, "h1": {"x": 112, "y": 120, "w": 620, "h": 210, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 844x390 menu {"toolbar": {"x": 0, "y": 0, "w": 844, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 844, "h": 334, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 844, "h": 3626, "vis": true, "inert": false}, "h1": {"x": 112, "y": 120, "w": 620, "h": 210, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 768x1024 default {"toolbar": {"x": 0, "y": 0, "w": 768, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 768, "h": 3451, "vis": true, "inert": false}, "h1": {"x": 74, "y": 120, "w": 620, "h": 191, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 768x1024 menu {"toolbar": {"x": 0, "y": 0, "w": 768, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 768, "h": 968, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 768, "h": 3451, "vis": true, "inert": false}, "h1": {"x": 74, "y": 120, "w": 620, "h": 191, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 1024x768 default {"toolbar": {"x": 0, "y": 0, "w": 1024, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1024, "h": 4043, "vis": true, "inert": false}, "h1": {"x": 202, "y": 120, "w": 620, "h": 254, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 1024x768 menu {"toolbar": {"x": 0, "y": 0, "w": 1024, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 1024, "h": 712, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1024, "h": 4043, "vis": true, "inert": false}, "h1": {"x": 202, "y": 120, "w": 620, "h": 254, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 1280x720 default {"toolbar": {"x": 0, "y": 0, "w": 1280, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1280, "h": 4408, "vis": true, "inert": false}, "h1": {"x": 330, "y": 120, "w": 620, "h": 318, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 1280x720 menu {"toolbar": {"x": 0, "y": 0, "w": 1280, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 1280, "h": 664, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1280, "h": 4408, "vis": true, "inert": false}, "h1": {"x": 330, "y": 120, "w": 620, "h": 318, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 1440x900 default {"toolbar": {"x": 0, "y": 0, "w": 1440, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1440, "h": 4555, "vis": true, "inert": false}, "h1": {"x": 410, "y": 120, "w": 620, "h": 358, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 1440x900 menu {"toolbar": {"x": 0, "y": 0, "w": 1440, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 1440, "h": 844, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1440, "h": 4555, "vis": true, "inert": false}, "h1": {"x": 410, "y": 120, "w": 620, "h": 358, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 1920x1080 default {"toolbar": {"x": 0, "y": 0, "w": 1920, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1920, "h": 4695, "vis": true, "inert": false}, "h1": {"x": 650, "y": 120, "w": 620, "h": 383, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 1920x1080 menu {"toolbar": {"x": 0, "y": 0, "w": 1920, "h": 56, "vis": true, "inert": false}, "menu": {"x": 0, "y": 56, "w": 1920, "h": 1024, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1920, "h": 4695, "vis": true, "inert": false}, "h1": {"x": 650, "y": 120, "w": 620, "h": 383, "vis": true, "inert": false}} active= a._1CICJq_reel "1Sybil → EclipseT+10s five S"
+landing 390x844@2x default {"toolbar": {"x": 0, "y": 0, "w": 390, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 390, "h": 3270, "vis": true, "inert": false}, "h1": {"x": 16, "y": 120, "w": 358, "h": 103, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+landing 1440x900@2x default {"toolbar": {"x": 0, "y": 0, "w": 1440, "h": 56, "vis": true, "inert": false}, "main": {"x": 0, "y": 56, "w": 1440, "h": 4555, "vis": true, "inert": false}, "h1": {"x": 410, "y": 120, "w": 620, "h": 358, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1Simula"
+404 390x844 default {"main": {"x": 0, "y": 0, "w": 390, "h": 47, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 390, "h": 31, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 844x390 default {"main": {"x": 0, "y": 0, "w": 844, "h": 58, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 844, "h": 42, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 768x1024 default {"main": {"x": 0, "y": 0, "w": 768, "h": 54, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 768, "h": 38, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 1024x768 default {"main": {"x": 0, "y": 0, "w": 1024, "h": 66, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 1024, "h": 51, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 1280x720 default {"main": {"x": 0, "y": 0, "w": 1280, "h": 79, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 1280, "h": 64, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 1440x900 default {"main": {"x": 0, "y": 0, "w": 1440, "h": 86, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 1440, "h": 70, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 1920x1080 default {"main": {"x": 0, "y": 0, "w": 1920, "h": 87, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 1920, "h": 70, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 390x844@2x default {"main": {"x": 0, "y": 0, "w": 390, "h": 47, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 390, "h": 31, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+404 1440x900@2x default {"main": {"x": 0, "y": 0, "w": 1440, "h": 86, "vis": true, "inert": false}, "h1": {"x": 0, "y": 0, "w": 1440, "h": 70, "vis": true, "inert": false}} active= body "Not foundHome · Simulator(gl"
+figure 390x844 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 844x390 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 768x1024 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 1024x768 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 1280x720 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 1440x900 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 1920x1080 default {} active= body "(globalThis["TURBOPACK"] || "
+figure 390x844@2x default {} active= body "(globalThis["TURBOPACK"] || "
+figure 1440x900@2x default {} active= body "(globalThis["TURBOPACK"] || "
+reels-mainnet-block-wave 390x844 default {"toolbar": {"x": 0, "y": 0, "w": 390, "h": 44, "vis": true, "inert": false}, "strip": {"x": -252, "y": 257, "w": 239, "h": 6, "vis": false, "inert": false}, "modes": {"x": 106, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 202, "y": 88, "w": 176, "h": 30, "vis": true, "inert": false}, "narrator": {"x": 12, "y": 136, "w": 366, "h": 0, "vis": false, "inert": false}, "main": {"x": 0, "y": 44, "w": 390, "h": 800, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 844x390 default {"toolbar": {"x": 0, "y": 0, "w": 844, "h": 44, "vis": true, "inert": false}, "strip": {"x": -252, "y": 257, "w": 239, "h": 6, "vis": false, "inert": false}, "modes": {"x": 333, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 656, "y": 88, "w": 176, "h": 30, "vis": true, "inert": false}, "narrator": {"x": 12, "y": 136, "w": 820, "h": 0, "vis": false, "inert": false}, "main": {"x": 0, "y": 44, "w": 844, "h": 346, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 768x1024 default {"toolbar": {"x": 0, "y": 0, "w": 768, "h": 44, "vis": true, "inert": false}, "strip": {"x": -252, "y": 257, "w": 239, "h": 6, "vis": false, "inert": false}, "modes": {"x": 295, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 580, "y": 88, "w": 176, "h": 30, "vis": true, "inert": false}, "narrator": {"x": 12, "y": 136, "w": 744, "h": 0, "vis": false, "inert": false}, "main": {"x": 0, "y": 44, "w": 768, "h": 980, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 1024x768 default {"toolbar": {"x": 0, "y": 0, "w": 1024, "h": 44, "vis": true, "inert": false}, "strip": {"x": 12, "y": 257, "w": 239, "h": 6, "vis": true, "inert": false}, "modes": {"x": 399, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 524, "y": 56, "w": 176, "h": 371, "vis": true, "inert": false}, "narrator": {"x": 280, "y": 656, "w": 0, "h": 0, "vis": false, "inert": false}, "main": {"x": 264, "y": 44, "w": 448, "h": 724, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 1280x720 default {"toolbar": {"x": 0, "y": 0, "w": 1280, "h": 44, "vis": true, "inert": false}, "strip": {"x": 12, "y": 268, "w": 239, "h": 6, "vis": true, "inert": false}, "modes": {"x": 527, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 780, "y": 56, "w": 176, "h": 371, "vis": true, "inert": false}, "narrator": {"x": 280, "y": 608, "w": 0, "h": 0, "vis": false, "inert": false}, "main": {"x": 264, "y": 44, "w": 704, "h": 676, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 1440x900 default {"toolbar": {"x": 0, "y": 0, "w": 1440, "h": 44, "vis": true, "inert": false}, "strip": {"x": 12, "y": 277, "w": 239, "h": 6, "vis": true, "inert": false}, "modes": {"x": 605, "y": 56, "w": 181, "h": 18, "vis": true, "inert": false}, "legend": {"x": 940, "y": 56, "w": 176, "h": 371, "vis": true, "inert": false}, "narrator": {"x": 280, "y": 788, "w": 0, "h": 0, "vis": false, "inert": false}, "main": {"x": 264, "y": 44, "w": 864, "h": 856, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 1920x1080 default {"toolbar": {"x": 0, "y": 0, "w": 1920, "h": 44, "vis": true, "inert": false}, "strip": {"x": 12, "y": 285, "w": 239, "h": 6, "vis": true, "inert": false}, "modes": {"x": 842, "y": 56, "w": 188, "h": 19, "vis": true, "inert": false}, "legend": {"x": 1420, "y": 56, "w": 176, "h": 395, "vis": true, "inert": false}, "narrator": {"x": 280, "y": 968, "w": 0, "h": 0, "vis": false, "inert": false}, "main": {"x": 264, "y": 44, "w": 1344, "h": 1036, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 390x844@2x default {"toolbar": {"x": 0, "y": 0, "w": 390, "h": 44, "vis": true, "inert": false}, "strip": {"x": -252, "y": 257, "w": 239, "h": 6, "vis": false, "inert": false}, "modes": {"x": 106, "y": 56, "w": 177, "h": 18, "vis": true, "inert": false}, "legend": {"x": 202, "y": 88, "w": 176, "h": 30, "vis": true, "inert": false}, "narrator": {"x": 12, "y": 136, "w": 366, "h": 0, "vis": false, "inert": false}, "main": {"x": 0, "y": 44, "w": 390, "h": 800, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"
+reels-mainnet-block-wave 1440x900@2x default {"toolbar": {"x": 0, "y": 0, "w": 1440, "h": 44, "vis": true, "inert": false}, "strip": {"x": 12, "y": 277, "w": 239, "h": 6, "vis": true, "inert": false}, "modes": {"x": 605, "y": 56, "w": 181, "h": 18, "vis": true, "inert": false}, "legend": {"x": 940, "y": 56, "w": 176, "h": 371, "vis": true, "inert": false}, "narrator": {"x": 280, "y": 788, "w": 0, "h": 0, "vis": false, "inert": false}, "main": {"x": 264, "y": 44, "w": 864, "h": 856, "vis": true, "inert": false}} active= body "LUMINAR gossipsub v1.1REEL ·"

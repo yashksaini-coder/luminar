@@ -1,0 +1,3452 @@
+[
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 1203,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 856,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1192,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 1038,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 1010,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 1118,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 1226,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 1203,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 1118,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "404",
+  "vp": "1440x900@2x"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 6228,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 300,
+    "r": 395
+   },
+   {
+    "sel": "path",
+    "l": 300,
+    "r": 395
+   },
+   {
+    "sel": "circle",
+    "l": 301,
+    "r": 394
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 5801,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 134,
+    "iy": 193
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 5734,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 122,
+    "iy": 176
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 6478,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 163,
+    "iy": 235
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 7024,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 181,
+    "iy": 261
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 7455,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 181,
+    "iy": 261
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 7668,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 181,
+    "iy": 261
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 6228,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "svg.jDvLKa_halo",
+    "l": 300,
+    "r": 395
+   },
+   {
+    "sel": "path",
+    "l": 300,
+    "r": 395
+   },
+   {
+    "sel": "circle",
+    "l": 301,
+    "r": 394
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 7455,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div._5eMK_W_stillA",
+    "b": "div._5eMK_W_stillB",
+    "ix": 181,
+    "iy": 261
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "landing",
+  "vp": "1440x900@2x"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -153,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -153,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -153,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 768,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -153,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 720,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 680,
+    "iy": 91
+   },
+   {
+    "a": "div.fill",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 680,
+    "iy": 91
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 1080,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.StatsRail-module__tyRD1W__rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.StatsRail-module__tyRD1W__section \"Nodes20idle20origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.StatsRail-module__tyRD1W__heading \"Nodes20\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.StatsRail-module__tyRD1W__meta \"20\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.StatsRail-module__tyRD1W__counts \"idle20origin0receiving0decod\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"idle20\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg.Glyph-module__0hGrRa__glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"20\"",
+    "l": -153,
+    "r": -138
+   },
+   {
+    "sel": "div.StatsRail-module__tyRD1W__countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.ModeSwitcher-module__k_Rz1G__switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.Legend-module__SfQQda__legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__strip \"⟲▶0.0s / 5:00.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.CommandStrip-module__LtaFMq__kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "sim",
+  "vp": "1440x900@2x"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 768,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 720,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 680,
+    "iy": 91
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 184,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 105,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 680,
+    "iy": 91
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 184,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 105,
+    "iy": 6
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 28,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 16,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 28,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 16,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 1080,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 54,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 31,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 54,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 31,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes50idle0origin0receiving\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes50\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"50\"",
+    "l": -27,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 28,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "span.LtaFMq_band",
+    "ix": 16,
+    "iy": 6
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 39.5s.5×1×2×3×5×10×\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 28,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "span.LtaFMq_band",
+    "ix": 16,
+    "iy": 6
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-sybil-eclipse",
+  "vp": "1440x900@2x"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes138idle0origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes138\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"138\"",
+    "l": -35,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes138idle0origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes138\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"138\"",
+    "l": -35,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes138idle0origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes138\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"138\"",
+    "l": -35,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 768,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes138idle0origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes138\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"138\"",
+    "l": -35,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 720,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 680,
+    "iy": 91
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 177,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 680,
+    "iy": 91
+   },
+   {
+    "a": "div.k_Rz1G_switch \"Layout\"",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 69,
+    "iy": 18
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 1080,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 78
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 188,
+    "iy": 19
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 78
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 395
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 820,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 818,
+    "iy": 18
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [
+   {
+    "sel": "div.tyRD1W_rail \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "section.tyRD1W_section \"Delivery—Propagation—Avg hop\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "div.tyRD1W_kpis \"Delivery—Propagation—Avg hop\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Delivery—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Delivery\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Propagation—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Propagation\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Avg hops—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Avg hops\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_kpi \"Mesh degree—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiLabel \"Mesh degree\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_kpiValue \"—\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "section.tyRD1W_section \"Nodes138idle0origin0receivin\"",
+    "l": -264,
+    "r": -1
+   },
+   {
+    "sel": "h2.tyRD1W_heading \"Nodes138\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "span.tyRD1W_meta \"138\"",
+    "l": -35,
+    "r": -13
+   },
+   {
+    "sel": "dl.tyRD1W_counts \"idle0origin0receiving0decode\"",
+    "l": -252,
+    "r": -13
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"idle0\"",
+    "l": -252,
+    "r": -138
+   },
+   {
+    "sel": "dt \"idle\"",
+    "l": -252,
+    "r": -203
+   },
+   {
+    "sel": "svg._0hGrRa_glyph",
+    "l": -252,
+    "r": -240
+   },
+   {
+    "sel": "circle",
+    "l": -249,
+    "r": -243
+   },
+   {
+    "sel": "dd \"0\"",
+    "l": -146,
+    "r": -138
+   },
+   {
+    "sel": "div.tyRD1W_countRow \"origin0\"",
+    "l": -126,
+    "r": -13
+   },
+   {
+    "sel": "dt \"origin\"",
+    "l": -126,
+    "r": -63
+   }
+  ],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [
+   {
+    "a": "div",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   },
+   {
+    "a": "div.fill",
+    "b": "div.k_Rz1G_switch \"Layout\"",
+    "ix": 181,
+    "iy": 18
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.LaCa9a_card \"Data provenance\"",
+    "ix": 320,
+    "iy": 73
+   },
+   {
+    "a": "div.fill",
+    "b": "aside.SfQQda_legend \"Legend\"",
+    "ix": 176,
+    "iy": 371
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_strip \"⟲▶0.0s / 1:36.5×1×2×3×5×10×S\"",
+    "ix": 657,
+    "iy": 52
+   },
+   {
+    "a": "div.fill",
+    "b": "div.LtaFMq_kbd.kbdHint \"SPACE play · F fit · T stage\"",
+    "ix": 655,
+    "iy": 17
+   }
+  ],
+  "anims": 0,
+  "animNames": [],
+  "route": "reels-mainnet-block-wave",
+  "vp": "1440x900@2x"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "390x844"
+ },
+ {
+  "vw": 844,
+  "vh": 390,
+  "sw": 844,
+  "sh": 390,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "844x390"
+ },
+ {
+  "vw": 768,
+  "vh": 1024,
+  "sw": 768,
+  "sh": 1024,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "768x1024"
+ },
+ {
+  "vw": 1024,
+  "vh": 768,
+  "sw": 1024,
+  "sh": 768,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "1024x768"
+ },
+ {
+  "vw": 1280,
+  "vh": 720,
+  "sw": 1280,
+  "sh": 720,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "1280x720"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "1440x900"
+ },
+ {
+  "vw": 1920,
+  "vh": 1080,
+  "sw": 1920,
+  "sh": 1080,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "1920x1080"
+ },
+ {
+  "vw": 390,
+  "vh": 844,
+  "sw": 390,
+  "sh": 844,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "390x844@2x"
+ },
+ {
+  "vw": 1440,
+  "vh": 900,
+  "sw": 1440,
+  "sh": 900,
+  "hscroll": false,
+  "overflowers": [],
+  "overlaps": [],
+  "anims": 0,
+  "animNames": [],
+  "route": "figure",
+  "vp": "1440x900@2x"
+ }
+]
