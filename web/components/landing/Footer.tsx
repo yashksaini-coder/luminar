@@ -1,6 +1,7 @@
 // Landing footer: wordmark and event line, routes, source and licence, then the copyright line.
 import Link from 'next/link'
 import { EVENT_LINE, REPO_URL } from '@/lib/copy'
+import { reelHref } from '@/lib/reels'
 import styles from './Footer.module.css'
 
 export default function Footer() {
@@ -15,7 +16,7 @@ export default function Footer() {
         <ul>
           <li><Link href="/">Landing</Link></li>
           <li><a href="/sim/">Simulator</a></li>
-          <li><a href="/reels/sybil-eclipse/">Recordings</a></li>
+          <li><a href={reelHref('sybil-eclipse')}>Recordings</a></li>
           <li><a href="/figure/">Figure</a></li>
         </ul>
       </div>

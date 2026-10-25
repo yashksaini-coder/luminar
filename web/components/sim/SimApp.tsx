@@ -17,6 +17,7 @@ import { MenuOverlay } from './Menus'
 import ModeSwitcher from './ModeSwitcher'
 import Narrator from './Narrator'
 import Provenance from './Provenance'
+import ReelProgress from './ReelProgress'
 import styles from './SimApp.module.css'
 import StatsRail from './StatsRail'
 import Toasts from './Toasts'
@@ -92,6 +93,7 @@ export default function SimApp({ reel = null }: SimAppProps) {
       </aside>
       <main data-slot="canvas" className={styles.canvas}>
         <DeckCanvas />
+        {reel && <ReelProgress title={reel.title} />}
         <ModeSwitcher />
         <Provenance />
         <Legend />

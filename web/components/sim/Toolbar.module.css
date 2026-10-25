@@ -70,6 +70,7 @@ button.badge, .preset, .menuBtn { cursor: pointer; }
 .group > .preset + .preset { border-left: 0; }
 .preset { font-family: var(--font-mono); letter-spacing: 0; font-variant-numeric: tabular-nums; }
 [data-reel] .presets { opacity: .5; }
+.preset:disabled { cursor: default; }
 
 .menuBtn { display: none; }
 /* ≤1023: brand, pill and Menu + only; the strip carries the time readout */

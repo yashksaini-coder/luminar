@@ -2,6 +2,7 @@
 // SameNames: the Grafana/Jaeger stills and the gossipsub_* series; LiveMainnet: the arrival feed and its credit.
 import DitherImage from '@/components/dither/DitherImage'
 import { ARRIVAL, ECLIPSE_WHY, PROVENANCE, SAME_NAMES } from '@/lib/copy'
+import { reelHref } from '@/lib/reels'
 import styles from './Sections.module.css'
 
 export function WhatItDoes() {
@@ -36,7 +37,7 @@ export function LiveMainnet() {
   return (
     <section className={styles.section}>
       <h2 className={styles.h2}>Live mainnet</h2>
-      <p>{`The MAINNET badge polls ethPandaOps once per slot and lights observer nodes as each block reaches them: ${ARRIVAL}. `}<a className="chev" href="/reels/mainnet-block-wave/">Watch the recorded block wave <span aria-hidden="true">›</span></a></p>
+      <p>{`The MAINNET badge polls ethPandaOps once per slot and lights observer nodes as each block reaches them: ${ARRIVAL}. `}<a className="chev" href={reelHref('mainnet-block-wave')}>Watch the recorded block wave <span aria-hidden="true">›</span></a></p>
       <p className={styles.credit}>{PROVENANCE}</p>
     </section>
   )

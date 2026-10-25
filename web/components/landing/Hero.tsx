@@ -4,6 +4,7 @@ import Figure from '@/components/dither/Figure'
 import PlateReplay from '@/components/landing/PlateReplay'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import { FIG1, MECHANISM } from '@/lib/copy'
+import { reelHref } from '@/lib/reels'
 import plateFrames from '@/lib/plate-frames.json'
 import styles from './Hero.module.css'
 
@@ -17,7 +18,7 @@ export default function Hero() {
         </p>
         <div className={styles.row}>
           <a className={`btn btn-primary ${styles.cta}`} href="/sim/">Open the simulator</a>
-          <a className="chev" href="/reels/sybil-eclipse/">Watch a recording <span aria-hidden="true">›</span></a>
+          <a className="chev" href={reelHref('sybil-eclipse')}>Watch a recording <span aria-hidden="true">›</span></a>
         </div>
       </div>
       <div className={styles.plate}>
