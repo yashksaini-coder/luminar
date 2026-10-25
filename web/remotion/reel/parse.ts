@@ -74,12 +74,28 @@ export function parseReel(text: string): ReelData {
     const at = firstEventAt.get(n.id)
     if (at !== undefined && at < n.firstSeenT) n.firstSeenT = at
   }
+  placeEclipse(d)
   const byAt = (a: { at: number }, b: { at: number }) => a.at - b.at
   const byTime = (a: { time: number }, b: { time: number }) => a.time - b.time
   for (const arr of [d.messages, d.grafts, d.prunes, d.phases, d.faults, d.cleared]) arr.sort(byAt)
   d.snapshots.sort(byTime); d.analytics.sort(byTime)
   d.durationSim = d.snapshots.at(-1)?.time ?? 0
   return d
+}
+
+/** Reel units from the eclipse target to each of its attackers. */
+export const ECLIPSE_RING = 60
+
+/** The recorder drops every eclipse attacker on one point at the mesh's top edge (off-frame once the
+ *  camera zooms on the target); fan them on an arc above the target so the four grafts read. */
+function placeEclipse(d: ReelData) {
+  const target = d.byId.get(d.faults.find(f => f.type === 'eclipse')?.target ?? '')
+  if (!target) return
+  const ecl = d.nodes.filter(n => n.attacker && n.id.startsWith('eclipse-'))
+  ecl.forEach((n, i) => {
+    const a = -Math.PI / 2 + (i - (ecl.length - 1) / 2) * 0.7
+    n.x = target.x + ECLIPSE_RING * Math.cos(a); n.y = target.y + ECLIPSE_RING * Math.sin(a)
+  })
 }
 
 function lastAtOrBefore<T extends { time: number }>(arr: T[], simTime: number, ok: (x: T) => boolean = () => true): T | null {

@@ -2,8 +2,9 @@
 import type { ReelData } from '../reel/parse'
 
 export interface Box { x: number; y: number; w: number; h: number }
-/** scale 1 = whole mesh fits the box with pad; focus = peer id the scale is about (default: box centre). */
-export interface Camera { scale: number; focus?: string }
+/** scale 1 = whole mesh fits the box with pad; focus = peer id the scale is about (default: box centre);
+ *  pan = mid-move: the fixed point blends from focus's point to `to`'s point by t. */
+export interface Camera { scale: number; focus?: string; pan?: { to?: string; t: number } }
 export type Projector = (x: number, y: number) => [number, number]
 
 export function makeProjector(d: ReelData, box: Box, cam: Camera, pad = 40): Projector {
@@ -17,8 +18,14 @@ export function makeProjector(d: ReelData, box: Box, cam: Camera, pad = 40): Pro
   const ox = box.x + box.w / 2 - ((x0 + x1) / 2) * k
   const oy = box.y + box.h / 2 - ((y0 + y1) / 2) * k
   const fit = (x: number, y: number): [number, number] => [ox + x * k, oy + y * k]
-  const f = cam.focus ? d.byId.get(cam.focus) : undefined
-  const [cx, cy] = f ? fit(f.x, f.y) : [box.x + box.w / 2, box.y + box.h / 2]
+  const centre = (id?: string): [number, number] => {
+    const n = id ? d.byId.get(id) : undefined
+    return n ? fit(n.x, n.y) : [box.x + box.w / 2, box.y + box.h / 2]
+  }
+  const [ax, ay] = centre(cam.focus)
+  const [bx, by] = cam.pan ? centre(cam.pan.to) : [ax, ay]
+  const t = cam.pan?.t ?? 0
+  const cx = ax + (bx - ax) * t, cy = ay + (by - ay) * t
   const s = cam.scale
   return (x, y) => {
     const [px, py] = fit(x, y)
@@ -26,7 +33,7 @@ export function makeProjector(d: ReelData, box: Box, cam: Camera, pad = 40): Pro
   }
 }
 
-/** Scale lerps; focus switches at t >= .5. */
+/** Scale lerps; the focus point pans continuously from a's focus to b's. */
 export function lerpCamera(a: Camera, b: Camera, t: number): Camera {
-  return { scale: a.scale + (b.scale - a.scale) * t, focus: t >= 0.5 ? b.focus : a.focus }
+  return { scale: a.scale + (b.scale - a.scale) * t, focus: a.focus, pan: { to: b.focus, t } }
 }

@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { analyticsAt, parseReel, snapshotAt } from './parse'
+import { analyticsAt, ECLIPSE_RING, parseReel, snapshotAt } from './parse'
 
 const d = parseReel(readFileSync(join(__dirname, '../../public/reels/sybil-eclipse.jsonl'), 'utf8'))
 const stats = JSON.parse(readFileSync(join(__dirname, '../../lib/reel-stats.json'), 'utf8'))
@@ -28,4 +28,11 @@ test('analytics carry snapshot sim time, not wall time', () => {
   expect(snapshotAt(d, 12.5).scores['sybil-0']).toBe(-15); expect(snapshotAt(d, 11.5).scores['sybil-0']).toBeCloseTo(-9.4, 2)
   expect(snapshotAt(d, 16.9).mesh['peer-10']).toEqual(['eclipse-0','eclipse-1','eclipse-2','eclipse-3'])
   expect(snapshotAt(d, 18).scores['eclipse-0']).toBeCloseTo(0.85, 2)   // P1 creeps up; the eclipse score is never negative in this recording
+})
+
+test('eclipse attackers fan out on an arc around their target, not stacked off-frame', () => {
+  const target = d.byId.get('peer-10')!
+  const ecl = d.nodes.filter(n => n.id.startsWith('eclipse-'))
+  expect(new Set(ecl.map(n => `${n.x},${n.y}`)).size).toBe(4)
+  for (const n of ecl) expect(Math.hypot(n.x - target.x, n.y - target.y)).toBeCloseTo(ECLIPSE_RING, 6)
 })

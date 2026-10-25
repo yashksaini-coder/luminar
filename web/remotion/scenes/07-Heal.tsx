@@ -4,7 +4,7 @@ import { Mesh } from '../mesh/Mesh'
 import { healedInS } from '../mesh/readouts'
 import { Ticker } from '../mesh/Ticker'
 import { lerpCamera } from '../mesh/view'
-import { simTimeAt } from '../timeline'
+import { frameForSimTime, simTimeAt } from '../timeline'
 import { Fig } from '../type/Fig'
 import { StampIn } from '../type/StampIn'
 import { FIG, FIG_N, STAMP, STAMP_TILT } from './copy'
@@ -19,7 +19,8 @@ export default function Heal({ data, orientation, span }: SceneProps) {
   const camera = lerpCamera({ scale: 1.15, focus: 'peer-10' }, { scale: 1 }, interpolate(f, [0, 30], [0, 1], { extrapolateRight: 'clamp' }))
   const clearedAt = data.cleared[0]?.at
   const healIn = healedInS(data)
-  const healed = clearedAt !== undefined && healIn !== null && simTime >= clearedAt + healIn
+  // compare frames, not floats: cleared.at is 24.100000000000072, so a sim-time compare lands one frame late
+  const healed = clearedAt !== undefined && healIn !== null && span.from + f >= frameForSimTime(span, clearedAt + healIn)
   return (
     <>
       <Mesh data={data} box={l.mesh!} camera={camera} simTime={simTime} cell={l.cell} />

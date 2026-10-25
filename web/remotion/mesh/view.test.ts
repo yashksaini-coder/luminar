@@ -32,3 +32,14 @@ test('focus node is the fixed point of the camera scale', () => {
   expect(b[1]).toBeCloseTo(a[1], 6)
   expect(lerpCamera({ scale: 1 }, { scale: 1.08, focus: 'peer-22' }, 0.5).scale).toBeCloseTo(1.04)
 })
+
+test('a focus change pans continuously: the projected point blends between the two focus nodes', () => {
+  const box = { x: 0, y: 0, w: 1920, h: 1080 }
+  const a = { scale: 1.15, focus: 'sybil-0' }, b = { scale: 1.15, focus: 'peer-10' }
+  const at = (t: number) => makeProjector(d, box, lerpCamera(a, b, t))(0, 0)
+  const step = (t0: number, t1: number) => Math.hypot(at(t1)[0] - at(t0)[0], at(t1)[1] - at(t0)[1])
+  const total = step(0, 1)
+  expect(total).toBeGreaterThan(50)
+  for (let t = 0; t < 1; t += 0.1) expect(step(t, t + 0.1)).toBeCloseTo(total / 10, 6)
+  expect(at(1)[0]).toBeCloseTo(makeProjector(d, box, b)(0, 0)[0], 6)
+})
