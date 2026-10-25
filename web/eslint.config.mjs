@@ -6,5 +6,5 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   { files: ['remotion/**'], rules: { '@next/next/no-img-element': 'off' } },
-  globalIgnores(['.next/**', 'out/**', 'next-env.d.ts', 'figures/sorter/core.js']),
+  globalIgnores(['.next/**', 'out/**', 'next-env.d.ts', 'figures/**/core.js']),
 ])

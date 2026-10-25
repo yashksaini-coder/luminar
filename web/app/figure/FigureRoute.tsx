@@ -1,5 +1,5 @@
 'use client'
-// /figure/: the sorter full-bleed; ?press= is forwarded so a scripted run plays unattended.
+// /figure/: the relay globe full-bleed; ?press= is forwarded so a scripted run plays unattended.
 import { useSearchParams } from 'next/navigation'
 import FigureFrame from '@/components/landing/FigureFrame'
 

@@ -11,7 +11,7 @@ The reference for whoever presents Luminar and whoever touches `web/`. The desig
 | `/` | landing | `?reel=<n>` → client redirect to `/reels/<n>/` carrying `theme`,`hero`,`t`,`peer` (old talk notes keep working) |
 | `/sim/` | live simulator | `theme=stage`, `hero=1`, `peer=<id>`; `?reel=` redirects as above |
 | `/reels/<name>/` | reel player (SimApp in reel mode, socket never opened) | `theme`, `hero`, `t` (sim seconds), `peer` |
-| `/figure/` | the sorter figure full-bleed | `?press=` passthrough to the iframe for screenshots |
+| `/figure/` | the relay globe figure full-bleed | `?press=` passthrough to the iframe for screenshots |
 
 Prefs `{stageTheme, hero}` persist in `localStorage['luminar.prefs']` (`web/lib/prefs.ts`); the URL wins on load. Share (`s`) copies `/reels/<n>/?t=…&peer=…`. Pages: `web/app/page.tsx`, `web/app/sim/page.tsx`, `web/app/figure/page.tsx`, `web/app/reels/[name]/page.tsx`; the `?reel=` redirect is `web/components/sim/ReelRedirect.tsx` over `redirectTarget` in `web/lib/reels.ts`.
 

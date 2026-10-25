@@ -1,6 +1,7 @@
 # Landing-page colorfigure: concept
 
 Status: concept, 2026-10-24. Branch `feat/ui-overhaul`. Not yet built.
+Superseded 2026-10-25 by the relay globe (task G.1); the text below is history.
 
 One hand-inked, turnable, see-through isometric object on the Next.js landing page that explains
 GossipSub v1.1 physically. Built with the owner's `colorfigures` skill (`core.js` engine + one figure

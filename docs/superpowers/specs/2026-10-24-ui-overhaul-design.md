@@ -501,6 +501,8 @@ the page.
 
 ## 8. The colorfigure (Fig. 2)
 
+Superseded 2026-10-25 by the relay globe (task G.1); the text below is history.
+
 **Object**: Candidate A from `figure-concept.md`, the **pneumatic-tube sorting office**
 (`SORTER No. 6`): a 1930s sorting desk, a port drum with six brass ports (+2 hinged overflow),
 six glass tubes to six rim stations, a splitter cone, bayonet collars, a balance-beam scorer per
