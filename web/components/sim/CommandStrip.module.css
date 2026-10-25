@@ -86,17 +86,15 @@
     left: var(--s-3);
     translate: none;
     width: calc(100% - 2 * var(--s-3));
-    bottom: var(--s-3);
     height: auto;
     display: grid;
     grid-template-rows: auto auto;
     gap: var(--s-2);
     padding: var(--s-2);
   }
+  /* bottom stays --strip-bottom: the desktop kbd hint hangs 25 px below the strip inside the clipped canvas */
   .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
   .menus { flex-wrap: wrap; }
-  /* hero: the 56 px ticker owns the bottom edge; sit the strip on --strip-bottom (60 px) above it */
-  :global(:root[data-hero="1"]) .strip { bottom: var(--strip-bottom); }
 }
 
 /* ≤1024: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
