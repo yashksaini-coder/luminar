@@ -5,6 +5,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { sparkPoints } from '@/lib/spark'
 
+// Shared with StatsRail's CDF so DPR policy and dither cell live in one place.
+export function sizeCanvas(cv: HTMLCanvasElement, ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  cv.width = Math.round(w * dpr)
+  cv.height = Math.round(h * dpr)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.clearRect(0, 0, w, h)
+}
+
+export function checkerPattern(ctx: CanvasRenderingContext2D, ink: string, cell: number) {
+  const tile = document.createElement('canvas')
+  tile.width = tile.height = cell * 2
+  const tctx = tile.getContext('2d')!
+  tctx.fillStyle = ink
+  tctx.fillRect(0, 0, cell, cell)
+  tctx.fillRect(cell, cell, cell, cell)
+  return ctx.createPattern(tile, 'repeat')
+}
+
 export interface SparklineProps {
   values: number[]; height?: number; domain?: [number, number]; zeroLine?: boolean; alarm?: boolean; 'aria-label': string
 }
@@ -26,11 +45,7 @@ export default function Sparkline({ values, height = 36, domain, zeroLine, alarm
     const cv = ref.current
     const ctx = cv?.getContext('2d')
     if (!cv || !ctx || width === 0) return
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    cv.width = Math.round(width * dpr)
-    cv.height = Math.round(h * dpr)
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.clearRect(0, 0, width, h)
+    sizeCanvas(cv, ctx, width, h)
     if (values.length < 2) return
     const css = getComputedStyle(document.documentElement)
     const tok = (n: string) => css.getPropertyValue(n).trim()
@@ -38,13 +53,7 @@ export default function Sparkline({ values, height = 36, domain, zeroLine, alarm
     const cell = parseFloat(tok('--cell-ui')) || 4
     const { pts, zeroY } = sparkPoints(values, width, h, domain)
 
-    const tile = document.createElement('canvas')
-    tile.width = tile.height = cell * 2
-    const tctx = tile.getContext('2d')!
-    tctx.fillStyle = ink
-    tctx.fillRect(0, 0, cell, cell)
-    tctx.fillRect(cell, cell, cell, cell)
-    const pattern = ctx.createPattern(tile, 'repeat')
+    const pattern = checkerPattern(ctx, ink, cell)
     if (pattern) {
       ctx.beginPath()
       ctx.moveTo(pts[0][0], h)

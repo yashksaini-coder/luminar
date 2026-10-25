@@ -8,7 +8,7 @@ import { cdfStats, fmtCount, fmtLatency, formatNumber, isPruned } from '@/lib/fo
 import { selectAttackers, selectHasMessages, selectKpis, selectStateCounts, useStore } from '@/lib/store'
 import type { AnalyticsSample, Beat, CdfPoint } from '@/lib/types'
 import Glyph, { type GlyphRole } from './Glyph'
-import Sparkline from './Sparkline'
+import Sparkline, { checkerPattern, sizeCanvas } from './Sparkline'
 import styles from './StatsRail.module.css'
 
 const CATS = ['gossip', 'connection', 'stream', 'dht', 'fault', 'health'] as const
@@ -75,11 +75,7 @@ function DeliveryCdf({ pts }: { pts: CdfPoint[] }) {
     const draw = () => {
       const w = cv.clientWidth
       if (w === 0) return
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      cv.width = Math.round(w * dpr)
-      cv.height = Math.round(h * dpr)
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.clearRect(0, 0, w, h)
+      sizeCanvas(cv, ctx, w, h)
       const css = getComputedStyle(document.documentElement)
       const tok = (n: string) => css.getPropertyValue(n).trim()
       const ink = tok('--fg')
@@ -89,13 +85,7 @@ function DeliveryCdf({ pts }: { pts: CdfPoint[] }) {
       const y = (pc: number) => h - (pc / 100) * (h - 1.5) - .75
       const xy = pts.map(p => [x(p.latency_ms), y(p.percentile)] as const)
 
-      const tile = document.createElement('canvas')
-      tile.width = tile.height = cell * 2
-      const tctx = tile.getContext('2d')!
-      tctx.fillStyle = ink
-      tctx.fillRect(0, 0, cell, cell)
-      tctx.fillRect(cell, cell, cell, cell)
-      const pattern = ctx.createPattern(tile, 'repeat')
+      const pattern = checkerPattern(ctx, ink, cell)
       if (pattern) {
         ctx.beginPath()
         ctx.moveTo(xy[0][0], h)
