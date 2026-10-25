@@ -42,6 +42,7 @@ export default function SimApp() {
   const [drawer, setDrawer] = useState<'stats' | 'log' | null>(null)
   const railL = useRef<HTMLElement>(null)
   const railR = useRef<HTMLElement>(null)
+  const shell = useRef<HTMLDivElement>(null)
   const [manifest, setManifest] = useState<ReelManifest>([])
   useEffect(() => {
     const stopPrefs = initPrefs()   // R5: data-stage and reduced motion apply before the first frame
@@ -60,9 +61,12 @@ export default function SimApp() {
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
-  useEffect(() => {   // an open drawer takes focus on its first control (no Overlay focus trap needed)
+  useEffect(() => {   // an open drawer takes focus and makes the rest of the shell inert, so aria-modal holds
     const rail = drawer === 'stats' ? railL.current : drawer === 'log' ? railR.current : null
-    if (rail) (rail.querySelector<HTMLElement>(FOCUSABLE) ?? rail).focus()
+    if (!rail || !shell.current) return
+    const restore = inertExcept(shell.current, rail)
+    ;(rail.querySelector<HTMLElement>(FOCUSABLE) ?? rail).focus()
+    return restore
   }, [drawer])   // pause at the duration limit (R4)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,7 +85,7 @@ export default function SimApp() {
     return () => document.removeEventListener('keydown', onKey)
   }, [manifest, overlayOpen, drawer])
   return (
-    <div className={styles.shell} data-reel={inReel ? '' : undefined}>
+    <div ref={shell} className={styles.shell} data-reel={inReel ? '' : undefined}>
       <Toolbar menuOpen={overlayOpen} onMenu={() => setOverlayOpen(o => !o)} />
       <aside ref={railL} data-rail="l" className={styles.railL} {...railProps(drawer === 'stats', 'Stats')}>
         <StatsRail onBeat={onBeat} />
@@ -105,6 +109,13 @@ export default function SimApp() {
       <MenuOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} manifest={manifest} />
     </div>
   )
+}
+
+/** Sets `inert` on every child of `shell` except `open` and the scrim; returns the undo. */
+export function inertExcept(shell: HTMLElement, open: HTMLElement): () => void {
+  const others = [...shell.children].filter(el => el !== open && el.getAttribute('aria-label') !== 'Close panel')
+  for (const el of others) el.setAttribute('inert', '')
+  return () => { for (const el of others) el.removeAttribute('inert') }
 }
 
 // Drawer semantics only while open (≤1023 px); inline rails stay plain asides.
