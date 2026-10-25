@@ -11,5 +11,5 @@
 
 .shell > header { grid-area: toolbar; }
 .railL { grid-area: rail-l; min-height: 0; border-right: 1px solid var(--hair); }
-.railR { grid-area: rail-r; min-height: 0; border-left: 1px solid var(--hair); }
+.railR { grid-area: rail-r; position: relative; overflow: hidden; min-height: 0; border-left: 1px solid var(--hair); }
 .canvas { grid-area: canvas; position: relative; min-width: 0; min-height: 0; overflow: hidden; }

@@ -9,6 +9,7 @@ import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
 import type { Beat, ReelManifest } from '@/lib/types'
 import CommandStrip from './CommandStrip'
+import Inspector from './Inspector'
 import LogRail from './LogRail'
 import ModeSwitcher from './ModeSwitcher'
 import Provenance from './Provenance'
@@ -56,6 +57,7 @@ export default function SimApp() {
       </main>
       <aside data-rail="r" className={styles.railR}>
         <LogRail />
+        <Inspector />
       </aside>
     </div>
   )
