@@ -21,3 +21,14 @@ test('mounts the overlay only on the 0 → n transition, removes it after the re
   act(() => root2.render(h(CanvasReveal))); act(() => useStore.getState().applySnapshot(snapWith(['peer-0']))); expect(host.querySelector('[data-reveal]')).toBeNull()
   act(() => root2.unmount()); vi.useRealTimers()
 })
+
+test('stage theme: the reveal reads --cell-mesh 3px and runs 28 → 3 on its own timer', () => {
+  vi.useFakeTimers(); reducedMotionMock.mockReturnValue(false); useStore.setState(useStore.getInitialState(), true)
+  document.documentElement.style.setProperty('--cell-mesh', '3px')
+  const host = document.body.appendChild(document.createElement('div')); const root = createRoot(host)
+  act(() => root.render(h(CanvasReveal))); act(() => useStore.getState().applySnapshot(snapWith(['peer-0'])))
+  expect(revealSteps(3)[0]).toBe(28); expect(revealSteps(3).at(-1)).toBe(3)
+  act(() => { vi.advanceTimersByTime(revealSteps(3).length * REVEAL_STEP_MS - 1) }); expect(host.querySelector('[data-reveal]')).toBeTruthy()
+  act(() => { vi.advanceTimersByTime(1) }); expect(host.querySelector('[data-reveal]')).toBeNull()   // ends at cell 3, one step before a cell-2 run would
+  act(() => root.unmount()); document.documentElement.style.removeProperty('--cell-mesh'); vi.useRealTimers()
+})
