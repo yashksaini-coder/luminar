@@ -5,9 +5,9 @@ import Figure from '@/components/dither/Figure'
 import { attachParallax } from '@/components/dither/parallax'
 
 test('Figure renders the plate, Fig. N label, italic caption, aspect and optional stamp', () => {
-  const m = r(h(Figure, { n: 2, caption: 'Same mechanism, toy constants.', aspect: '16 / 9', stamp: 'SORTER No. 6' }, h('div', { id: 'kid' })))
+  const m = r(h(Figure, { n: 2, caption: 'Same mechanism, toy constants.', aspect: '16 / 9', stamp: 'RELAY GLOBE No. 1' }, h('div', { id: 'kid' })))
   expect(m).toContain('<figure'); expect(m).toContain('class="plate'); expect(m).toContain('aspect-ratio:16 / 9')
-  expect(m).toContain('Fig. 2'); expect(m).toContain('<em>Same mechanism, toy constants.</em>'); expect(m).toContain('SORTER No. 6'); expect(m).toContain('id="kid"')
+  expect(m).toContain('Fig. 2'); expect(m).toContain('<em>Same mechanism, toy constants.</em>'); expect(m).toContain('RELAY GLOBE No. 1'); expect(m).toContain('id="kid"')
   expect(m).toContain('--cursor-reticle:url(')
 })
 test('Figure defaults: aspect 16 / 6.4, narrowAspect 4 / 3, narrowAt 450; no stamp when omitted', () => {
