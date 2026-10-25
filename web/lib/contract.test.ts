@@ -125,3 +125,10 @@ test('fixed-size contract tables', () => {
   expect(renderer.LAYER_IDS).toHaveLength(15)
   expect(palette.BAND_DENSITY).toEqual([0.12, 0.35, 0.65, 1])
 })
+
+// A.28's activeFaultCount(events) moved to store state in ee7bf42 (task 3.3 review): the
+// Clear-all count (spec "shows active count") survives the events ring rolling over.
+test('A.28 active-fault count lives in store state, not fault-items', () => {
+  expect('activeFaultCount' in faultItems).toBe(false)
+  expect(store.useStore.getState().activeFaults).toBe(0)
+})
