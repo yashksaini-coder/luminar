@@ -2,7 +2,7 @@
 
 Verified against web/ at 52790f4 on 2026-10-25. Trust code over this file.
 
-The reference for whoever presents Luminar and whoever touches `web/`. The design and its reasons live in `docs/superpowers/specs/2026-10-24-ui-overhaul-design.md`; this file only says what each screen does and which file does it. Paths in backticks starting `web/` exist at the commit above; paths marked † (`app/reels/[name]/page.tsx` and friends) are the reel, stage and hero surfaces of phase 4 and land with its merge; until then their behaviour here follows `docs/superpowers/plans/parts/phase-4.md`. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
+The reference for whoever presents Luminar and whoever touches `web/`. The design and its reasons live in `docs/superpowers/specs/2026-10-24-ui-overhaul-design.md`; this file only says what each screen does and which file does it. Every path in backticks exists at the commit above. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
 
 ## 1. Routes and URL parameters
 
@@ -13,7 +13,7 @@ The reference for whoever presents Luminar and whoever touches `web/`. The desig
 | `/reels/<name>/` | reel player (SimApp in reel mode, socket never opened) | `theme`, `hero`, `t` (sim seconds), `peer` |
 | `/figure/` | the sorter figure full-bleed | `?press=` passthrough to the iframe for screenshots |
 
-Prefs `{stageTheme, hero}` persist in `localStorage['luminar.prefs']` (`web/lib/prefs.ts`); the URL wins on load. Share (`s`) copies `/reels/<n>/?t=…&peer=…`. Pages: `web/app/page.tsx`, `web/app/sim/page.tsx`, `web/app/figure/page.tsx`, `app/reels/[name]/page.tsx` †; the `?reel=` redirect is `components/sim/ReelRedirect.tsx` † over `redirectTarget` in `web/lib/reels.ts`.
+Prefs `{stageTheme, hero}` persist in `localStorage['luminar.prefs']` (`web/lib/prefs.ts`); the URL wins on load. Share (`s`) copies `/reels/<n>/?t=…&peer=…`. Pages: `web/app/page.tsx`, `web/app/sim/page.tsx`, `web/app/figure/page.tsx`, `web/app/reels/[name]/page.tsx`; the `?reel=` redirect is `web/components/sim/ReelRedirect.tsx` over `redirectTarget` in `web/lib/reels.ts`.
 
 ## 2. Screen map
 
@@ -136,7 +136,7 @@ Menus: arrow keys, `Enter`, `Escape`. Hint row under the strip:
 
 **Stage** (`t`, `?theme=stage`, Legend › gear): `<html data-stage="1">` scales by tokens, never CSS `zoom`. Type, row height and cell sizes grow, `fg-3` becomes `paper-1`, hairlines get stronger and links brighter (the `:root[data-stage="1"]` block of `docs/design/tokens.css`, copied verbatim into `web/app/globals.css`). The renderer uses `scale {node 1.4, particle 1.8, edgeAlpha 1.6}` and 12 px labels.
 
-**Hero** (`h`, `?hero=1`): `data-hero="1"` hides both rails, the legend, the tooltip and the hint row; the canvas spans the width and the strip sits 60 px up, above a 56 px lower-third ticker (`components/sim/Ticker.tsx` †, cells from `lib/ticker.ts` †). Ticker cells:
+**Hero** (`h`, `?hero=1`): `data-hero="1"` hides both rails, the legend, the tooltip and the hint row; the canvas spans the width and the strip sits 60 px up, above a 56 px lower-third ticker (`web/components/sim/Ticker.tsx`, cells from `web/lib/ticker.ts`). Ticker cells:
 `phase · delivery · mesh d · hops · e2e · attackers (N · P pruned, flame) · invalid (flame) · T+` at `--t-hero-n`. Before the first message they read `free play · — · — · — · — · 0 · 0 · 0.0s`. In Geo with mainnet on, cells 2–5 become `slot · first seen (ms · client) · p50 · observers`. The narrator caption grows to 24 px.
 
 Accessibility: the ticker is `aria-live="off"` (numbers changing at 2 Hz must not be announced); the caption keeps `aria-live="polite"`. Both toggles persist in `localStorage['luminar.prefs']` and mirror to the URL.
@@ -153,11 +153,11 @@ Luminar's reels are reproducible recordings: JSONL files of the exact WebSocket 
 | `4` | `mainnet-block-wave` | Mainnet block wave (real) | 138 | Real mainnet block arrivals, slots 15466393–15466400: ~150 observer nodes light up in the order they saw each block. Arrival at observer nodes, not mesh paths. Data: ethPandaOps (CC BY 4.0). |
 
 **Load** (`enterReel` in `web/lib/actions.ts`, parser and scheduler in `web/lib/api/replay.ts`):
-no socket opens; mainnet state clears; the file streams in under a dithered progress bar (`components/sim/ReelProgress.tsx` †, label `REEL · <title> · 2.1 / 3.5 MB · 60%`); the first snapshot draws before the file finishes; the reel seeks to its first snapshot, paused; the pill reads `REEL · <title>`; then `?t=` and `?peer=` apply, `t` first, so `?t=12.4&peer=sybil-0` selects a node that only exists after the seek.
+no socket opens; mainnet state clears; the file streams in under a dithered progress bar (`web/components/sim/ReelProgress.tsx`, label `REEL · <title> · 2.1 / 3.5 MB · 60%`); the first snapshot draws before the file finishes; the reel seeks to its first snapshot, paused; the pill reads `REEL · <title>`; then `?t=` and `?peer=` apply, `t` first, so `?t=12.4&peer=sybil-0` selects a node that only exists after the seek.
 
 **Seek** replays the last `edges, scenario, telemetry_status, snapshot, metrics, analytics` frames before `t`; events are skipped, so particles and captions do not replay. Speed goes down to 0.1×; playback auto-pauses at the end and `Space` there restarts from 0.
 
-**Guards**: recorded `SimulationStateChanged` events and snapshot `state` / `speed` are ignored; scenario, fault, preset and `MAINNET` clicks are refused with the toast `Press 0 to leave the reel first`. `0` or *Back to live* navigates to `/sim/`.
+**Guards**: recorded `SimulationStateChanged` events and snapshot `state` / `speed` are ignored; preset and layout-picker buttons are disabled; scenario, fault and `MAINNET` clicks are refused with the toast `Press 0 to leave the reel first`. `0` or *Back to live* navigates to `/sim/`.
 
 **Offline test** (no backend at all):
 
@@ -176,7 +176,7 @@ The reel loads under the progress bar, plays, pauses at the end; while in the re
 
 `LIVE MAINNET` · `slot <n> · T−<lag>s · <n> observers · arrival at observer nodes, not mesh paths · data: ethPandaOps (CC BY 4.0)`
 
-with ` · shown on the Geo layout` appended outside Geo. In the real reel the kicker is `RECORDED MAINNET` and the lag reads `recorded` (phase 4 †).
+with ` · shown on the Geo layout` appended outside Geo. In the real reel the kicker is `RECORDED MAINNET` and the lag reads `recorded`.
 
 ## 11. Demo script: Sybil → Eclipse
 
