@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
-import { autoPauseIfDue, bootSim, initAutoGeo, runKey, seekTo, teardownSim } from '@/lib/actions'
+import { autoPauseIfDue, bootSim, initAutoGeo, initUrlMoment, runKey, seekTo, teardownSim } from '@/lib/actions'
 import { actionForKey } from '@/lib/keys'
 import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
@@ -52,8 +52,11 @@ export default function SimApp({ reel = null }: SimAppProps) {
     return () => { stopAutoGeo(); stopPrefs() }
   }, [])
   useEffect(() => {   // reel → no socket, no API; live → socket + topology + scenarios (A.29)
-    void bootSim({ reel, search: location.search })
-    return teardownSim
+    let live = true
+    let stopUrlMoment = () => {}
+    // Mirror only once the incoming ?t/?peer is applied, so an opened moment link keeps its URL as given.
+    void bootSim({ reel, search: location.search }).then(() => { if (live) stopUrlMoment = initUrlMoment() })
+    return () => { live = false; stopUrlMoment(); teardownSim() }
   }, [reel?.name])   // eslint-disable-line react-hooks/exhaustive-deps -- a new reel name is a new boot; the meta object is static
   useEffect(() => useStore.subscribe(s => s.simTime, () => autoPauseIfDue()), [])
   useEffect(() => {   // back above the breakpoint the rails are inline again: drop drawer and overlay state

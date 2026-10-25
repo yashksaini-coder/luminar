@@ -150,8 +150,11 @@ export function seekReel(ms: number, opts?: { eventTailMs?: number }): void {
 }
 
 /** Seek by simulation seconds (what the scrubber shows) rather than reel ms. */
+/** Half the ?t= precision (0.1 s): recorded times are float sums (12.8999…), so a rounded 12.9 still names that snapshot. */
+const SEEK_SLACK_SEC = 0.05
+
 export function seekReelToSimTime(sec: number): void {
-  const hit = frames.find(f => typeOf(f.frame) === 'snapshot' && (f.frame as SnapshotFrame).time >= sec)
+  const hit = frames.find(f => typeOf(f.frame) === 'snapshot' && (f.frame as SnapshotFrame).time >= sec - SEEK_SLACK_SEC)
   seekReel(hit ? hit.t : reelDurationMs())
 }
 

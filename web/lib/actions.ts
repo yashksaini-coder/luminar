@@ -249,6 +249,11 @@ export function syncUrlMoment(): void {
   if (url.href !== location.href) history.replaceState(null, '', url)
 }
 
+/** Mirrors selection and play/pause to ?peer/?t; returns the unsubscribe. */
+export function initUrlMoment(): () => void {
+  return useStore.subscribe(s => [s.selectedPeer, s.playing] as const, syncUrlMoment, { equalityFn: shallow })
+}
+
 export function applyUrlMoment(q: URLSearchParams): void {
   const t = Number(q.get('t'))
   if (S().reel && q.has('t') && Number.isFinite(t)) seekReelToSimTime(t)

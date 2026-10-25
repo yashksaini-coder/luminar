@@ -33,3 +33,8 @@ test('initPrefs applies the URL to the store and mirrors later store changes to 
   useStore.getState().setPref('hero', true); expect(document.documentElement.dataset.hero).toBe('1'); expect(location.search).toContain('hero=1')
   off(); useStore.getState().setPref('hero', false); expect(document.documentElement.dataset.hero).toBe('1')
 })
+test('persistPrefs keeps ?t and ?peer', () => {
+  history.replaceState(null, '', '/reels/sybil-eclipse/?t=12.4&peer=sybil-0')
+  persistPrefs({ stageTheme: true, hero: false }); expect(location.search).toBe('?t=12.4&peer=sybil-0&theme=stage')
+  persistPrefs({ stageTheme: false, hero: true }); expect(location.search).toBe('?t=12.4&peer=sybil-0&hero=1')
+})

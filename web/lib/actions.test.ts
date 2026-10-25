@@ -7,7 +7,7 @@ import { resetTopology, fitView } from '@/components/map/renderer'
 import { selectPill, useStore } from '@/lib/store'
 import { peerNode, snapWith } from '@/lib/fixtures'
 import {
-  autoPauseIfDue, bootSim, enterReel, initAutoGeo, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
+  applyUrlMoment, autoPauseIfDue, bootSim, enterReel, initAutoGeo, initUrlMoment, shareMoment, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
 } from '@/lib/actions'
 
 // Every request function becomes a bare vi.fn(); toastFor stays real so the toast text is the real one.
@@ -160,4 +160,32 @@ test('StrictMode boot, teardown, boot on a reel page: the first load aborts quie
   await Promise.all([first, second])
   expect(vi.mocked(loadReel).mock.calls[0][1]?.signal?.aborted).toBe(true)
   expect(assign).not.toHaveBeenCalled(); expect(useStore.getState().reel?.name).toBe(meta.name); expect(seekReelToSimTime).toHaveBeenCalledTimes(1)
+})
+
+test('applyUrlMoment seeks before selecting, so a peer that appears after the seek is selectable', () => {
+  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } })
+  vi.mocked(seekReelToSimTime).mockImplementation(() => useStore.getState().applySnapshot(snapWith(['peer-0', 'sybil-0'])))
+  applyUrlMoment(new URLSearchParams('t=12.4&peer=sybil-0'))
+  expect(seekReelToSimTime).toHaveBeenCalledWith(12.4); expect(useStore.getState().selectedPeer).toBe('sybil-0')
+})
+test('syncUrlMoment writes ?t only while a reel is paused and keeps theme/hero', () => {
+  history.replaceState(null, '', '/reels/sybil-eclipse/?theme=stage&hero=1')
+  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 }, playing: false }); useStore.getState().applySnapshot(snapWith(['sybil-0'], { time: 12.4 })); useStore.getState().selectPeer('sybil-0')
+  syncUrlMoment(); expect(location.search).toBe('?theme=stage&hero=1&peer=sybil-0&t=12.4')
+  useStore.setState({ playing: true }); syncUrlMoment(); expect(location.search).toBe('?theme=stage&hero=1&peer=sybil-0')
+  useStore.setState({ reel: null, playing: false }); syncUrlMoment(); expect(location.search).not.toContain('t=')
+})
+test('initUrlMoment mirrors selection and pause changes to the URL', () => {
+  history.replaceState(null, '', '/reels/sybil-eclipse/'); const off = initUrlMoment()
+  useStore.getState().applySnapshot(snapWith(['peer-3'])); useStore.getState().selectPeer('peer-3'); expect(location.search).toBe('?peer=peer-3')
+  useStore.getState().selectPeer(null); expect(location.search).toBe(''); off()
+})
+test('shareMoment copies the current href and toasts Link copied', async () => {
+  const writeText = vi.fn(async () => {}); vi.stubGlobal('navigator', { clipboard: { writeText } })
+  await shareMoment(); expect(writeText).toHaveBeenCalledWith(location.href); expect(useStore.getState().toasts.at(-1)?.text).toBe('Link copied')
+})
+test('without navigator.clipboard (http on the venue LAN) shareMoment prompts with the href and still toasts; an unknown ?peer= is ignored (global review focus 5)', async () => {
+  vi.stubGlobal('navigator', {}); const prompt = vi.fn(); vi.stubGlobal('prompt', prompt)
+  await shareMoment(); expect(prompt).toHaveBeenCalledWith('Copy this link', location.href); expect(useStore.getState().toasts.at(-1)?.text).toBe('Link copied')
+  useStore.getState().applySnapshot(snapWith(['peer-0'])); expect(() => applyUrlMoment(new URLSearchParams('peer=ghost'))).not.toThrow(); expect(useStore.getState().selectedPeer).toBeNull()
 })

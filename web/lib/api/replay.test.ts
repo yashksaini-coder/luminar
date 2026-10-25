@@ -114,3 +114,12 @@ test('loadReel drops the previous reel before fetching; a superseded load cannot
   firstRelease(); expect(await first).toBe(false); expect(useStore.getState().nodes).toHaveLength(0); expect(useStore.getState().reel).toBeNull()
   release(); expect(await second).toBe(true); expect(useStore.getState().reel?.title).toBe('Second')
 })
+test('seekReelToSimTime lands on the snapshot a rounded ?t= names, not the next one (recorded times are float sums)', async () => {
+  const drift = [
+    { t: 0, frame: snapWith(['peer-0'], { time: 12.399999999999972 }) },
+    { t: 500, frame: snapWith(['peer-0'], { time: 12.89999999999997 }) },
+    { t: 1000, frame: snapWith(['peer-0'], { time: 13.399999999999968 }) },
+  ].map(l => JSON.stringify(l)).join('\n') + '\n'
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(drift, { status: 200 })))
+  await loadReel(meta); seekReelToSimTime(12.9); expect(reelElapsedMs()).toBe(500)
+})
