@@ -1,7 +1,7 @@
 /* Menu/toast surfaces carry no dither (spec §7). */
 .stack {
   position: absolute;
-  top: calc(var(--toolbar-h) + var(--s-3));
+  top: var(--s-3);   /* the stack lives in .canvas, whose grid row already starts under the toolbar */
   left: var(--s-3);
   z-index: 3;
   display: flex;
