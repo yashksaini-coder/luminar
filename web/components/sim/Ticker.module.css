@@ -18,6 +18,7 @@
 
 .cell { display: flex; align-items: center; gap: var(--s-2); min-width: 0; flex: none; }
 .cell:first-child { flex: 0 1 auto; }   /* the phase cell truncates, never wraps */
+.cell:first-child .value { min-width: 4ch; }   /* floor so the cell never shrinks under its own key label */
 
 .key {
   font: 600 var(--t-label)/1 var(--font-ui);
