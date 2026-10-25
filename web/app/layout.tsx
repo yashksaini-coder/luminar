@@ -1,6 +1,7 @@
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+import Reveal from '@/components/Reveal'
 
 const display = localFont({
   src: [
@@ -25,10 +26,18 @@ const ui = localFont({
   display: 'swap',
 })
 
+const DESCRIPTION = 'GossipSub v1.1 peer scoring you can watch bite: fifty peers, five Sybils, pruned in two heartbeats.'
+
 export const metadata: Metadata = {
+  // NEXT_PUBLIC_SITE_URL is the deploy origin (land-05); without it og:image resolves against localhost.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: { default: 'Luminar', template: '%s · Luminar' },
   description: 'Real-time GossipSub v1.1 simulator',
+  openGraph: { title: 'Luminar', description: DESCRIPTION, images: ['/video/poster.png'] },
+  twitter: { card: 'summary_large_image' },
 }
+
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,7 +52,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         } as React.CSSProperties
       }
     >
-      <body>{children}</body>
+      <head>
+        {/* data-js gates the reveal's hidden state (globals.css): no JS, no hidden sections. Runs before paint. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js='1'" }} />
+      </head>
+      <body>
+        {children}
+        <Reveal />
+      </body>
     </html>
   )
 }
