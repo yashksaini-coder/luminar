@@ -1,11 +1,11 @@
-import DitherImage from '@/components/dither/DitherImage'
-import Figure from '@/components/dither/Figure'
 import FigurePlate from '@/components/landing/FigurePlate'
+import Footer from '@/components/landing/Footer'
 import Hero from '@/components/landing/Hero'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
 import Readouts from '@/components/landing/Readouts'
-import { WhatItDoes } from '@/components/landing/Sections'
+import { LiveMainnet, SameNames, WhatItDoes } from '@/components/landing/Sections'
+import VideoPlate from '@/components/landing/VideoPlate'
 import cards from '@/lib/reel-cards.json'
 import { REEL_MANIFEST } from '@/lib/reels'
 
@@ -19,12 +19,11 @@ export default function Home() {
       <Readouts />
       <WhatItDoes />
       <FigurePlate />
-      <div style={{ padding: 'var(--gutter, 16px)' }}>
-        <Figure n={0} caption="dither check">
-          <DitherImage src="/stills/grafana.png" alt="Grafana dashboard with the gossipsub_* series" depth={0.6} loupe />
-        </Figure>
-      </div>
+      <VideoPlate />
+      <SameNames />
+      <LiveMainnet />
     </main>
+    <Footer />
     </>
   )
 }
