@@ -11,5 +11,5 @@ test('PlateReplay server markup: canvas, halo ring, diamond, readout box and the
   expect(m).toContain('>PEERS<'); expect(m).toContain('>SYBIL<'); expect(m).toContain('>PRUNED<'); expect(m).toContain('>T+<')
   expect(m).toContain(p.frames[frameIndexAt(p, STILL_T)].stamp)     // SSR renders the reduced-motion still frame; the client advances
   expect(m).not.toMatch(/clip-path|halftone|polygon\(/)
-  expect(m).toContain('tabindex="0"'); expect(m).toContain('aria-label="Fifty peers')
+  expect(m).toContain('tabindex="0"'); expect(m).toContain('role="group"'); expect(m).toContain('aria-label="Fifty peers')   // aria-label needs a role that allows it (axe aria-prohibited-attr)
 })

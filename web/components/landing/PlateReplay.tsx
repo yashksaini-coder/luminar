@@ -42,7 +42,8 @@ export default function PlateReplay({ plate, className }: PlateReplayProps) {
   const revealed = final !== null   // a boolean dep: each loop redraw sets a new final and must not restart the timer
   useEffect(() => {
     if (still || paused || !revealed) return
-    const id = setInterval(() => { idx.current = (idx.current + 1) % plate.frames.length; setView(idx.current) }, 1000 / PLATE_FPS)
+    // advances only; the text follows in onFinal, right after the canvas paints idx, so readout and frame never disagree
+    const id = setInterval(() => { idx.current = (idx.current + 1) % plate.frames.length }, 1000 / PLATE_FPS)
     return () => clearInterval(id)
   }, [still, paused, revealed, plate])
 
@@ -68,6 +69,7 @@ export default function PlateReplay({ plate, className }: PlateReplayProps) {
       ref={root}
       className={className ? `${styles.replay} ${className}` : styles.replay}
       tabIndex={0}
+      role="group"
       aria-label={FIG1}
       onPointerEnter={() => setHover(true)} onPointerLeave={() => setHover(false)}
       onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
