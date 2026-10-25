@@ -1,4 +1,4 @@
-/** Event type codes, filter groups and row detail builders (ported from frontend/src/ui/events-panel.ts). */
+/** Event type codes, filter groups and row detail builders (ported from the pre-overhaul ui/events-panel.ts, git tag pre-overhaul). */
 import { shortId } from '@/lib/format'
 import type { AppEvent, EventCategory } from '@/lib/types'
 

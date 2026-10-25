@@ -96,5 +96,6 @@ docker compose (Jaeger 2.22, Prometheus 3.5, Grafana 12 with a provisioned dashb
 
 ## Reference material in the repo
 `docs/ui.md` (complete UI reference with layer order, colours and every control),
-`assets/ui-main-*.jpeg` (current UI screenshots), `frontend/src/style.css` and
-`frontend/src/palette.ts` (current tokens), `frontend/index.html` (current DOM).
+`assets/ui-main-*.jpeg` (current UI screenshots), `src/style.css` and
+`src/palette.ts` (current tokens), `index.html` (current DOM) of the old Vite frontend
+(git tag `pre-overhaul`).

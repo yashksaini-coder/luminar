@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { bezierPoint, breathe, glyphScale, nodeRadiusPx, particleFrame, pulseAlpha } from './geometry'
 
 test('nodeRadiusPx follows clamp(200/√n, 3, 8) × scale, halved off Force', () => {
-  // 200/√n per docs/design/ui-inventory.md:143 (Keep; spec §6.2 defers to it) and frontend/src/map/renderer.ts:153;
+  // 200/√n per docs/design/ui-inventory.md:143 (Keep; spec §6.2 defers to it) and the pre-overhaul map/renderer.ts:153;
   // the brief's values (5.657 at n=50, 3 at n=200) were computed with 40/√n
   expect(nodeRadiusPx(20, 'force', 1)).toBe(8); expect(nodeRadiusPx(200, 'force', 1)).toBe(8)
   expect(nodeRadiusPx(1000, 'force', 1)).toBeCloseTo(6.325, 2); expect(nodeRadiusPx(5000, 'force', 1)).toBe(3)

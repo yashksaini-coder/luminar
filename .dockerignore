@@ -12,7 +12,6 @@ web/node_modules
 web/.next
 web/out
 web/remotion/out
-frontend
 
 tests
 report

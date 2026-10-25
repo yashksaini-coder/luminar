@@ -1,4 +1,4 @@
-/** Hero lower-third: eight broadcast cells derived from the store (port of frontend/src/ui/narrator.ts renderTicker). */
+/** Hero lower-third: eight broadcast cells derived from the store (port of the pre-overhaul ui/narrator.ts renderTicker, git tag pre-overhaul). */
 import { formatTime } from '@/lib/format'
 import { type AppState, selectAttackers, selectHasMessages, selectPrunedCount } from '@/lib/store'
 

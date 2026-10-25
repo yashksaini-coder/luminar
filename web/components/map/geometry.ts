@@ -1,6 +1,6 @@
 import type { LayoutMode, NodeState } from '@/lib/types'
 
-// Pure canvas geometry, ported from frontend/src/map/renderer.ts. No DOM.
+// Pure canvas geometry, ported from the pre-overhaul map/renderer.ts (git tag pre-overhaul). No DOM.
 
 export const PARTICLE_TRAVEL_MS = 800, PARTICLE_LIFETIME_MS = 1200, PARTICLE_CAP = 600, PULSE_CAP = 200, PULSE_MS = 800, FIZZLE_AT = 0.6, FIZZLE_ALPHA = 89
 export const OBSERVER_STATIC_ALPHA = 0.5   // reduced motion [spec §10]

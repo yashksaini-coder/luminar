@@ -4,7 +4,7 @@
     uv run python scripts/mainnet_to_reel.py --slots 8 --out mainnet-block-wave
 
 Fetches `--slots` consecutive past slots from the same arrival API the live feed uses,
-and writes frontend/public/reels/<out>.jsonl in the reel format the player expects:
+and writes web/public/reels/<out>.jsonl in the reel format the player expects:
 observers as real nodes on a geo layout, one BlockSeen event per arrival at its real
 offset, snapshots every 500 ms. No backend, no DuckDB. Honesty: observer arrival times at
 ~150 nodes run by ethPandaOps and contributors, one row per node, not gossip mesh paths.
@@ -29,7 +29,7 @@ from backend.live.mainnet import (  # noqa: E402
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-REELS = ROOT / "frontend" / "public" / "reels"
+REELS = ROOT / "web" / "public" / "reels"
 SNAPSHOT_S = 0.5
 
 
