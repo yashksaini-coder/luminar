@@ -199,7 +199,7 @@ Swagger at http://localhost:8000/docs: 24 GET, 18 POST, 2 WebSocket routes. Deta
 ## Development
 
 ```bash
-make check       # lint + test + typecheck + build, the same four jobs CI runs
+make check       # lint + test + web-check + build (ruff, pytest, tsc/eslint/unit tests, next build)
 make test        # uv run pytest tests/ -v, 126 tests in 15 files, trio mode
 make lint        # ruff check + ruff format --check, line length 100
 make typecheck   # cd web && npx tsc --noEmit
