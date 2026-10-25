@@ -84,7 +84,7 @@ test('deck is created with an OrthographicView, controller, reticle cursor, and 
 
 test('snapshot + edges lay out once and emit the pinned layer order with nodes pickable', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(10) }); useStore.getState().applySnapshot(snapWith(peers(10).map(p => p.peer_id))); flush()
-  const ids = layerIds(); expect(ids).toEqual(['edges', 'mesh-edges', 'nodes'].filter(id => ids.includes(id)))   // subset of LAYER_IDS, in LAYER_IDS order
+  const ids = layerIds(); expect(ids).toEqual(['edges', 'attack-links', 'mesh-edges', 'nodes'].filter(id => ids.includes(id)))   // subset of LAYER_IDS, in LAYER_IDS order
   expect(ids).toContain('nodes'); expect(ids).toContain('edges'); expect(ids.indexOf('edges')).toBeLessThan(ids.indexOf('nodes'))
   const nodes = FakeDeck.instances[0].lastLayer('nodes'); expect(nodes.props.pickable).toBe(true); expect(nodes.props.sizeUnits).toBe('pixels'); expect(nodes.props.data).toHaveLength(10)
   expect([...visiblePositions().keys()]).toHaveLength(10); expect([...visiblePositions().values()].every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true)
@@ -174,6 +174,12 @@ test('negative score → flame halo-0; attack links dashed 4/3 from grafted atta
   const halos = FakeDeck.instances[0].lastLayer('halos'); expect(halos.props.data.every((d: PeerNode) => halos.props.getIcon(d) === 'halo-0')).toBe(true)
   const al = FakeDeck.instances[0].lastLayer('attack-links'); expect(al.props.data).toHaveLength(2); expect(al.props.getDashArray).toEqual([4, 3]); expect(al.props.widthUnits).toBe('pixels')
   expect(layerIds().indexOf('attack-links')).toBeGreaterThan(layerIds().indexOf('edges')); expect(layerIds().indexOf('attack-links')).toBeLessThan(layerIds().indexOf('mesh-edges') === -1 ? 99 : layerIds().indexOf('mesh-edges'))
+})
+test('attack-links and labels exist empty before any attacker at 200 nodes, so their shaders link at mount and not on the Sybil arrival frame', () => {
+  // a fresh Chrome profile spent ~620 ms + ~210 ms in getProgramParameter (link status) on the first arrival frame when these layers were created then
+  mount(); fontsReadyForTest(true); useStore.getState().applyEdges({ type: 'edges', edges: ring(200) }); useStore.getState().applySnapshot(snapWith(peers(200).map(p => p.peer_id))); flush()
+  expect(FakeDeck.instances[0].lastLayer('attack-links').props.data).toEqual([])
+  expect(FakeDeck.instances[0].lastLayer('labels').props.data).toEqual([])
 })
 test('selection draws the reticle at 2 r and ×1.5 size; hover draws 2 px edges and r+4 rings; event highlight lines + rings', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(5) }); useStore.getState().applySnapshot(snapWith(peers(5).map(p => p.peer_id))); flush()

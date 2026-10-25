@@ -208,3 +208,46 @@ So the drop sits in the GPU process, on the iGPU that also scans out the game's 
 - **Ruling needed (owner or controller):** either change the scenario or scoring constants in phase 7 so that a victim goes negative, or drop "halos go flame" from the spec §11 acceptance line and the talk copy. Band-0 flame rendering itself is covered by Task 2.5's injected-snapshot evidence (`band0.png`) and the atlas tests.
 
 **Console:** one error across the prod-build walk, `GET /favicon.ico 404` from the static server. The app ships no favicon yet, and that is outside this task. No warnings.
+
+## Review round 3 re-measure (2026-10-25 14:20–14:40 IST, base `2197a84`)
+
+**Conditions (commands):** AC (`ADP*/online` = 1), governor `powersave`, cores 2.1–3.4 GHz, `enlisted` still at ~428 % CPU on the RTX 5050, load average 4.4–8.1. Still not a clean gate run: I can't close the owner's game.
+
+**Real DPR 1.5 at the spec viewport, no code patch.** Round 2 needed a temporary `useDevicePixels` patch. This round uses headless Chrome with `--force-device-scale-factor=1.5 --window-size=1440,987 --use-gl=angle --use-angle=gl-egl` (script `phase-2-walk/real-dpr.mjs`). It gives `devicePixelRatio` 1.5, a 1440×857 CSS canvas, a **2160×1286 drawing buffer**, and GPU `ANGLE (Intel, Mesa Intel(R) Graphics (RPL-P), OpenGL ES 3.2)`, which is the same iGPU the headful runs used. Each run starts from a fresh profile, so the GPU shader cache is cold.
+
+**Limit of the headless method.** In headless mode, frame production caps a *running* sim at 10–18 fps even at DPR 1 (`walk-dpr1`: 13–16 fps). Headful Chrome at the same moment did 54–55 fps at DPR 1 with a 1896×843 buffer. So headless burst fps measure the headless compositor, not the canvas. I used headless only for the timings that don't depend on it: cold layout, first paint, the arrival long task, and idle.
+
+**New defect found and fixed: a shader link on the Sybil arrival frame.**
+
+- **Symptom:** with a cold shader cache, the first Sybil arrival blocked the main thread for 472–865 ms, while the relayout inside that task took only 94–140 ms.
+- **Cause:** the trace (`attrib.py`) put ~620 ms in `_initializeLayer → _getModel → createRenderPipeline → _linkShaders → getProgramParameter`. The `attack-links` PathLayer (a dash-only shader variant; `edges` uses `highPrecisionDash`) was created on the arrival frame. After a first fix, a second ~210 ms link remained: at 200 nodes the `labels` TextLayer is also created then, because the first label is an attacker's.
+- **Fix in `renderer.ts`:** both layers are now pushed even when their data is empty, so the shaders link at mount. Labels are still gated on `showLabels`, `fontsReady` and visible peers. With no labels yet, the label atlas is seeded with `'sybil-0123456789'`, because `'auto'` on empty data gave a 0×0 font atlas and the warning `WebGL: INVALID_VALUE: texSubImage2D: no canvas`.
+- **Result:** first-arrival long task in a cold profile went from 472, 703, 721 and 865 ms to **141 and 174 ms**. In the same traces, layout took 130 and 159 ms, and no `_linkShaders` samples remain.
+
+| check (prod export, 200 nodes) | result |
+|---|---|
+| cold layout, DPR 1.5, final code, 2 sessions × 5 | 403, 414, 405, 385, 342 · 546, 537, 475, 504, 559 ms (brief's ≤ 400: 2 of 10) |
+| first frame with 200 discs after the reconfigure response, same runs | 695, 731, 763, 897, 390 · 990, 1030, 509, 655, 704 ms (spec ≤ 1 s: 9 of 10; the 1030 ms run was at load average 8.1) |
+| cold layout and first paint, DPR 1.5, the two runs before the label fix (same renderer otherwise) | 430, 396, 259, 226, 285 / 878, 859, 741, 247, 327 · 377, 261, 396, 375, 391 / 409, 321, 541, 518, 541 ms (10 of 10 ≤ 1 s) |
+| `mesh-edges` at 200 | absent in every run ✔ |
+| first Sybil arrival long task, cold shader cache, DPR 1.5 | 141, 174 ms (was 472–865 ms) ✔ |
+| Sybil burst, headful (chrome-devtools MCP), DPR 1, 1896×843 buffer, sim running, final build | 42, 51, 55, 49, 53, 49 fps; one 132 ms task (layout 120 ms); 55 commits, all one component (the `Clock`) ✔ |
+| idle, headful DPR 1, final build | 59 fps, 0 long tasks, 0 commits ✔ |
+| idle, headless DPR 1.5 and DPR 2 | 58.7–60.3 fps, 0 long tasks, 0 commits ✔ |
+| console | only `favicon.ico` 404. The `texSubImage2D` warning seen before the seed is gone ✔ |
+
+**DPR, what is now settled:**
+
+- The venue row (1440×900 CSS at DPR 1.5) needs a **2160×1350 physical** surface.
+- This laptop's panel is 1920×1080, so the venue configuration cannot exist on the built-in panel.
+- Hyprland at scale 1.5 would give 1280×720 CSS (2.07 MP) instead of 1440×900 CSS (2.78 MP).
+- So the headful ≥ 30 fps burst row at DPR 1.5 can only be measured on the venue display: an external screen or projector at 1.5, or the venue laptop.
+- I also tried a headful real-DPR window on the owner's Wayland session. It closed mid-run ("Target closed"), so I stopped launching windows on the desktop.
+
+**Halos go flame: proved unreachable from the code, not just from polling.**
+
+- An honest score is `P1 + P2 + P3 + P4` (`backend/gossip/scoring.py:135`).
+- P3 applies only when `time_in_mesh > 5 s` (`:126`), and by then P1 ≥ 5 × 0.5 = 2.5 (`:118-119`). P3 bottoms out at −(0.5)² = −0.25 (`:129-130`).
+- P4 comes only from `on_invalid_message`, which only `sybil-*` peers receive (`backend/gossip/engine.py:513-514`).
+- So no honest peer can go below 0 with the current backend. Under spec §6.2, attackers have no halo ("never dithered").
+- The spec §11 line "halos go flame" therefore conflicts with the spec's own render table plus the backend freeze before phase 7. It needs an owner or controller ruling. Band-0 flame rendering stays covered by the unit test `negative score → flame halo-0 …` and Task 2.5's `band0.png`.

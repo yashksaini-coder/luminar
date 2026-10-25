@@ -330,14 +330,14 @@ export function renderLayers(): void {
       if (q) attackData.push([p, q])
     }
   }
-  if (attackData.length) {
-    const c = PAL.linkAttack
-    layers.push(new PathLayer<Seg, PathStyleExtensionProps<Seg>>({
-      id: 'attack-links', data: attackData, getPath: d => d,
-      getColor: withAlpha(c, (c[3] / 255) * s.scale.edgeAlpha), getWidth: 1, widthUnits: 'pixels',
-      getDashArray: [4, 3], extensions: [new PathStyleExtension({ dash: true })],
-    }))
-  }
+  // Pushed even when empty: deck links a layer's shader when the layer is first created, and the
+  // dashed-path program took ~620 ms (cold GPU shader cache) on the Sybil arrival frame.
+  const c = PAL.linkAttack
+  layers.push(new PathLayer<Seg, PathStyleExtensionProps<Seg>>({
+    id: 'attack-links', data: attackData, getPath: d => d,
+    getColor: withAlpha(c, (c[3] / 255) * s.scale.edgeAlpha), getWidth: 1, widthUnits: 'pixels',
+    getDashArray: [4, 3], extensions: [new PathStyleExtension({ dash: true })],
+  }))
 
   if (s.showEdges) {
     // The live GossipSub mesh, honest pairs only (attacker pairs are attack links), deduped undirected.
@@ -490,14 +490,17 @@ export function renderLayers(): void {
   if (s.showLabels && fontsReady) {
     const all = s.allLabels && visible.length <= 50
     const labelData = visible.filter(n => all || n.state === 'attacker' || n.peer_id === selectedPeer || n.peer_id === hovered)
-    if (labelData.length) {
+    // Pushed even when empty, like attack-links: above 50 nodes the first label is an attacker's, on the arrival frame.
+    if (visible.length) {
       layers.push(new TextLayer<PeerNode>({
         id: 'labels', data: labelData, getPosition,
         getText: d => (d.state === 'attacker' ? d.peer_id : shortName(d)),
         // R6: pruned attacker labels are paper-2 (paper-3 is never text)
         getColor: d => (d.state !== 'attacker' ? PAL.paper0 : isPruned(d) ? PAL.paper2 : PAL.flame),
         getSize: s.stageTheme ? 12 : 10, sizeUnits: 'pixels',
-        fontFamily: monoFamily(), fontWeight: 500, characterSet: 'auto',
+        fontFamily: monoFamily(), fontWeight: 500,
+        // 'auto' scans the data; with no labels yet that is a 0×0 font atlas (WebGL "texSubImage2D: no canvas"), so seed it.
+        characterSet: labelData.length ? 'auto' : 'sybil-0123456789',
         getTextAnchor: 'start', getAlignmentBaseline: 'center',
         // Start past whatever rings the glyph, so no label sits on the reticle's ticks (2 r + 4 px) or the halo cells (1.7 r).
         getPixelOffset: d => [(d.peer_id === selectedPeer ? 2 * r + 4 : hasHalo(d) ? HALO_OUTER * r : r * glyphScale(d, false)) + 3, 0],
