@@ -16,7 +16,10 @@ function activate(evt: AppEvent) {
   if (r) s.selectPeer(r.select, r.highlight)
 }
 
+const SKELETON_ROWS = 8
+
 export default function LogRail() {
+  const busy = useStore(s => s.connecting && s.reel === null)   // booting: no socket open/close yet, not a reel
   const live = useStore(s => s.events)
   const eventCount = useStore(s => s.eventCount)
   const dropped = useStore(s => s.droppedEvents)
@@ -54,7 +57,7 @@ export default function LogRail() {
   }
 
   return (
-    <section className={styles.rail} aria-label="Event log">
+    <section className={styles.rail} aria-label="Event log" aria-busy={busy || undefined}>
       <header className={styles.header}>
         <span className={styles.label}>EVENT LOG</span>
         <span className={styles.meta}>
@@ -83,7 +86,8 @@ export default function LogRail() {
         <span className={styles.hint}>⌥-click isolates</span>
       </div>
       <div ref={listRef} className={styles.list} onScroll={onScroll}>
-        {rows.length === 0 && (
+        {busy && rows.length === 0 && Array.from({ length: SKELETON_ROWS }, (_, i) => <div key={i} className={`skeleton ${styles.skelRow}`} />)}
+        {!busy && rows.length === 0 && (
           <p className={styles.empty}>{active.size === 0 ? 'no categories selected · All restores them' : 'waiting for the first event'}</p>
         )}
         {rows.map((evt, i) => {

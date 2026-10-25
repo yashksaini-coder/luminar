@@ -30,6 +30,10 @@
 
 .strip { display: block; width: 100%; height: 6px; margin-bottom: var(--s-2); }
 
+/* booting skeletons sit where the value and sparkline will be (B9) */
+.skelValue { display: block; width: 4ch; height: var(--t-kpi); }
+.skelSpark { display: block; width: 100%; height: 24px; }
+
 .counts { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--s-3); row-gap: var(--s-1); margin: 0; }
 .countRow, .rows > div { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); }
 .countRow dt { display: flex; align-items: center; gap: var(--s-2); color: var(--fg-2); }

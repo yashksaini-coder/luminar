@@ -23,6 +23,7 @@
 .chip:hover { color: var(--fg); }
 .hint { font: 400 var(--t-micro)/1.4 var(--font-mono); color: var(--fg-3); }
 .empty { margin: 0; padding: var(--s-3); font: 400 var(--t-label)/1.4 var(--font-mono); color: var(--fg-3); }
+.skelRow { height: calc(var(--log-row) - var(--s-2)); margin: var(--s-1) var(--s-3); }   /* booting rows, the list's own pitch (B9) */
 
 .list {
   --log-row: max(var(--row-h), 24px);   /* desktop rows never under 24 px; stage's 26 px wins */

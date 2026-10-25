@@ -10,7 +10,7 @@ const ev = (at: number) => ({ at, event_type: 'GossipMessage', category: 'gossip
 const batch = (from: number, n: number) => Array.from({ length: n }, (_, i) => ev(from + i))
 let root: Root, host: HTMLDivElement
 beforeEach(() => {
-  useStore.setState({ ...useStore.getInitialState(), events: batch(0, 500) }, true)
+  useStore.setState({ ...useStore.getInitialState(), connecting: false, events: batch(0, 500) }, true)
   host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host)
   act(() => root.render(<LogRail />))
 })
@@ -43,4 +43,16 @@ test('empty list text: None → "no categories selected · All restores them"; n
   expect(host.querySelectorAll('[role=button]').length).toBe(500)
   act(() => { useStore.setState({ events: [] }) })
   expect(list().textContent).toBe('waiting for the first event')
+})
+
+// T8 (prod-09): until the first socket open/close the list is skeleton rows and the rail is aria-busy; a reel never opens a socket, so it is not busy.
+test('booting: skeleton rows and aria-busy until the socket opens; a reel is never busy', () => {
+  act(() => { useStore.setState({ connecting: true, events: [] }) })
+  expect(host.querySelector('section')!.getAttribute('aria-busy')).toBe('true')
+  expect(host.querySelectorAll('.skeleton').length).toBe(8); expect(host.textContent).not.toContain('waiting')
+  act(() => { useStore.getState().setConnected(true) })
+  expect(host.querySelector('section')!.hasAttribute('aria-busy')).toBe(false)
+  expect(host.querySelectorAll('.skeleton').length).toBe(0); expect(host.textContent).toContain('waiting for the first event')
+  act(() => { useStore.setState({ connecting: true, reel: { name: 'r', title: 'R', file: '/r.jsonl' } as never }) })
+  expect(host.querySelectorAll('.skeleton').length).toBe(0)
 })
