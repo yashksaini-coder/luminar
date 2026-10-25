@@ -1,0 +1,7 @@
+.faq { width: min(var(--col-prose), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
+.h2 { margin: 0 0 42px; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.list { margin: 0; }
+.pair { padding: var(--s-5) 0; border-top: var(--hair-w) solid var(--hair); }
+.pair:last-child { border-bottom: var(--hair-w) solid var(--hair); }
+.pair dt { font: italic 400 var(--t-lead)/var(--lh-body) var(--font-display); color: var(--fg); }
+.pair dd { margin: var(--s-2) 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }
