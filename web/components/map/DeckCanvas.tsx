@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import CanvasReveal from '@/components/sim/CanvasReveal'
 import Tooltip from '@/components/sim/Tooltip'
 import { destroyRenderer, initRenderer, resizeRenderer } from './renderer'
 import styles from './DeckCanvas.module.css'
@@ -19,6 +20,7 @@ export default function DeckCanvas({ className }: { className?: string }) {
   return (
     <div className={className ? `${className} ${styles.field}` : styles.field}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      <CanvasReveal />
       <div ref={tipRef} role="tooltip" className={styles.tip}><Tooltip /></div>
     </div>
   )
