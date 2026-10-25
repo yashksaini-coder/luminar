@@ -1,0 +1,13 @@
+.footer { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px; max-width: 1000px; margin: 128px auto 0; padding: 2.4rem var(--gutter) 1.75rem; border-top: 1px solid var(--hair); font: 400 14px/1.58 var(--font-ui); color: var(--paper-1); }
+.footer h3 { margin: 0 0 10px; font: 600 14px/1.58 var(--font-ui); color: var(--paper-2); }
+.footer ul { margin: 0; padding: 0; list-style: none; }
+.footer a { color: var(--paper-1); text-decoration: none; }
+.footer a:hover { color: var(--paper-0); }
+.mark { margin: 0 0 8px; font: 600 14px/1.58 var(--font-ui); letter-spacing: .12em; color: var(--fg); }
+.event { margin: 0; font: italic 400 17px/1.4 var(--font-display); color: var(--paper-1); }
+.copy { grid-column: 1 / -1; margin: 3rem 0 0; color: var(--paper-2); }
+@media (max-width: 640px) {
+  .footer { grid-template-columns: 1fr 1fr; }
+  .brand { grid-column: 1 / -1; }
+}
+.footer li a { display: inline-block; min-height: 24px; }

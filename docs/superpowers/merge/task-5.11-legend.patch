@@ -1,0 +1,57 @@
+diff --git c/web/components/sim/Legend.module.css w/web/components/sim/Legend.module.css
+index 9327873..7e32058 100644
+--- c/web/components/sim/Legend.module.css
++++ w/web/components/sim/Legend.module.css
+@@ -79,3 +79,9 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
+   color: var(--fg);
+   font: inherit;
+ }
++
++/* Stage (projector): the glyph rows grow with --row-h (22 -> 26 px) and the plate glyphs scale with them (task 5.11).
++   ponytail: 26/22 is hardcoded; derive it if --row-h changes again. */
++:global(:root[data-stage="1"]) .body { grid-template-columns: var(--row-h) 1fr; }
++:global(:root[data-stage="1"]) .body dt { min-height: var(--row-h); align-items: center; }
++:global(:root[data-stage="1"]) .body dt > svg { scale: calc(26 / 22); }
+diff --git c/web/components/sim/Legend.test.tsx w/web/components/sim/Legend.test.tsx
+index 3faa85d..5cae5bd 100644
+--- c/web/components/sim/Legend.test.tsx
++++ w/web/components/sim/Legend.test.tsx
+@@ -24,3 +24,13 @@ test('the Stage theme switch follows setPref toggles from outside the form', ()
+   act(() => useStore.getState().setPref('stageTheme'))
+   expect(stage().checked).toBe(false)
+ })
++
++// Spec §7.4.2: the legend's halo ring and diamond are the plate's own glyph components (task 5.11).
++test('legend rows use the shared glyph components: banded halo, grafted and pruned diamonds, reticle', () => {
++  const m = host.innerHTML
++  expect((m.match(/<pattern id="halo-/g) ?? []).length).toBeGreaterThanOrEqual(1)          // HaloRing
++  expect(m).toContain('points="50,0 100,50 50,100 0,50"'); expect(m).toContain('stroke-dasharray="3 2"')   // Diamond grafted + pruned
++  expect(m).toContain('viewBox="0 0 14 14"')                                                 // Reticle (selected)
++  expect(m).toContain('gossip mesh · hidden above 100 peers (backend sends none)')
++  expect(m).toContain('<dd>selected peer</dd>')
++})
+diff --git c/web/components/sim/Legend.tsx w/web/components/sim/Legend.tsx
+index aabdbc6..17b5509 100644
+--- c/web/components/sim/Legend.tsx
++++ w/web/components/sim/Legend.tsx
+@@ -2,7 +2,7 @@
+ // Legend (a <dl> of the render table's twins) and the settings form behind the gear [spec §6.2, §7.4.2].
+ import { useState, useSyncExternalStore } from 'react'
+ import { useShallow } from 'zustand/react/shallow'
+-import { Diamond } from '@/components/dither/Diamond'
++import LegendTwins from '@/components/glyphs/LegendTwins'
+ import { adminToken, setAdminToken } from '@/lib/api/client'
+ import { MESH_HIDDEN } from '@/lib/copy'
+ import { reducedMotion } from '@/lib/prefs'
+@@ -88,10 +88,8 @@ export default function Legend() {
+       </div>
+       {!collapsed && (settings ? <Settings /> : (
+         <dl className={styles.body}>
+-          <dt><Glyph role="honest" band={3} /></dt><dd>honest · halo = score</dd>
++          <LegendTwins />
+           {FILLS.map(([role, text]) => <Row key={role} term={<Glyph role={role} />} text={text} />)}
+-          <dt><Diamond size={12} /></dt><dd>attacker</dd>
+-          <dt><Glyph role="pruned" /></dt><dd>pruned attacker</dd>
+           {LINES.map(([kind, text]) => <Row key={kind} term={<span className={styles.line} data-line={kind} />} text={text} />)}
+           <dd className={styles.note}>{MESH_HIDDEN}</dd>
+         </dl>

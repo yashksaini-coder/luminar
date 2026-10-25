@@ -1,0 +1,10 @@
+.section { width: min(var(--col-prose), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
+.h2 { margin: 0 0 42px; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.section p { margin: 0 0 22px; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }
+/* the plate breaks out of the prose column to --col-wide, centred on it */
+.stills { --w: min(var(--col-wide), 100vw - 2 * var(--gutter)); position: relative; aspect-ratio: 16 / 7; width: var(--w); margin: 0 0 32px calc(50% - var(--w) / 2); }
+.stillA { position: absolute; left: 0; top: 0; width: 62%; height: 78%; }
+.stillB { position: absolute; right: 0; top: 22%; width: 55%; height: 78%; }
+.series { margin: 0; padding: 0; list-style: none; font: 400 var(--t-body)/var(--lh-body) var(--font-mono); color: var(--paper-1); }
+@media (min-width: 640px) { .series { columns: 2; } }
+.section p.credit { font: 500 var(--t-label)/1.4 var(--font-mono); color: var(--paper-2); }
