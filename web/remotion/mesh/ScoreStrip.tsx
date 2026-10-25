@@ -20,10 +20,10 @@ export function ScoreStrip({ data, peer, simTime, orientation, width, flat }: {
   return (
     <div style={{ position: 'relative', width, height: wide ? 60 : 140, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: 'var(--paper-0)' }}>
       <div style={{ fontSize: label, fontWeight: 500, whiteSpace: 'pre' }}>{`${peer}  ${score === null ? '—' : signed(score)}`}</div>
-      <div style={{ position: 'relative', height: bar, marginTop: 6 }}>
+      <div style={{ position: 'relative', height: bar, marginTop: 6, marginBottom: small + 8 }}>
         <div style={{ position: 'absolute', left: 0, top: 0, height: bar, width: barW, background: score !== null && score < 0 ? 'var(--flame)' : 'var(--paper-1)' }} />
-        <div style={{ position: 'absolute', left: pruneX, top: -small - 8, bottom: 0, borderLeft: '1px dotted var(--paper-1)' }} />
-        <div style={{ position: 'absolute', left: pruneX + 6, top: -small - 8, fontSize: small, lineHeight: 1, color: 'var(--paper-1)' }}>{`prune ${TOY.pruneThreshold}`}</div>
+        <div style={{ position: 'absolute', left: pruneX, top: -4, bottom: -4, borderLeft: '1px dotted var(--paper-1)' }} />
+        <div style={{ position: 'absolute', left: pruneX + 6, top: bar + 4, fontSize: small, lineHeight: 1, color: 'var(--paper-1)' }}>{`prune ${TOY.pruneThreshold}`}</div>
       </div>
       {flat && <div style={{ fontSize: small, marginTop: 4, color: 'var(--paper-1)' }}>{ECLIPSE_WHY}</div>}
     </div>
