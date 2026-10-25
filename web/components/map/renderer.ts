@@ -75,6 +75,8 @@ const STATE_KEY: Record<NodeState, PaletteKey> = {
 const stateKey = (n: PeerNode) => (n.state === 'attacker' ? `attacker${n.connected_peers.length ? '+' : '-'}` : n.state)
 const pulseColor = (n: PeerNode) => PAL[isPruned(n) ? 'nodePruned' : STATE_KEY[n.state]]
 
+const PARTICLE_BASE_PX = 4   // 2 × the base 2 px cell; stage's 3 px cell only sharpens the texture, so particles grow by scale.particle alone (spec §6.3: ×1.8)
+
 /** Peers with a gossip history worth a score halo; idle has none yet, the rest carry their own glyphs. */
 const HALO_STATES = new Set<PeerNode['state']>(['origin', 'receiving', 'decoded'])
 const hasHalo = (n: PeerNode) => isSimPeer(n) && HALO_STATES.has(n.state)
@@ -429,7 +431,7 @@ export function renderLayers(): void {
     layers.push(new IconLayer<ParticleDraw>({
       id: 'particles', data: particleData, ...atlasProps,
       getIcon: d => (d.kind === 'spam' ? 'squareTrail' : 'square'),   // the trail's cell sits at −x, so the angle points the head along travel
-      getSize: 2 * a.cellPx * s.scale.particle, getPosition: d => d.pos, getAngle: d => d.angle, getColor: d => d.color,
+      getSize: PARTICLE_BASE_PX * s.scale.particle, getPosition: d => d.pos, getAngle: d => d.angle, getColor: d => d.color,
       pickable: false,
       textureParameters: { minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' },   // hard squares, no smear
     }))

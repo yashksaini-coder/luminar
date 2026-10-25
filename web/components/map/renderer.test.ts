@@ -26,10 +26,10 @@ vi.mock('@/lib/prefs', async (importOriginal) => ({ ...await importOriginal<obje
 vi.mock('@/components/map/atlas', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/components/map/atlas')>()
   const ids: GlyphId[] = ['disc', 'idle', 'origin', 'decoded', 'observer', 'joining', 'failed', 'error', 'attacker', 'pruned', 'reticle', 'square', 'squareTrail', 'halo-0', 'halo-1', 'halo-2', 'halo-3']
-  buildAtlasMock.mockImplementation(() => ({
+  buildAtlasMock.mockImplementation((opts: { cellPx: number }) => ({
     image: document.createElement('canvas'),
     mapping: Object.fromEntries(ids.map(id => [id, { x: 0, y: 0, width: 8, height: 8, mask: false }])),
-    nodePx: 8, cellPx: 2,
+    nodePx: 8, cellPx: opts.cellPx,   // the real cell, so stage (3 px) reaches the layers
   }))
   return { ...real, buildAtlas: buildAtlasMock }
 })
@@ -243,6 +243,11 @@ test('spawnParticle: cap 600, unknown/hidden peers no-op, disabled no-op; partic
   const P2 = FakeDeck.instances[0].lastLayer('particles'); const spam = P2.props.data.at(-1); expect(P2.props.getIcon(spam)).toBe('squareTrail'); expect(P2.props.getColor(spam).slice(0, 3)).toEqual(PAL.particleSpam.slice(0, 3))
   useStore.getState().setDisplay({ particlesEnabled: false }); spawnParticle('peer-0', 'peer-1'); // no throw, no push
   vi.advanceTimersByTime(1300); flush(); expect(layerIds()).not.toContain('particles')   // all expired
+})
+test('particle size is the base 2 px cell × 2 × scale.particle: 4 px, 7.2 px on stage (×1.8, not compounded with the stage cell)', () => {
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(4) }); useStore.getState().applySnapshot(snapWith(peers(4).map(p => p.peer_id))); flush()
+  spawnParticle('peer-0', 'peer-1'); flush(); expect(FakeDeck.instances[0].lastLayer('particles').props.getSize).toBe(4)
+  useStore.getState().setPref('stageTheme', true); spawnParticle('peer-0', 'peer-1'); flush(); expect(FakeDeck.instances[0].lastLayer('particles').props.getSize).toBeCloseTo(7.2)
 })
 test('a particle whose endpoint leaves the visible set is dropped, not drawn at [0,0]', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(10) }); useStore.getState().applySnapshot(snapWith(peers(10).map(p => p.peer_id))); flush()
