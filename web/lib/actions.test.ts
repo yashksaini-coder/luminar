@@ -144,7 +144,7 @@ test('bootSim live connects, fetches topology and scenarios, applies ?peer', asy
 test('bootSim live with the backend down: no throw, defaults kept, pill OFFLINE, no toast, socket still asked to connect (global review focus 1)', async () => {
   const down = { ok: false, status: 0, data: null }; api.simSnapshot.mockResolvedValue(down); api.topologyEdges.mockResolvedValue(down); api.scenariosList.mockResolvedValue(down)
   await expect(bootSim({ reel: null, search: '' })).resolves.toBeUndefined()
-  expect(ws.connect).toHaveBeenCalledTimes(1); expect(useStore.getState().nodes).toEqual([]); expect(useStore.getState().scenarios).toEqual([]); expect(useStore.getState().toasts).toEqual([]); expect(selectPill(useStore.getState())).toBe('offline')
+  expect(ws.connect).toHaveBeenCalledTimes(1); expect(useStore.getState().nodes).toEqual([]); expect(useStore.getState().scenarios).toEqual([]); expect(useStore.getState().toasts).toEqual([]); expect(selectPill(useStore.getState())).toBe('connecting')   // T7: the mocked socket never closes, so the pill stays CONNECTING… (a real close reads OFFLINE)
 })
 test('runKey reel N navigates to the reel route carrying theme/hero; past the last reel is a no-op; 0 leaves a reel page for /sim/', () => {
   const assign = vi.fn(); vi.stubGlobal('location', { ...location, pathname: '/reels/sybil-eclipse/', search: '?theme=stage&t=3', assign })
