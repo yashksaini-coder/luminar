@@ -48,7 +48,7 @@ export default function CanvasReveal() {
 
   if (phase !== 'revealing') return null
   return (
-    <div data-reveal className={styles.reveal}>
+    <div data-mesh-reveal className={styles.reveal}>
       <DitherCanvas source={draw} cell={cell} reveal aria-label="mesh loading" />
     </div>
   )

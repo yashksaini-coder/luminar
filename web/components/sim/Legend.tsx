@@ -20,7 +20,7 @@ function readCollapsed(): boolean {
     // No stored choice on a phone: start collapsed, or the 176px panel covers the RADIAL/GEO tabs.
     try {
       const stored = localStorage.getItem(LEGEND_KEY)
-      collapsedNow = stored ? stored === 'collapsed' : matchMedia('(max-width: 1023px)').matches
+      collapsedNow = stored ? stored === 'collapsed' : matchMedia('(max-width: 1024px)').matches
     } catch { collapsedNow = false }
   }
   return collapsedNow
