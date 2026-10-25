@@ -1,6 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Relay globe: GossipSub attacks on a world mesh</title><style>.mcap{display:none!important}@media (max-width:560px){.stat .v{font-size:20px!important}.stats{align-items:flex-end}}@media (min-width:561px){.vset{top:4px!important}#stats{top:var(--vset-h,44px)!important}}</style><style>@media (max-width:560px){body > header{display:none}}</style><script>window.FIG_A = () => innerWidth <= 560 ? 1.1 : .75;</script><script>window.LBL_U = () => { if (innerWidth > 560) return 0; const s = document.getElementById("fig"); return s && s.clientWidth && s.viewBox.baseVal.width ? s.viewBox.baseVal.width / s.clientWidth : 0; };</script></head><body>
+<title>Relay globe: GossipSub attacks on a world mesh</title>
+<style>
+  /* nearly monochrome (task P.1): no body-colour swatches, the ocean is the paper; ?pal= still works for screenshots */
+  .ctl:has(#pals){display:none}
+  /* in the landing plate the paper is a 16:9 window: less page chrome above and below the figure, and the bottom bar
+     starts right of the plate's RELAY GLOBE No. 1 stamp (bottom-left, ~176px) when the stage spans the whole width */
+  @media (min-width:561px){body{padding:12px 16px 16px}body #fig{overflow:hidden}.controls{padding-left:clamp(0px, 176px - (100vw - 792px) / 2, 176px)}}
+  /* a 4:3 phone plate (the landing at 390: 334x245): buttons down the left, the globe beside them filling the height;
+     stats, See-through/Labels and the label list follow below (the plate scrolls); a real phone screen is unaffected */
+  @media (max-width:560px) and (max-height:480px){
+    body .stage{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:start}
+    body .actions{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;margin:0}
+    body .stats,body .vset,body .lgd{grid-column:1/-1}body .stats{order:1}body .vset,body .lgd{order:2}
+    body #fig{max-height:calc(100vh - 22px);margin:0}
+    .zchip{right:auto;left:2px}   /* the plate's stamp sits bottom-right on a narrow plate */
+  }
+</style><style>.mcap{display:none!important}@media (max-width:560px){.stat .v{font-size:20px!important}.stats{align-items:flex-end}}@media (min-width:561px){.vset{top:4px!important}#stats{top:var(--vset-h,44px)!important}}</style><style>@media (max-width:560px){body > header{display:none}}</style><script>window.FIG_A = () => innerWidth <= 560 ? 1.1 : .75;</script><script>window.LBL_U = () => { if (innerWidth > 560) return 0; const s = document.getElementById("fig"); return s && s.clientWidth && s.viewBox.baseVal.width ? s.viewBox.baseVal.width / s.clientWidth : 0; };</script></head><body>
 <script>
 /* ============================================================
    Colorfigures core: projection, shapes, shading, ink, labels, page shell.
@@ -1068,6 +1084,20 @@ ui = mountFigure({
   },
 });
 xrMount(() => ui, () => '');
+/* Frame on the globe, not on its box (task P.1): the engine frames the 62x62x75 box, and a box's iso projection is
+   ~1.4x the sphere inside it, so the sphere filled a third of a 16:9 plate. Desktop only: a phone keeps the engine's
+   taller frame. The globe (ring, pins, finial, foot rim) fills 97% of the height of a 4:3 view box, 74% of its width,
+   6% right of centre as the engine does; the cast shadow that spills below is clipped at the view box (the style
+   above), so it ends at the bottom bar's rule instead of running under its labels. Ink scale and grain are rebuilt. */
+if (innerWidth > 560) (() => {
+  const svg = document.getElementById('fig'), k = CAM_K;
+  const [cx, cy] = P(GX, GY, ZC), [, ty] = P(GX, GY, 75), [, fy] = P(GX, GY, 0);
+  const rs = (RR + 3) * k;                                                    // ring, huts and pins reach past the sphere
+  const x0 = cx - rs, bw = 2 * rs, y0 = Math.min(ty, cy - rs), bh = Math.max(fy + 14 * k * Math.sin(PITCH0 * rad), cy + rs) - y0;   // foot rim
+  const vbW = Math.max(bw / .74, bh / .97 / .75), vbH = vbW * .75;
+  svg.setAttribute('viewBox', `${f(x0 - (vbW - bw) / 2 - vbW * .06)} ${f(y0 - (vbH - bh) / 2)} ${f(vbW)} ${f(vbH)}`);
+  INK_K = vbW / INK_REF_VB; document.getElementById('fdefs').innerHTML = filterFor(INK_K); bakeNoise(svg); ui.render();
+})();
 </script><style>@media (max-width:560px),(pointer:coarse){#art{filter:none!important}.ctl:has(#wb){display:none!important}}</style><style>@media (max-width:560px){html body .kpad{width:100%;box-sizing:border-box;justify-content:space-between;gap:10px;margin:10px 0 0;padding:0;border:0;background:none;box-shadow:none}
 html body .kpad .dp{display:flex;gap:8px}html body .kpad .hub{display:none}
 html body .kpad .k{width:46px;height:42px;font-size:14px;border-radius:9px}

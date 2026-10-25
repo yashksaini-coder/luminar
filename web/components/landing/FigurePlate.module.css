@@ -3,3 +3,5 @@
 .halo { position: absolute; right: -24px; top: -24px; z-index: 1; pointer-events: none; }
 /* Figure's stamp is the plate's last child; move it to the bottom-left corner */
 .plate :global(.plate) > span:last-child { left: 2%; top: auto; bottom: 6%; z-index: 1; }
+/* narrow plate (< 450 px, Figure.module.css): the figure's buttons run down the left, so the stamp sits bottom-right */
+@container (max-width: 449px) { .plate :global(.plate) > span:last-child { left: auto; right: 2%; } }

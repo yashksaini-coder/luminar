@@ -14,4 +14,7 @@
 .readout dt { font: var(--t-label) var(--font-ui); letter-spacing: var(--track-label); color: var(--paper-2); }
 .readout dd { margin: 0; text-align: right; color: var(--paper-0); }
 .stamp { left: 56%; top: 24%; }
+/* narrow plate: the stamp moves to the left edge, clear of the right-aligned readout box; top stays 24% because the
+   parallax (depth 1.2, -170px travel) lifts it ~40px while the hero sits at the top of the page, and a 12px top would clip */
+@container (max-width: 449px) { .stamp { left: var(--s-3); } }
 .blank { visibility: hidden; }   /* frames before the first beat have no stamp */
