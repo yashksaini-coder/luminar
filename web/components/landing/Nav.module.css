@@ -3,7 +3,7 @@
   display: flex; align-items: center; gap: 2rem; padding: 0 var(--gutter);
   background: var(--bg); border-bottom: var(--hair-w) solid var(--hair);
 }
-.brand { font: 600 var(--t-ui) var(--font-ui); letter-spacing: .14em; color: var(--fg); text-decoration: none; display: flex; align-items: baseline; gap: .8em; }
+.brand { font: 600 var(--t-ui) var(--font-ui); letter-spacing: .14em; color: var(--fg); text-decoration: none; display: flex; flex-wrap: wrap; align-content: center; align-items: baseline; gap: .8em; min-height: 44px; }
 .sub { font: 400 var(--t-label) var(--font-mono); letter-spacing: 0; color: var(--paper-2); }
 .links { margin-left: auto; display: flex; gap: 1.6rem; }
 .links a, .menuBtn { font: 500 var(--t-ui) var(--font-ui); color: var(--fg); text-decoration: none; }

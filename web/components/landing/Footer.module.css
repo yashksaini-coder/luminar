@@ -10,3 +10,4 @@
   .footer { grid-template-columns: 1fr 1fr; }
   .brand { grid-column: 1 / -1; }
 }
+.footer li a { display: inline-block; min-height: 24px; }
