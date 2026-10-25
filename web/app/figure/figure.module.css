@@ -1,0 +1,6 @@
+/* /figure/ chrome over the full-bleed globe iframe: the way back and the loading skeleton. Paper and ink are the
+   globe's own (#f4f1e8 / #231e16), whatever the site theme. */
+.back { position: fixed; top: var(--s-2); left: var(--gutter); z-index: 2; padding: 0 var(--s-3); color: #231e16; background: #f4f1e8; }
+/* the globe's phone layout (its own 560px rule) hides its header and puts the action chips top-left: step out of their way */
+@media (max-width: 560px) { .back { top: auto; bottom: calc(var(--s-2) + env(safe-area-inset-bottom)); } }
+.skeleton { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
