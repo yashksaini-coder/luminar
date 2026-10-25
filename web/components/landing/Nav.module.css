@@ -7,6 +7,9 @@
 .sub { font: 400 var(--t-label) var(--font-mono); letter-spacing: 0; color: var(--paper-2); }
 .links { margin-left: auto; display: flex; gap: 1.6rem; }
 .links a, .menuBtn { font: 500 var(--t-ui) var(--font-ui); color: var(--fg); text-decoration: none; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--d-fast) var(--ease); }
+.links a:hover { text-decoration: underline; text-underline-offset: .35em; }
+.links a:active { transform: translateY(1px); }
 .menuBtn { display: flex; align-items: center; gap: .6em; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; }
 .plus { position: relative; width: 11px; height: 11px; transition: transform var(--d-menu) var(--ease); }
 .plus::before, .plus::after { content: ''; position: absolute; background: currentColor; }
@@ -43,9 +46,11 @@
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
 
 @media (max-width: 860px) { .inner { grid-template-columns: 1fr; } }
-@media (max-width: 640px) {
+@media (max-width: 1024px) {   /* touch band (D1): the menu overlay is the only nav */
   .links { display: none; }
   .menuBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
   .name { font-size: 24px; }
   .reel { gap: .8rem; }
 }
