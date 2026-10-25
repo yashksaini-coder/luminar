@@ -203,6 +203,7 @@ export function syncUrlMoment(): void {
   else url.searchParams.delete('peer')
   if (s.reel && !s.playing) url.searchParams.set('t', s.simTime.toFixed(1))
   else url.searchParams.delete('t')
+  // Next's patched replaceState turns null into {} and copies __NA + the router tree over (verified 16.4.3, back/forward walk).
   if (url.href !== location.href) history.replaceState(null, '', url)
 }
 
