@@ -52,3 +52,4 @@ htmlcov/
 # Reel recordings (raw); shipped reels live in frontend/public/reels/
 recordings/
 !frontend/public/reels/*.jsonl
+!web/public/reels/*.jsonl
