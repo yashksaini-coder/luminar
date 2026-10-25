@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import { autoPauseIfDue, initAutoGeo } from '@/lib/actions'
+import { autoPauseIfDue, fetchScenarios, initAutoGeo } from '@/lib/actions'
+import { getStatic } from '@/lib/api/client'
 import { ws } from '@/lib/api/websocket'
 import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
@@ -16,16 +17,19 @@ import Toolbar from './Toolbar'
 
 const DeckCanvas = dynamic(() => import('@/components/map/DeckCanvas'), { ssr: false })   // mounts Tooltip itself
 
-const NO_REELS: ReelManifest = []   // manifest state lands in Task 3.3
-
 export default function SimApp() {
   const inReel = useStore(s => s.reel !== null)
-  const [, setOverlayOpen] = useState(false)   // the overlay itself lands in Task 3.11; drawer + manifest state in Task 3.3
+  const [, setOverlayOpen] = useState(false)   // the overlay itself lands in Task 3.11
+  const [manifest, setManifest] = useState<ReelManifest>([])
   useEffect(() => {
     const stopPrefs = initPrefs()   // R5: data-stage and reduced motion apply before the first frame
     ws.connect()
     const stopAutoGeo = initAutoGeo()
     return () => { stopAutoGeo(); ws.disconnect(); stopPrefs() }
+  }, [])
+  useEffect(() => {
+    void fetchScenarios()
+    void getStatic<ReelManifest>('/reels/manifest.json').then(m => setManifest(m ?? []))
   }, [])
   useEffect(() => useStore.subscribe(s => s.simTime, () => autoPauseIfDue()), [])   // pause at the duration limit (R4)
   return (
@@ -36,7 +40,7 @@ export default function SimApp() {
         <DeckCanvas />
         <ModeSwitcher />
         <Provenance />
-        <CommandStrip manifest={NO_REELS} onDrawer={() => {}} />
+        <CommandStrip manifest={manifest} onDrawer={() => {}} />
         <Toasts />
       </main>
       <aside data-rail="r" className={styles.railR} />
