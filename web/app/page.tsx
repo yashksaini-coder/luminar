@@ -1,5 +1,6 @@
 import DitherImage from '@/components/dither/DitherImage'
 import Figure from '@/components/dither/Figure'
+import FigurePlate from '@/components/landing/FigurePlate'
 import Hero from '@/components/landing/Hero'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
@@ -17,6 +18,7 @@ export default function Home() {
       <Hero />
       <Readouts />
       <WhatItDoes />
+      <FigurePlate />
       <div style={{ padding: 'var(--gutter, 16px)' }}>
         <Figure n={0} caption="dither check">
           <DitherImage src="/stills/grafana.png" alt="Grafana dashboard with the gossipsub_* series" depth={0.6} loupe />
