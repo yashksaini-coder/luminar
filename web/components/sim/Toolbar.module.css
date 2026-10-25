@@ -72,4 +72,8 @@ button.badge, .preset, .menuBtn { cursor: pointer; }
 [data-reel] .presets { opacity: .5; }
 
 .menuBtn { display: none; }
-@media (max-width: 1023px) { .menuBtn { display: inline-block; } }
+/* ≤1023: brand, pill and Menu + only; the strip carries the time readout */
+@media (max-width: 1023px) {
+  .menuBtn { display: inline-block; min-height: 36px; }
+  .sub, .badge, .presets, .clock, .link { display: none; }
+}

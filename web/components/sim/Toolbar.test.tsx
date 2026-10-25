@@ -9,7 +9,7 @@ let root: Root, host: HTMLDivElement
 beforeEach(() => {
   useStore.setState(useStore.getInitialState(), true)
   host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host)
-  act(() => root.render(<Toolbar onMenu={() => {}} />))
+  act(() => root.render(<Toolbar onMenu={() => {}} menuOpen={false} />))
 })
 afterEach(() => { act(() => root.unmount()); host.remove() })
 const q = (id: string) => host.querySelector(`[data-testid="${id}"]`)!

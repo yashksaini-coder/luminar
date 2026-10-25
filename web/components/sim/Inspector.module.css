@@ -1,6 +1,8 @@
 /* Peer inspector over the log rail. Text, chips and the score line only: no dither (spec §7). */
 .panel {
+  grid-area: rail-r;   /* placed by SimApp's grid over the log rail */
   position: absolute; inset: 0; z-index: 1;
+  border-left: 1px solid var(--hair);
   display: flex; flex-direction: column; min-height: 0;
   background: var(--panel);
   animation: slideIn var(--d-rail) var(--ease);
@@ -63,3 +65,18 @@
 .row [data-tone="alarm"] { color: var(--flame-text); }
 .row [data-tone="fg"] { color: var(--fg); }
 .row [data-tone="fg3"] { color: var(--fg-3); }
+
+/* ≤1023: a bottom sheet over the canvas; the title row is the 44 px grab row holding ESC. */
+@media (max-width: 1023px) {
+  .panel {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 35;
+    max-height: 70dvh; overflow-y: auto;
+    border-left: 0; border-top: 1px solid var(--hair-strong);
+    transform: translateY(0);
+    animation-name: sheetIn;
+  }
+  .title { min-height: 44px; }
+  .close { min-width: 44px; min-height: 44px; }
+  .events { flex: none; overflow: visible; }
+}
+@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }

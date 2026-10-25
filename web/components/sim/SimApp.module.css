@@ -1,4 +1,5 @@
 .shell {
+  position: relative;   /* the Inspector is absolutely placed on the rail-r grid area */
   display: grid;
   grid-template:
     "toolbar toolbar toolbar" var(--toolbar-h)
@@ -13,3 +14,34 @@
 .railL { grid-area: rail-l; min-height: 0; border-right: 1px solid var(--hair); }
 .railR { grid-area: rail-r; position: relative; overflow: hidden; min-height: 0; border-left: 1px solid var(--hair); }
 .canvas { grid-area: canvas; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.scrim { display: none; }
+
+@media (max-width: 1023px) {
+  .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / 1fr; }
+  .railL, .railR {
+    position: fixed;
+    top: var(--toolbar-h);
+    bottom: 0;
+    z-index: 30;
+    background: var(--panel);
+    visibility: hidden;   /* closed drawers leave the tab order once they have slid out */
+    transition: transform var(--d-rail) var(--ease), visibility 0s var(--d-rail);
+  }
+  .railL { left: 0; width: min(var(--rail-l), 86vw); transform: translateX(-100%); }
+  .railR { right: 0; width: min(var(--rail-r), 86vw); transform: translateX(100%); }
+  .railL[data-open="true"], .railR[data-open="true"] {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--d-rail) var(--ease), visibility 0s;
+  }
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: var(--toolbar-h) 0 0 0;
+    z-index: 25;
+    padding: 0;
+    border: 0;
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
+    cursor: pointer;
+  }
+}

@@ -4,12 +4,14 @@
 
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode, type ToggleEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { enterReel, exitReel, injectFault, launchScenario } from '@/lib/actions'
+import { enterReel, exitReel, injectFault, launchScenario, setDurationPreset, setNodePreset } from '@/lib/actions'
 import { faultItems, type FaultItem } from '@/lib/fault-items'
 import { nextMenuIndex } from '@/lib/menu-keys'
 import { useStore } from '@/lib/store'
 import type { ReelManifest, ScenarioDefinition } from '@/lib/types'
 import s from './Menus.module.css'
+import Overlay from './Overlay'
+import { DURATIONS, NODES } from './Toolbar'
 
 const GAP = 4
 const EDGE = 8
@@ -188,5 +190,58 @@ export function FaultMenu() {
         </div>,
       ])}
     </Menu>
+  )
+}
+
+/** ≤1023 route to the same rows: the `Menu +` overlay. A row closes the overlay, then runs. */
+export function MenuOverlay({ open, onClose, manifest }: { open: boolean; onClose: () => void; manifest: ReelManifest }) {
+  const scenarios = useStore(st => st.scenarios)
+  const activeId = useStore(st => st.activeScenario?.scenario?.id ?? null)
+  const activeReel = useStore(st => st.reel?.name ?? null)
+  const st = useStore(useShallow(x => ({ selectedPeer: x.selectedPeer, nodeById: x.nodeById, activeFaults: x.activeFaults })))
+  const maxDuration = useStore(x => x.maxDuration)
+  const nodeCount = useStore(x => x.nodeCount)
+  const run = (f: () => void) => () => { onClose(); f() }
+  const scenarioList = scenarioRows(scenarios, activeId)
+  const sections: [string, MenuRow[]][] = [
+    ['Scenarios', scenarioList.length ? scenarioList : [{ key: 'offline', name: 'backend offline', disabled: true, onSelect: () => {} }]],
+    ['Reels', reelRows(manifest, activeReel)],
+    ['Faults', faultRows(faultItems(st, 5), 5)],
+  ]
+  return (
+    <Overlay open={open} onClose={onClose} title="Menu">
+      {sections.map(([title, rows]) => (
+        <section key={title} className={s.oSection}>
+          <h2 className={s.oHeading}>{title}</h2>
+          {rows.map(r => (
+            <button
+              key={r.key} type="button" data-row="" className={s.oRow} aria-disabled={r.disabled || undefined}
+              aria-current={r.active ? 'true' : undefined} onClick={r.disabled ? undefined : run(r.onSelect)}
+            >
+              <span className={s.line}>
+                {r.kbd && <kbd className={s.kbd}>{r.kbd}</kbd>}
+                <span className={s.oName}>{r.name}</span>
+                {r.tag && <span className={s.tag}>{r.tag}</span>}
+                {r.aside && <span className={s.aside}>{r.aside}</span>}
+              </span>
+              {(r.disabled && r.reason ? r.reason : r.meta) && <span className={s.meta}>{r.disabled && r.reason ? r.reason : r.meta}</span>}
+            </button>
+          ))}
+        </section>
+      ))}
+      <section className={s.oSection}>
+        <h2 className={s.oHeading}>Presets</h2>
+        <div role="group" aria-label="Duration" data-row="" className={s.oPresets}>
+          {DURATIONS.map(([sec, label]) => (
+            <button key={sec} type="button" className={s.oPreset} aria-pressed={maxDuration === sec} onClick={run(() => setDurationPreset(sec))}>{label}</button>
+          ))}
+        </div>
+        <div role="group" aria-label="Nodes" data-row="" className={s.oPresets}>
+          {NODES.map(n => (
+            <button key={n} type="button" className={s.oPreset} aria-pressed={nodeCount === n} onClick={run(() => void setNodePreset(n))}>{n}</button>
+          ))}
+        </div>
+      </section>
+    </Overlay>
   )
 }

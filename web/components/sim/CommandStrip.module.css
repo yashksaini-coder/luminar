@@ -14,6 +14,9 @@
   z-index: 2;
 }
 
+.row { display: contents; }   /* two rows only below the breakpoint */
+.drawerBtn { display: none; }
+
 .btn, .speed {
   font: 500 var(--t-label)/1 var(--font-mono);
   color: var(--fg-3);
@@ -74,4 +77,25 @@
   border: 1px solid var(--hair-strong);
   pointer-events: none;
   white-space: nowrap;
+}
+
+/* ≤1023: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
+@media (max-width: 1023px) {
+  .strip {
+    left: var(--s-3);
+    translate: none;
+    width: calc(100% - 2 * var(--s-3));
+    bottom: var(--s-3);
+    height: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: var(--s-2);
+    padding: var(--s-2);
+  }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+  .btn, .speed { min-width: 44px; min-height: 44px; }
+  .drawerBtn { display: inline-block; }
+  .menus { flex-wrap: wrap; }
+  .range { inset: -19px 0; height: 44px; }
+  .kbd { display: none; }
 }
