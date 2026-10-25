@@ -342,6 +342,8 @@ button, input, select, textarea {
 }
 a { color: inherit; }
 canvas, img, video, svg { display: block; max-width: 100%; }
+h1, h2, h3, dt, figcaption { text-wrap: balance; }
+p, li { text-wrap: pretty; }
 
 /* focus: never removed anywhere (spec §10) */
 :focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
@@ -386,7 +388,7 @@ canvas, img, video, svg { display: block; max-width: 100%; }
 .btn:hover { background: var(--wash); }
 .btn:active { transform: scale(.97); }
 .btn-primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.btn-primary:hover { background: var(--fg); }
+.btn-primary:hover { background: var(--paper-1); }
 
 /* menu (popover positioning is phase 3's call, spec §12) */
 .menu {
@@ -405,6 +407,14 @@ canvas, img, video, svg { display: block; max-width: 100%; }
 }
 .menu-item:hover, .menu-item[aria-current="true"] { background: var(--wash-bg); }
 .menu-sep { border-top: var(--hair-w) solid var(--hair); margin: var(--s-1) 0; }
+
+/* skip link (land-04): off-screen until focused, then a paper tab under the nav's left gutter */
+.skip { position: absolute; left: var(--gutter); top: -100%; z-index: 70; padding: var(--s-2) var(--s-3); background: var(--fg); color: var(--bg); }
+.skip:focus { top: var(--s-2); }
+/* loading skeleton shaped like the thing it replaces (B9); the dither is the shimmer */
+.skeleton { background: var(--dither-25); }
+/* shared press feedback (B9): 1px down in the canvas, the header and the rails */
+[data-slot=canvas] button:active:not(:disabled), header button:active, aside button:active { transform: translateY(1px); }
 
 /* misc */
 kbd {
@@ -425,10 +435,28 @@ kbd {
   border: 0;
 }
 
-/* chevron link (landing): paper text, the › nudges 3px on hover */
-.chev { display: inline-flex; align-items: center; gap: .35em; min-height: 42px; font: 500 var(--t-ui)/1 var(--font-ui); color: var(--fg); text-decoration: none; }
+/* chevron link (landing): paper text, the › nudges 3px on hover; 44px tall for touch */
+.chev { display: inline-flex; align-items: center; gap: .35em; min-height: 44px; font: 500 var(--t-ui)/1 var(--font-ui); color: var(--fg); text-decoration: none; }
 .chev > span { transition: transform var(--d-fast) var(--ease); }
 .chev:hover > span { transform: translateX(3px); }
+.chev:active > span { transform: translateX(3px) translateY(1px); }
+
+/* section reveal (D2). lib/reveal.ts sets data-in once ≥30% of a [data-reveal] section is visible;
+   children carry data-k="up|pop|card|line" and --i (reading order). Only motion-capable JS clients
+   ever see the hidden state: no-JS and reduced motion land on the final frame with nothing to undo. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-js] [data-reveal] [data-k] {
+    transition: transform var(--d-rise) var(--e), opacity var(--d-fade) var(--e2), filter var(--d-fade) var(--e2);
+    transition-delay: calc(var(--i, 0) * var(--stagger-sec));
+  }
+  :root[data-js] [data-reveal] [data-k=line] { transform-origin: left; }
+  :root[data-js] [data-reveal]:not([data-in]) [data-k] { opacity: 0; }
+  :root[data-js] [data-reveal]:not([data-in]) [data-k=up] { transform: translateY(10px); filter: blur(4px); }
+  :root[data-js] [data-reveal]:not([data-in]) [data-k=pop] { transform: scale(.85); filter: blur(4px); }
+  :root[data-js] [data-reveal]:not([data-in]) [data-k=card] { transform: translateY(24px) scale(.985); }  /* no filter: the plate dithers */
+  :root[data-js] [data-reveal]:not([data-in]) [data-k=line] { transform: scaleX(0); }
+  [data-k=card] .plate { filter: none; }
+}
 
 /* hero broadcast layout (Task 4.8): the strip rises above the 56 px ticker, the caption grows, chrome hides */
 :root { --strip-bottom: 36px; }
