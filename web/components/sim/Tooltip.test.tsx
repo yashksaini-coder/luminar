@@ -39,3 +39,11 @@ test('Tooltip renders nothing without a hovered node, and nothing when the hover
   act(() => { useStore.getState().applySnapshot({ ...snapWith(['peer-7']), nodes: [honest] }); useStore.getState().hoverPeer('peer-7') })
   const html = host.innerHTML; expect(html).toContain('n7'); expect(html).toContain('DECODED'); expect(html).toContain('+3.50'); expect(html).not.toMatch(/style="[^"]*#/)   // tones via class, never inline colour
 })
+test('DOM tones: a sybil graft row carries the alarm class; a pruned attacker badge is data-state=pruned without alarm (R6)', () => {
+  act(() => { useStore.getState().applySnapshot({ ...snapWith(['peer-7']), nodes: [honest, { ...grafted, connected_peers: [] }], gossip: { mesh: { 'peer-7': ['sybil-0'] } } }); useStore.getState().hoverPeer('peer-7') })
+  const dd = [...host.querySelectorAll('dd')].find(d => d.textContent === '1 sybil graft')
+  expect(dd?.className).toMatch(/alarm/)
+  act(() => useStore.getState().hoverPeer('sybil-0'))
+  const badge = host.querySelector('[data-state]')
+  expect(badge?.getAttribute('data-state')).toBe('pruned'); expect(badge?.textContent).toBe('PRUNED'); expect(badge?.className).not.toMatch(/alarm/)
+})
