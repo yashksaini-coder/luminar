@@ -53,6 +53,7 @@ let lastNodes: PeerNode[] | null = null
 let landPolygons: Pos[][] | null = null
 let landRequest: Promise<void> | null = null
 let checker: HTMLCanvasElement | null = null
+let viewZoom = 0   // current deck zoom: the land checker's pattern scale follows it
 
 const STATE_KEY: Record<NodeState, PaletteKey> = {
   idle: 'nodeIdle', origin: 'nodeOrigin', receiving: 'nodeReceiving', decoded: 'nodeDecoded',
@@ -147,6 +148,7 @@ export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement |
     getCursor: ({ isHovering }) => (isHovering ? 'pointer' : RETICLE_CURSOR),
     // Deck's root onClick is a tap (a pan never fires it) and runs after the nodes layer's onClick.
     onClick: info => { if (!info.picked) useStore.getState().selectPeer(null) },
+    onViewStateChange: ({ viewState }) => { viewZoom = (viewState as { zoom: number }).zoom; markDirty() },
     width: W,
     height: H,
   })
@@ -176,6 +178,7 @@ export function destroyRenderer(): void {
   lastNodes = null
   landPolygons = null
   landRequest = null
+  viewZoom = 0
   raf = 0
   atlas = null
   atlasK = ''
@@ -217,6 +220,7 @@ function ensureLand(): void {
     landRequest = null
     if (!fc) return
     landPolygons = fc.features.map(f => f.geometry.coordinates[0].map(([lon, lat]) => [lon * GEO_SCALE, lat * GEO_SCALE] as Pos))
+      .filter(ring => ring.some(([, y]) => y >= WORLD_BOUNDS.minY))   // Antarctica cropped: rings wholly south of the Geo frame are dropped
     markDirty()
   })
   landRequest = req
@@ -283,7 +287,9 @@ export function renderLayers(): void {
         extensions: [new FillStyleExtension({ pattern: true })],
         fillPatternAtlas: checkerAtlas(), fillPatternMapping: { checker: { x: 0, y: 0, width: 2, height: 2 } },
         getFillPattern: () => 'checker', fillPatternMask: true,
-        fillPatternSizeUnits: 'pixels', getFillPatternScale: 1, getFillPatternOffset: [0, 0],   // one pattern pixel = one CSS px at any zoom
+        // deck's 'pixels' units snap to the nearest whole zoom (a texel is 2^-round(zoom) common units); the scale makes up the
+        // fractional part so one texel is exactly one CSS px, otherwise the checker beats into grey bands at a fit zoom like -0.28.
+        fillPatternSizeUnits: 'pixels', getFillPatternScale: 2 ** (Math.round(viewZoom) - viewZoom), getFillPatternOffset: [0, 0],
       }))
     }
   }
@@ -504,6 +510,8 @@ export function fitView({ durationMs = reducedMotion() ? 0 : 500 }: { durationMs
   // Deck ignores an initialViewState deep-equal to the previous one, so a refit after a pan would be dropped: the seq makes each fit new.
   const fit = { target: [(minX + maxX) / 2, (minY + maxY) / 2, 0] as [number, number, number], zoom, transitionDuration: durationMs, fitSeq: ++fitSeq }
   deck.setProps({ initialViewState: fit })
+  viewZoom = zoom   // a 0 ms fit fires no onViewStateChange; a transition's frames overwrite this on the way
+  markDirty()
   fitPending = false
 }
 

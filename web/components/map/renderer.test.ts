@@ -20,7 +20,7 @@ const { FakeDeck, buildAtlasMock, reducedMotionMock } = vi.hoisted(() => {
   return { FakeDeck, buildAtlasMock, reducedMotionMock }
 })
 
-vi.mock('@/lib/api/client', () => ({ getStatic: vi.fn(async () => ({ features: [{ geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 0]]] } }] })) }))
+vi.mock('@/lib/api/client', () => ({ getStatic: vi.fn(async () => ({ features: [{ geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 0]]] } }, { geometry: { type: 'Polygon', coordinates: [[[0, -63], [10, -70], [20, -90], [0, -63]]] } }] })) }))   // second ring: Antarctica, wholly south of WORLD_BOUNDS
 vi.mock('@deck.gl/core', async (importOriginal) => ({ ...await importOriginal<object>(), Deck: FakeDeck }))
 vi.mock('@/lib/prefs', async (importOriginal) => ({ ...await importOriginal<object>(), reducedMotion: reducedMotionMock }))
 vi.mock('@/components/map/atlas', async (importOriginal) => {
@@ -232,10 +232,18 @@ test('event subscription spawns from the batch; pulses on state change to non-id
   useStore.getState().applySnapshot({ ...snapWith(peers(4).map(p => p.peer_id)), nodes: peers(4).map(p => ({ ...p, state: 'decoded' as const })) }); flush(); expect(layerIds()).not.toContain('pulses')
 })
 
-test('geo loads land once and draws it under everything with the checker fill', async () => {
+test('geo loads land once, crops Antarctica and draws it under everything with the checker fill', async () => {
   mount(); useStore.setState({ geoAvailable: true }); useStore.getState().setLayoutMode('geo'); useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [{ ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 10, y: -25 }] }); flush(); await Promise.resolve(); flush()
   expect(getStatic).toHaveBeenCalledTimes(1); expect(getStatic).toHaveBeenCalledWith('/geo/land-110m.json')
   expect(layerIds()[0]).toBe('world-land'); const land = FakeDeck.instances[0].lastLayer('world-land')
-  expect(land.props.getPolygon(land.props.data[0])[1]).toEqual([10 * GEO_SCALE, 0]); expect(land.props.extensions.some((e: any) => e.constructor.extensionName === 'FillStyleExtension')).toBe(true); expect(land.props.fillPatternMask).toBe(true); expect(land.props.pickable).toBe(false)   // eslint-disable-line @typescript-eslint/no-explicit-any
+  expect(land.props.data).toHaveLength(1); expect(land.props.getPolygon(land.props.data[0])[1]).toEqual([10 * GEO_SCALE, 0]); expect(land.props.extensions.some((e: any) => e.constructor.extensionName === 'FillStyleExtension')).toBe(true); expect(land.props.fillPatternMask).toBe(true); expect(land.props.pickable).toBe(false)   // eslint-disable-line @typescript-eslint/no-explicit-any
   useStore.getState().setLayoutMode('force'); flush(); expect(layerIds()).not.toContain('world-land'); useStore.getState().setLayoutMode('geo'); flush(); expect(getStatic).toHaveBeenCalledTimes(1)
+})
+
+test('land checker stays one texel per CSS px at a fractional zoom (deck rounds pixel units to the nearest zoom level)', async () => {
+  mount(); useStore.setState({ geoAvailable: true }); useStore.getState().setLayoutMode('geo'); useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [{ ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 10, y: -25 }] }); flush(); await Promise.resolve(); flush()
+  const texelPx = (z: number) => FakeDeck.instances[0].lastLayer('world-land').props.getFillPatternScale * 2 ** -Math.round(z) * 2 ** z
+  FakeDeck.instances[0].props.onViewStateChange({ viewState: { target: [0, 0, 0], zoom: -0.28 } }); flush(); expect(texelPx(-0.28)).toBeCloseTo(1)
+  FakeDeck.instances[0].props.onViewStateChange({ viewState: { target: [0, 0, 0], zoom: 1.7 } }); flush(); expect(texelPx(1.7)).toBeCloseTo(1)
+  fitView({ durationMs: 0 }); flush(); const z = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).at(-1)!.initialViewState.zoom; expect(texelPx(z)).toBeCloseTo(1)
 })
