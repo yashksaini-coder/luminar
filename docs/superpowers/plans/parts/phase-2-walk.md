@@ -99,3 +99,48 @@ Everything in the phase-2 checklist renders on the live backend. Two acceptance 
 - **Victim halos going flame** cannot happen with the current backend data, as found in Task 2.5.
 
 Both need an owner decision. The first needs a re-measure at full clock, and possibly a `layout.ts` tick change. The second needs a scenario or backend change, or a different line in the talk.
+
+## Review round 1 re-measure (2026-10-25 14:00–14:02 IST, at `ac8eb55`)
+
+**The walk scripts are now committed** in `phase-2-walk/`, so every browser number can be re-run:
+
+- `cold200.js`: Step 1.
+- `burst.js`: Step 2.1.
+- `idle.js`: Step 2.2.
+- `hook.js`: the React-commit counter. Pass it as the `initScript` of a `navigate_page` reload before running `burst.js` or `idle.js`.
+- `bench.mjs` with `snap-200.json`: d3-force alone in Node. Run it as `node bench.mjs snap-200.json [ticks] [collideIterations]`.
+
+To run a browser script, call `evaluate_script` with `sourcePath` set to the file. The page must have `window.__luminar`, which the renderer installs.
+
+The traces and screenshots from the first walk stay out of git (about 40 MB). Item for item, the scripts above reproduce what they show.
+
+**Conditions:** these are still not valid gate conditions. The laptop was **on battery** (`ADP1/online = 0`) with the `powersave` governor. The `enlisted` game was still running at about 440 % CPU, and load average was 9.3. The difference from the first walk is the clock: cores ran at **3.8 GHz** this time, against 0.9 GHz then. DPR was emulated at 1440×900×**1**. The built-in panel `eDP-1` is 1920×1080 at Hyprland scale 1, so its physical DPR is 1. **Whether this laptop is the venue laptop is not recorded here. The owner must confirm it.**
+
+| check | runs | result |
+|---|---|---|
+| Cold layout at 200 (the final `layout` measure) | 5 × `cold200.js` | **269, 885, 305, 308, 297 ms** |
+| First frame with 200 discs after the reconfigure response | same 5 runs | **661, 920, 467, 364, 741 ms** |
+| Idle: sim paused, faults cleared, 3 s | `idle.js` (with `hook.js`) | **59.3 fps**, p50 16.7 ms, max 24.3 ms, 0 long tasks, **0 React commits** |
+| Sybil burst, sim running, 6 s | `burst.js` (with `hook.js`) | **51–56 fps**, p50 18.1 ms, p95 19.8 ms. One 131 ms arrival task (warm relayout, 118 ms). 59 commits, every one `Clock`. |
+| `mesh-edges` at 200 | `cold200.js` | absent ✔ |
+| Console errors and warnings | `list_console_messages` | only the known dev StrictMode WebSocket warning ×1 |
+
+d3-force alone, `node bench.mjs snap-200.json` (200 nodes, 1 543 links, same run conditions as the table):
+
+| ticks | collide iterations | ms (2 of 3 reps) |
+|---|---|---|
+| 300 (pinned) | 2 (pinned) | 1 246, 1 155 |
+| 300 | 1 | 898, 942 |
+| 150 | 2 | 653, 606 |
+| 150 | 1 | 522, 474 |
+
+The bench runs slower than the in-page measure because it sits in a separate process that competes with the game.
+
+**Reading.** With the clock at 3.8 GHz, the pinned 300 ticks and 2 collide iterations meet `layout ≤ 400 ms` in 4 of 5 runs. All 5 runs meet first paint ≤ 1 s, even with the game running. The one 885 ms outlier fits the scheduler contention from the game. The first walk's 1.2–1.4 s numbers came from the 0.9 GHz clock, not from the renderer. **No change to `layout.ts` is proposed.**
+
+**Gate status: still OPEN.** It does not close on this run, because the run is still on battery and under background load. To close it, the owner re-runs `cold200.js` ×5 and `idle.js` on AC at full clock with the game closed, on the venue laptop (or confirms this laptop is the venue laptop), before the cut-rule deadline (evening of Mon 27 Oct). If the cold layout still misses 400 ms there, the owner rules on `layout.ts:118` (ticks) or `layout.ts:115` (collide iterations). The bench table above is the cost data for that ruling.
+
+**Halos go flame (spec §11, Step 3 item 2): still unmet, needs a controller or owner ruling.** No honest score drops below 0 in `demo_sybil_eclipse`, and the renderer cannot change that. Band-0 flame rendering is proven only by Task 2.5's injected snapshot. The options:
+
+- change the scenario or backend in a later phase so that a victim's score goes negative;
+- or drop "halos go flame" from the acceptance line and the talk copy.
