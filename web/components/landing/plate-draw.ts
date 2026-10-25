@@ -39,7 +39,8 @@ export function frameIndexAt(plate: PlateFrames, t: number): number {
 }
 
 export function drawPlateFrame(ctx: CanvasRenderingContext2D, plate: PlateFrames, i: number, w: number, h: number, layer: PlateLayer): void {
-  const fit = plateTransform(plate.bounds, w, h)
+  const { bounds } = plate
+  const fit = plateTransform(plate.geo ? { ...bounds, minY: -bounds.maxY, maxY: -bounds.minY } : bounds, w, h)   // geo flips y, so fit the flipped box
   const to = (x: number, y: number) => fit(x, plate.geo ? -y : y)
   const r = Math.min(6, Math.max(3, w / 120))
   const f = plate.frames[i]

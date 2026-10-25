@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import plate from '@/lib/plate-frames.json'
+import cards from '@/lib/reel-cards.json'
 import { drawPlateFrame, frameIndexAt, PLATE_FPS, plateTransform, STILL_T, type PlateFrames } from './plate-draw'
 
 test('frameIndexAt finds the first frame at or after t, else the last', () => {
@@ -21,4 +22,13 @@ test('drawPlateFrame draws every layer of a pre-Sybil frame (a: [], m: []) and o
   expect(calls).toContain('arc'); expect(calls.filter(c => c === 'fillText')).toHaveLength(0)        // no text outside the loupe layer (spec §7: never dither text)
   calls.length = 0; drawPlateFrame(ctx, empty, 0, 620, 248, 'loupe'); expect(calls.filter(c => c === 'fillText').length).toBeGreaterThanOrEqual(50)   // one id per node
   const geo = { ...p, geo: true, bounds: { minX: -450, minY: -145, maxX: 450, maxY: 210 } }; expect(() => drawPlateFrame(ctx, geo, 0, 96, 60, 'base')).not.toThrow()
+})
+test('a geo card (y flipped) lands every node inside the canvas', () => {
+  const arcs: [number, number][] = []
+  const ctx = new Proxy({}, { get: (_, k) => (k === 'arc' ? (x: number, y: number) => arcs.push([x, y]) : () => ({ width: 10 })), set: () => true }) as unknown as CanvasRenderingContext2D
+  const geo = (cards as unknown as Record<string, PlateFrames>)['mainnet-block-wave']; expect(geo.geo).toBe(true)
+  for (const [w, h] of [[96, 60], [620, 248]]) {
+    arcs.length = 0; drawPlateFrame(ctx, geo, 0, w, h, 'base'); expect(arcs.length).toBeGreaterThan(0)
+    for (const [x, y] of arcs) { expect(x).toBeGreaterThanOrEqual(0); expect(x).toBeLessThanOrEqual(w); expect(y).toBeGreaterThanOrEqual(0); expect(y).toBeLessThanOrEqual(h) }
+  }
 })
