@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/yashksaini-coder/luminar/actions/workflows/ci.yml"><img src="https://github.com/yashksaini-coder/luminar/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/typescript-5.7-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.7">
+  <img src="https://img.shields.io/badge/typescript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT"></a>
   <a href="https://github.com/sponsors/yashksaini-coder"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white" alt="Sponsor @yashksaini-coder on GitHub"></a>
 </p>
@@ -52,15 +52,15 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 
 | control | where | what it does |
 |---|---|---|
-| play / pause | `Space`, toolbar | runs the trio simulation; `f` fits the view, `Esc` deselects |
-| nodes | toolbar: 20 · 50 · 100 · 200 · 500 | rebuilds the pool; the API clamps to 2–500 |
-| speed · duration | 0.5 · 1 · 2 · 3 · 5 · 10× · 1m · 2m · 5m · 10m | duration auto-pauses, default 5m |
+| play / pause | `Space`, command strip | runs the trio simulation; `r` resets, `f` fits the view, `Esc` deselects, `?` lists the keys |
+| nodes | toolbar: 20 · 50 · 100 · 200 | rebuilds the pool; the API clamps to 2–500 |
+| speed · duration | strip: 0.5 · 1 · 2 · 3 · 5 · 10× · toolbar: 1m · 2m · 5m · 10m | duration auto-pauses, default 5m; Play there extends it one step |
 | layout | top centre: Force · Radial · Geo | d3-force laid out once and frozen, rings by degree, world map for observer nodes |
 | Scenarios ▾ | 5 scripted runs | timed phases with narrator captions, table below |
-| Inject Fault ▾ | partition · Sybil ×5 · eclipse ×4 on the selected node · drop · clear all | latency is API-only: `POST /api/fault/latency` |
-| inspector | click a node | score sparkline, connected peers, live events for that peer |
+| Inject fault ▾ | partition · Sybil ×1–10 (default 5) · eclipse ×4 and drop on the selected node · clear all | latency is API-only: `POST /api/fault/latency` |
+| inspector | click a node or a log row | score sparkline, mesh peers vs topology peers, live events for that peer |
 | Reels ▾ | `1`–`9`, `0` back to live | 4 shipped, table below |
-| stage · hero | `t` · `h`, or `?theme=stage&hero=1` | projector theme; hero hides the panels and inspector and shows the ticker; both persist in `localStorage` |
+| stage · hero | `t` · `h`, or `?theme=stage&hero=1` | projector theme; hero hides the rails, legend and tooltip and shows the ticker; both persist in `localStorage` |
 | share | `s` | copies the current URL with `&peer=<id>`, plus `&t=<sec>` in a paused reel, so a link opens that moment |
 
 ![Main screen, Force layout, 50 peers after a Sybil attack: the five attackers sit pruned outside the mesh, n7 is selected and the inspector shows its score history, ten connected peers and live events; the stats panel has delivery, propagation, the delivery CDF and event categories.](assets/readme/ui-main.png)
@@ -159,10 +159,10 @@ flowchart LR
     api -. "trio.from_thread" .-> trio
   end
   subgraph frontend ["web · Next.js static export · React"]
-    store["store.ts"]
+    store["lib/store.ts · zustand"]
     map["deck.gl + d3-force<br/>Force · Radial · Geo"]
-    ui["panels · charts · narrator"]
-    reels["reels/*.jsonl"]
+    ui["rails · inspector · narrator"]
+    reels["public/reels/*.jsonl"]
     store --> map
     store --> ui
     reels -- "offline replay" --> store
