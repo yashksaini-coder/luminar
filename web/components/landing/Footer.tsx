@@ -25,6 +25,7 @@ export default function Footer() {
         <ul>
           <li><a href={`https://${REPO_URL}`}>GitHub</a></li>
           <li><a href={`https://${REPO_URL}/blob/master/LICENSE`}>MIT licence</a></li>
+          <li>No account, no analytics, no cookies. Recordings run offline.</li>
           <li>data: ethPandaOps (CC BY 4.0)</li>
         </ul>
       </div>

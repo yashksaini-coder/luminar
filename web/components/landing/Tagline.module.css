@@ -1,0 +1,11 @@
+.tagline { width: min(var(--col-prose), 100% - 2 * var(--gutter)); margin: var(--s-24) auto; }
+.line { font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+/* ::first-letter needs a block container; inline-block keeps the word in the line */
+.cap { display: inline-block; }
+.cap::first-letter { text-transform: uppercase; }
+/* word-by-word rise (motion-06): only motion-capable JS clients see the muted state; no-JS and
+   reduced motion read the final frame. 60 ms per word, --i continues across both lines. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-js] .tagline [data-w] { opacity: .3; transition: opacity var(--d-fade) var(--e); transition-delay: calc(var(--i) * 60ms); }
+  :root[data-js] .tagline[data-in] [data-w] { opacity: 1; }
+}

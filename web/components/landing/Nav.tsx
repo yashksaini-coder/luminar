@@ -1,6 +1,7 @@
 'use client'
 // Landing nav and the full-screen menu overlay: four reel rows with one-frame dithered cards, three routes (spec §7.4.1).
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import DitherCanvas from '@/components/dither/DitherCanvas'
 import { REPO_URL } from '@/lib/copy'
@@ -10,6 +11,7 @@ import styles from './Nav.module.css'
 
 const GITHUB = `https://${REPO_URL}`
 const ROUTES: [string, string][] = [['Simulator', '/sim/'], ['Figure', '/figure/'], ['Source', GITHUB]]
+const trim = (p: string) => p.replace(/\/+$/, '') || '/'   // '/sim/' and '/sim' are the same page
 
 function AttackerLayer({ card }: { card: PlateFrames }) {   // attackers stay flat: never dithered
   const ref = useRef<HTMLCanvasElement>(null)
@@ -36,6 +38,8 @@ function Card({ card, title }: { card: PlateFrames; title: string }) {
 
 export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Record<string, PlateFrames> }) {
   const [open, setOpen] = useState(false)
+  const path = usePathname()
+  const cur = (href: string) => (path && trim(href) === trim(path) ? 'page' as const : undefined)   // B9: current page marked
   const btnRef = useRef<HTMLButtonElement>(null)
   const dlgRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
@@ -66,10 +70,10 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
 
   return (
     <header className={styles.nav}>
-      <Link href="/" className={styles.brand}>LUMINAR <span className={styles.sub}>gossipsub v1.1</span></Link>
+      <Link href="/" className={styles.brand} aria-current={cur('/')}><span className={styles.word}>LUMINAR</span> <span className={styles.sub}>gossipsub v1.1</span></Link>
       <nav className={styles.links} aria-label="Primary">
-        <a href="/sim/">Simulator</a>
-        <a href={`/reels/${reels[0].name}/`}>Recordings</a>
+        <a href="/sim/" aria-current={cur('/sim/')}>Simulator</a>
+        <a href={`/reels/${reels[0].name}/`} aria-current={cur(`/reels/${reels[0].name}/`)}>Recordings</a>
         <a href={GITHUB} rel="noopener" target="_blank">GitHub</a>
       </nav>
       <button ref={btnRef} type="button" className={styles.menuBtn} data-open={open || undefined}
@@ -84,7 +88,7 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
               <ul className={styles.rows}>
                 {reels.map((reel, n) => (
                   <li key={reel.name} style={{ '--i': n } as React.CSSProperties}>
-                    <a href={`/reels/${reel.name}/`} className={styles.reel}>
+                    <a href={`/reels/${reel.name}/`} className={styles.reel} aria-current={cur(`/reels/${reel.name}/`)}>
                       <kbd>{n + 1}</kbd>
                       {cards[reel.name] ? <Card card={cards[reel.name]} title={reel.title} /> : <div className={styles.card} />}
                       <span className={styles.text}>
@@ -102,7 +106,7 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
               <ul className={styles.rows}>
                 {ROUTES.map(([label, href], n) => (
                   <li key={href} style={{ '--i': reels.length + n } as React.CSSProperties}>
-                    <a href={href} className={styles.route} {...(href === GITHUB ? { rel: 'noopener', target: '_blank' } : {})}>
+                    <a href={href} className={styles.route} aria-current={cur(href)} {...(href === GITHUB ? { rel: 'noopener', target: '_blank' } : {})}>
                       <span className={styles.name}>{label}</span><span aria-hidden="true">›</span>
                     </a>
                   </li>

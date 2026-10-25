@@ -7,6 +7,10 @@
 .sub { font: 400 var(--t-label) var(--font-mono); letter-spacing: 0; color: var(--paper-2); }
 .links { margin-left: auto; display: flex; gap: 1.6rem; }
 .links a, .menuBtn { font: 500 var(--t-ui) var(--font-ui); color: var(--fg); text-decoration: none; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--d-fast) var(--ease); }
+.links a:hover { text-decoration: underline; text-underline-offset: .35em; }
+.links a:active { transform: translateY(1px); }
+.brand[aria-current] .word, .links [aria-current], .rows [aria-current] .name {   /* .word, not .brand: the underline would propagate under .sub */ text-decoration: underline; text-underline-offset: .35em; text-decoration-thickness: 1px; }
 .menuBtn { display: flex; align-items: center; gap: .6em; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; }
 .plus { position: relative; width: 11px; height: 11px; transition: transform var(--d-menu) var(--ease); }
 .plus::before, .plus::after { content: ''; position: absolute; background: currentColor; }
@@ -18,13 +22,16 @@
   position: fixed; inset: var(--nav-h) 0 0; z-index: 50; overflow-y: auto; overscroll-behavior: contain;
   background: var(--bg); animation: fade var(--d-menu) var(--ease);
 }
+@supports (backdrop-filter: blur(1px)) {   /* B7 glass over the pitch; solid --bg stays the fallback */
+  .overlay { background: rgb(11 11 13 / .86); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }   /* unprefixed last: lightningcss keeps only the last one */
+}
 .inner {
   width: min(var(--col-wide), 100% - 2 * var(--gutter)); margin: 0 auto; padding: 3rem 0;
   display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.6rem 4rem; align-items: start;
 }
 .label { margin: 0 0 .8rem; font: 500 var(--t-label) var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--paper-2); }
 .rows { list-style: none; margin: 0; padding: 0; border-top: var(--hair-w) solid var(--hair); }
-.rows li { border-bottom: var(--hair-w) solid var(--hair); animation: rise var(--d-row) var(--ease) both; animation-delay: calc(var(--i) * var(--stagger)); }
+.rows li { border-bottom: var(--hair-w) solid var(--hair); animation: rise var(--d-row) var(--ease) both; animation-delay: calc(var(--i) * 60ms); }
 .reel, .route { display: grid; align-items: center; gap: 1.2rem; padding: 1rem 0; color: var(--fg); text-decoration: none; }
 .reel { grid-template-columns: auto 96px 1fr auto; }
 .route { grid-template-columns: 1fr auto; }
@@ -39,13 +46,16 @@
 .end { display: flex; align-items: center; gap: .8rem; }
 .tag { font: var(--t-label) var(--font-mono); letter-spacing: var(--track-label); color: var(--signal-text); border: var(--hair-w) solid var(--hair); padding: .1em .45em; }
 
+@media (prefers-reduced-motion: reduce) { .rows li { animation: none; } }   /* the 60ms delay is not a token: zero it here */
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
 
 @media (max-width: 860px) { .inner { grid-template-columns: 1fr; } }
-@media (max-width: 640px) {
+@media (max-width: 1024px) {   /* touch band (D1): the menu overlay is the only nav */
   .links { display: none; }
   .menuBtn { margin-left: auto; }
+}
+@media (max-width: 640px) {
   .name { font-size: 24px; }
   .reel { gap: .8rem; }
 }
