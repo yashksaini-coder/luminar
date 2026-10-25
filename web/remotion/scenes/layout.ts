@@ -29,6 +29,7 @@ const T_CAPTION: Box = { x: 60, y: 1500, w: 960, h: 100 }
 const T_CAPTION_HIGH: Box = { x: 60, y: 360, w: 960, h: 100 }   // scenes whose strip takes the band below the square
 const T_READOUT: Box = { x: 60, y: 240, w: 960, h: 120 }
 const T_STRIP: Box = { x: 40, y: 1460, w: 1000, h: 140 }
+const T_STRIP_WHY: Box = { x: 40, y: 1430, w: 1000, h: 170 }   // the flat strip adds the two-line ECLIPSE_WHY; starts 30 px up so it ends at 1600
 const T_STAMP: SceneLayout['stamp'] = { anchor: 'tr', inset: [60, 380] }
 const T_STAMP_TOP: SceneLayout['stamp'] = { anchor: 'c', inset: [0, -620] }   // centred at y 340: top third, between SAFE_TALL.top and the square
 const T_STAMP_LOW: SceneLayout['stamp'] = { anchor: 'tr', inset: [60, 480] }   // inside the square's top-right, clear of T_CAPTION_HIGH
@@ -47,7 +48,7 @@ export const LAYOUT: Record<SceneId, Record<Orientation, SceneLayout>> = {
   },
   eclipse: {
     wide: wide({ mesh: W_MESH, caption: W_CAPTION, readout: W_READOUT, strip: W_STRIP }),
-    tall: tall({ mesh: T_MESH, caption: T_CAPTION_HIGH, readout: T_READOUT, strip: T_STRIP, stamp: T_STAMP_LOW }),
+    tall: tall({ mesh: T_MESH, caption: T_CAPTION_HIGH, readout: T_READOUT, strip: T_STRIP_WHY, stamp: T_STAMP_LOW }),
   },
   heal: { wide: wide({ mesh: W_MESH, caption: W_CAPTION, readout: W_READOUT }), tall: tall({ mesh: T_MESH, caption: T_CAPTION, readout: T_READOUT }) },
   'same-names': { wide: wide({ caption: W_CAPTION }), tall: tall({ mesh: { x: 40, y: 560, w: 1000, h: 600 }, caption: T_CAPTION }) },
