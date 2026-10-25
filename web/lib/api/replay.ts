@@ -3,7 +3,7 @@
 import { dispatchFrame, flushEvents } from '@/lib/api/dispatch'
 import { useStore } from '@/lib/store'
 import { isTypedFrame } from '@/lib/types'
-import type { ReelFrame, ReelMeta, SnapshotFrame, WsFrame } from '@/lib/types'
+import type { AnalyticsFrame, AppEvent, Beat, ReelFrame, ReelMeta, ScenarioFrame, ScenarioPhase, SnapshotFrame, WsFrame } from '@/lib/types'
 
 export const REEL_TICK_MS = 50              // setInterval, survives background tabs
 export const REEL_MIN_SPEED = 0.1
@@ -19,6 +19,8 @@ let timer: ReturnType<typeof setInterval> | null = null
 let playing = false
 let speed = 1
 let loadGen = 0         // bumped by every loadReel; an older load that sees a newer gen stops (R33)
+let beats: Beat[] = []            // every beat a full play-through leaves in the store, known at load so the scrubber draws the whole track at T+0
+let phases: ScenarioPhase[] = []  // the recorded scenario's phases (its frame lands ~100 ms after the first snapshot, so the store has none at T+0)
 
 const typeOf = (f: WsFrame): string | null => isTypedFrame(f) ? f.type : null
 
@@ -26,6 +28,45 @@ export function reelLoaded(): boolean { return frames.length > 0 }
 export function reelDurationMs(): number { return frames.length ? frames[frames.length - 1].t : 0 }
 export function reelElapsedMs(): number { return elapsed }
 export function reelPlaying(): boolean { return playing }
+export function reelBeats(): Beat[] { return beats }
+export function reelPhases(): ScenarioPhase[] { return phases }
+
+/** What a full play-through leaves behind, from the frames alone: the beats store.applyEvents / applyAnalytics / applyScenario
+ *  would accumulate, and the phases of the scenario frame that ends up active. */
+export function scanReel(all: ReelFrame[]): { beats: Beat[]; phases: ScenarioPhase[] } {
+  const out: Beat[] = []
+  let ph: ScenarioPhase[] = []
+  let time = 0, started = false, sybilPruned = false, healStart: number | null = null, healed = false
+  for (const { frame } of all) {
+    const type = typeOf(frame)
+    if (type === 'snapshot') { time = (frame as SnapshotFrame).time; started = true; continue }   // events before the first snapshot are never played
+    if (type === 'scenario') {   // resetNarratorPatch
+      const f = frame as ScenarioFrame
+      ph = (f.active && f.scenario?.phases) || []
+      out.length = 0; sybilPruned = false; healStart = null; healed = false
+      continue
+    }
+    if (type === 'analytics') {
+      if (healStart !== null && !healed && ((frame as AnalyticsFrame).recent_delivery_ratio ?? 0) >= 0.95) { healed = true; out.push({ label: 'Mesh healed', time, kind: 'healed' }) }
+      continue
+    }
+    if (type || !started) continue
+    const evt = frame as AppEvent
+    switch (evt.event_type) {
+      case 'ClockTick': time = evt.at; break
+      case 'ScenarioPhaseFired': out.push({ label: String(evt.label ?? ''), time: evt.at, kind: 'phase' }); break
+      case 'GossipPrune':
+        if (!sybilPruned && evt.to_peer?.startsWith('sybil-') && evt.reason === 'score') { sybilPruned = true; out.push({ label: 'First Sybil pruned', time: evt.at, kind: 'prune' }) }
+        break
+      case 'FaultInjected': out.push({ label: `${evt.fault_type ?? 'fault'} injected`, time: evt.at, kind: 'fault' }); break
+      case 'FaultCleared':
+        out.push({ label: `${evt.fault_type ?? 'faults'} cleared`, time: evt.at, kind: 'fault' })
+        if (healStart === null) healStart = evt.at
+        break
+    }
+  }
+  return { beats: out, phases: ph }
+}
 
 export function parseReelChunk(text: string, carry: string): { frames: ReelFrame[]; carry: string } {
   const parts = (carry + text).split('\n')
@@ -91,6 +132,7 @@ export async function loadReel(meta: ReelMeta, opts?: { signal?: AbortSignal }):
   if (stale()) return false
   if (parsed.length === 0) { s.setReelLoad(null); return false }
   frames = parsed
+  ;({ beats, phases } = scanReel(parsed))
   const snaps = parsed.filter(f => typeOf(f.frame) === 'snapshot')
   s.setReel({
     name: meta.name, title: meta.title, durationMs: reelDurationMs(),
@@ -176,6 +218,8 @@ export function stopReel(): void {
 export function unloadReel(): void {
   stopReel()
   frames = []
+  beats = []
+  phases = []
 }
 
 function step(now: number): void {

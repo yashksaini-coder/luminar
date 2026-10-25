@@ -1,7 +1,7 @@
 import { test, expect, beforeEach, vi } from 'vitest'
 import {
   loadReel, playReel, pauseReel, setReelSpeed, seekReel, seekReelToSimTime, stopReel, unloadReel,
-  reelLoaded, reelDurationMs, reelElapsedMs, reelPlaying, parseReelChunk,
+  reelLoaded, reelDurationMs, reelElapsedMs, reelPlaying, parseReelChunk, reelBeats, REEL_TICK_MS,
 } from '@/lib/api/replay'
 import { useStore } from '@/lib/store'
 import { snapWith } from '@/lib/fixtures'
@@ -140,4 +140,15 @@ test('seek derives phaseLabel, caption and phase beats from the scenario phases 
   expect(useStore.getState().beats).toEqual([{ label: 'Sybils graft in', time: 1, kind: 'phase' }]); expect(useStore.getState().events).toHaveLength(0)
   seekReelToSimTime(3.5); expect(useStore.getState().phaseLabel).toBe('Faults cleared'); expect(useStore.getState().beats).toHaveLength(2)
   seekReelToSimTime(0); expect(useStore.getState().phaseLabel).toBe(''); expect(useStore.getState().beats).toEqual([])
+})
+test('loading the sybil-eclipse reel pre-scans every beat before a frame is played; a full play-through leaves the store with the same list (T9)', async () => {
+  const { readFileSync } = await import('node:fs')
+  const text = readFileSync('public/reels/sybil-eclipse.jsonl', 'utf8')   // vitest runs from web/
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(text, { status: 200 })))
+  expect(await loadReel({ name: 'sybil-eclipse', title: 'Sybil → Eclipse', file: '/reels/sybil-eclipse.jsonl' })).toBe(true)
+  const scanned = reelBeats()
+  expect(scanned.length).toBeGreaterThan(3); expect(scanned.map(b => b.kind)).toContain('prune'); expect(useStore.getState().beats).toEqual([])
+  setReelSpeed(1000); playReel(); vi.advanceTimersByTime(REEL_TICK_MS * Math.ceil(reelDurationMs() / 1000 / REEL_TICK_MS) + REEL_TICK_MS)
+  expect(reelPlaying()).toBe(false); expect(useStore.getState().beats).toEqual(scanned)
+  unloadReel(); expect(reelBeats()).toEqual([])
 })

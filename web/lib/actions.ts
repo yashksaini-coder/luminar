@@ -20,6 +20,9 @@ function toast(r: ApiResult<unknown>, label: string): void {
   S().pushToast(t.text, t.kind)
 }
 
+/** Transport controls say nothing on success (the pill and clock show it) and toast only a failure (B9: inline, never silent). */
+const failToast = (r: ApiResult<unknown>, label: string): void => { if (!r.ok) toast(r, label) }
+
 /** In a reel, sim actions are refused with a hint; true means "stop here". */
 export function reelGuard(): boolean {
   if (!S().reel) return false
@@ -53,13 +56,13 @@ export async function togglePlay(): Promise<void> {
   if (s.reel) { toggleReel(); return }   // the player sets store.playing itself (A.0)
   if (s.playing) {
     s.setPlaying(false)
-    await api.simPause()
+    failToast(await api.simPause(), 'Pause')
     return
   }
   // Play at the limit means "one more period", so the sim still pauses at the total the timeline shows.
   if (s.maxDuration > 0 && s.simTime >= s.maxDuration) s.extendDuration()
   s.setPlaying(true)
-  await api.simPlay()
+  failToast(await api.simPlay(), 'Play')
 }
 
 export async function reset(): Promise<void> {
@@ -74,13 +77,13 @@ export async function reset(): Promise<void> {
   s.resetRun()
   s.setPlaying(false)
   useStore.setState({ simState: 'stopped' })
-  await api.simReset()
+  failToast(await api.simReset(), 'Reset')
 }
 
 export async function setSpeed(speed: number): Promise<void> {
   useStore.setState({ simSpeed: speed })
   if (S().reel) setReelSpeed(speed)
-  else await api.simSpeed(speed)
+  else failToast(await api.simSpeed(speed), `Speed ×${speed}`)
 }
 
 /** Reels only; the live scrubber is disabled (spec §6.2). */

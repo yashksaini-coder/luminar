@@ -13,10 +13,13 @@ export function bandsFor(phases: ScenarioPhase[], total: number): Band[] {
   })
 }
 
-/** Phases as 'phase' ticks plus beats; a phase within 0.05 s of a beat is dropped (beat wins). */
+/** A phase fires on the heartbeat after its `at` (recorded reels: 0.1–0.2 s late), so the beat it leaves and the scheduled phase are one tick. */
+const PHASE_TICK_SLACK_SEC = 0.5
+
+/** Phases as 'phase' ticks plus beats; a phase within PHASE_TICK_SLACK_SEC of a beat is dropped (beat wins). */
 export function ticksFor(beats: Beat[], phases: ScenarioPhase[], total: number): Tick[] {
   const phaseBeats: Beat[] = phases
-    .filter(p => !beats.some(b => Math.abs(b.time - p.at) < 0.05))
+    .filter(p => !beats.some(b => Math.abs(b.time - p.at) < PHASE_TICK_SLACK_SEC))
     .map(p => ({ label: p.label, time: p.at, kind: 'phase' }))
   return [...beats, ...phaseBeats]
     .filter(b => b.time <= total)
