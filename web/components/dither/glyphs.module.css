@@ -1,0 +1,17 @@
+/* Shared by Reticle, HaloRing, Diamond and Stamp (A.30). */
+.stamp { display: inline-block; }
+.inner {
+  display: inline-block;
+  font: 600 var(--t-stamp) var(--font-ui);
+  letter-spacing: var(--track-stamp);
+  text-transform: uppercase;
+  padding: .55em 1.1em;
+  background: var(--paper-0);
+  color: var(--pitch-0);
+  transform: rotate(var(--stamp-tilt));
+  box-shadow: var(--stamp-shadow);
+  white-space: nowrap;
+}
+
+/* Floating legend glyphs on a plate. */
+.halo, .diamond { position: absolute; pointer-events: none; }
