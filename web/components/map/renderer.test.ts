@@ -99,6 +99,16 @@ test('state-only snapshots never relayout; a changed edge set relayouts once', (
   useStore.getState().applyEdges({ type: 'edges', edges: ring(10).slice(1) }); flush(); expect(performance.getEntriesByName('layout').length).toBe(before + 1)
 })
 
+test('an attacker arriving on the same edge set relayouts warm: every honest peer keeps its position', () => {
+  const ids = peers(20).map(p => p.peer_id)
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(20) }); useStore.getState().applySnapshot(snapWith(ids)); flush()
+  const before = visiblePositions()
+  const snap = snapWith(ids); snap.nodes.push({ ...snap.nodes[0], peer_id: 'sybil-0', index: 20, state: 'attacker', connected_peers: ['peer-3'] })
+  useStore.getState().applySnapshot(snap); flush()
+  const after = visiblePositions(); expect(after.has('sybil-0')).toBe(true)
+  for (const id of ids) expect(after.get(id)).toEqual(before.get(id))
+})
+
 test('showEdges off removes edges; mesh pairs are deduped and honest-only', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(6) })
   useStore.getState().applySnapshot({ ...snapWith([...peers(6).map(p => p.peer_id), 'sybil-0']), gossip: { mesh: { 'peer-0': ['peer-1', 'sybil-0'], 'peer-1': ['peer-0'] } } }); flush()

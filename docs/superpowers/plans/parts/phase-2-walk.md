@@ -1,0 +1,101 @@
+# Phase 2 walk: 200-node timing and acceptance (Task 2.9)
+
+- **Date:** 2026-10-25 (13:00–13:55 IST)
+- **Commit:** measured on `5c0843f` plus the Task 2.9 `renderer.ts` change, which is committed together with this file. The "before" rows were measured at `5c0843f`, unchanged.
+- **Machine:** this laptop (13th Gen Intel i7-13620H), DPR **1**, Chrome emulated viewport **1440×900×1** (the window is tiled, so `resize_page` is refused).
+- **Run conditions (they matter for every timing):** the laptop was **on battery**, the governor was `powersave`, `scaling_cur_freq` was 0.9 GHz against a 4.7 GHz max, and a background game process (`enlisted`) used about 230 % CPU. Load average was 7.6.
+- **Stack:** `next dev` (unminified React dev build, not `next build`) and `make backend` (uvicorn `--reload`).
+- **Baseline for this CPU state:** plain d3-force in Node with 200 random nodes, default `forceManyBody`, 300 ticks takes **590 ms**. That is several times slower than the same laptop at full clock.
+
+## Step 1: cold layout and first paint at 200 nodes
+
+Method: an in-page script calls `POST /api/sim/reconfigure {n_nodes: 50}`, waits 3 s, then calls `POST /api/sim/reconfigure {n_nodes: 200}` through the dev proxy. It reads `performance.getEntriesByName('layout')` and polls with rAF until `nodes.length === 200` and `layerIds()` contains `nodes`. Script: `cold200.js`.
+
+| run | reconfigure response | layout measures (start after response → duration) | first frame with 200 discs after response | layers at 200 |
+|---|---|---|---|---|
+| before (`5c0843f`), 20→200 | 82 ms | 2 measures, last **768 ms** | 890 ms | `edges, particles, nodes, reticle, labels` |
+| before (`5c0843f`), 50→200 | 109 ms | +18 ms → 194 ms; +264 ms → **1371 ms** | **1646 ms** | `edges, nodes, reticle, labels` |
+| after, 50→200 | 104 ms | +16 ms → 186 ms; +247 ms → **1211 ms** | **1470 ms** | `edges, nodes` |
+| after, `?theme=stage`, 50→200 | 102 ms | +7 ms → 206 ms; +301 ms → **1304 ms** | **1616 ms** | `edges, nodes` |
+
+- `nodes === 200` ✔. `mesh-edges` is absent at 200 (the backend sends `mesh: {}`) ✔.
+- The first measure is the 200-node snapshot laid out against the old 50-node edge set (most nodes are new, so it runs cold). The second is the cold 300-tick relayout when the 200-node edges frame lands (about 1 550–1 620 edges).
+- **`layout ≤ 400 ms`: NOT MET on this run (1.2–1.4 s).**
+- **First paint ≤ 1 s: NOT MET on this run (1.47–1.65 s).**
+- The cost is d3-force itself. A Node replay of the same snapshot (200 nodes, 1 543 links, the renderer's forces, 300 ticks) takes 1 349–1 524 ms. Per force: charge 607 ms, collide 561 ms, link 52 ms, center 4 ms. The renderer adds nothing measurable.
+- Re-measure on AC power at full clock with the game closed before Mon 27 Oct. If it still misses, the fix lives in `layout.ts` (tick count or collide iterations), which is outside this task's files. That is the owner's call.
+
+## Step 2: frame rate during a Sybil burst and at idle (200 nodes)
+
+The rAF rate comes from an in-page counter. Long tasks come from a `PerformanceObserver('longtask')`. React commits are counted by a `__REACT_DEVTOOLS_GLOBAL_HOOK__` stub installed with `initScript`, which records every `onCommitFiberRoot` and every function component that performed work. Scripts: `burst.js` and `idle.js`.
+
+| measurement | before (`5c0843f`) | after |
+|---|---|---|
+| long task when the 10 Sybils arrive | **972 ms** `FireAnimationFrame`, 1 113 ms `RunTask` (a cold 300-tick relayout that moves every honest peer) | **253–351 ms** (a warm relayout with honest peers pinned; measure 234–248 ms) |
+| frame rate during the burst, sim running (s1–s5 after arrival) | n/a | **53–70 fps** (rAF per second 53, 53, 53, 70, 56; p50 interval 18.0 ms, p95 21.2 ms). With the sim paused: 60 fps flat (p50 16.6 ms). |
+| long tasks > 50 ms during the burst after arrival | — | none (one 51 ms task at +1.27 s, on the paused-sim run only) |
+| React commits during a 6 s burst | — | 50, every one `Clock` (the toolbar clock at its own rate, not per frame). No other component rendered. No `Tooltip` because there was no hover. |
+| idle (sim paused, faults cleared, 3 s) | — | **60.3 fps**, p50 16.7 ms, max 20.0 ms. 0 long tasks. **0 React commits.** `renderLayers` was on the stack in 128 of 24 569 samples (it runs only on store updates). |
+
+- **≥ 30 fps during the burst ✔.** **60 fps at idle ✔.** **No React re-render per frame ✔.**
+- The arrival relayout still blocks the main thread for one 250–350 ms task on this throttled CPU. That is one hitch when the attackers appear, not a sustained cost.
+- Traces: `trace-sybil-before.json.gz`, `trace-sybil-after.json.gz` and `trace-idle.json.gz` in the session scratchpad (not committed). The insight list was empty, so the frame numbers come from parsing `FireAnimationFrame`/`RunTask` and the CPU profile.
+
+**Fix applied in `renderer.ts`** (the brief's step 2.4 "profile and fix"):
+
+1. **Layout memory keyed by edge set.** `renderLayers` passed `topologyKey` (visible ids + edges + mode) to `computeLayout` as the layout-memory key. Any node joining therefore counted as a new topology, `layoutForce` ran cold for 300 ticks, and every honest peer moved when the Sybils arrived. The memory key is now `${edgesKey(edges)}|${mode}`. An attacker joining the same edge set now settles warm (60 ticks) around pinned peers, which is what `layout.ts`'s warm path and its "warm relayout pins known nodes" test were written for. `topologyKey` still decides *whether* to relayout.
+   - Regression test: `an attacker arriving on the same edge set relayouts warm: every honest peer keeps its position`. It was RED at `5c0843f`: peer positions changed, e.g. `[514.9, 5.1]` became `[502.6, -97.9]`.
+2. **Reference guard on `topologyKey`.** The key string, which sorts about 1 600 edge strings at 200 nodes, is rebuilt only when `nodes`, `edges` or `layoutMode` change identity. It is no longer rebuilt on every animating frame. `resetTopology` and `destroyRenderer` clear the guard.
+
+**Atlas on `?theme=stage`:** `document.createElement` was wrapped from `initScript`, and canvases created from `buildAtlas` were counted. There was **1 build** since load across 50→200. There were **0 builds** during 5 s of animation (particles, pulses, halos). ✔
+
+## Step 3: phase acceptance walk (spec §11), live backend, 50 nodes
+
+Screenshots are in the session scratchpad, named below. The scenario steps pause the sim on the observed condition (`scen2/3/4.js`), so each screenshot shows that state.
+
+1. ✔ `demo_sybil_eclipse` launched with curl-equivalent `POST /api/scenarios/demo_sybil_eclipse/launch {speed:1}`. At **T+10.5** all five `sybil-0..4` are grafted (4 victims each). Layers: `edges, attack-links, mesh-edges, pulses, particles, halos, nodes, labels`. Screenshot `walk-01-sybil-graft-T10.png` shows five flame diamonds, dashed flame links to every victim, and flame `sybil-N` labels.
+2. ◐ The diamonds go hollow at the first score prune, **T+12.3–12.9**. All five are pruned (`connected_peers` empty, `gossip_score −15`), and `attack-links` leaves the layer list. Screenshot `walk-02-sybil-pruned-T12.png` shows hollow dashed diamonds with paper-2 labels (R6). **Halos going flame did not happen live:** no honest peer's score went below 0 in this scenario (`firstNeg: null`). This matches Task 2.5's finding: P4 penalises the attackers, and attackers carry no halo. Band-0 flame rendering was proven in 2.5 with an injected snapshot (`band0.png`). Making it happen live needs a backend or scenario change.
+3. ✔ At **T+16.3**, `eclipse-0..3` are grafted to peer-10 with dashed attack links (`walk-03-eclipse-T16.png`). Across the whole run there were **0** `GossipMessage` events from `eclipse-*` and 40 from `sybil-*`. `particlesFor` makes `spam` only for `sybil-` senders, so eclipse diamonds emit no spam particles.
+4. ✔ Fit: after a synthetic pan the target moved from [9.8, 31.2] to [−112.7, −60.7]. A wheel zoom took the zoom from 0.555 to 1.485. `fitView()` returned the view to [9.8, 31.2] at zoom 0.555. **Note:** the `f` key is not wired yet. `actionForKey`/`runKey` exist, but no keydown listener is installed until Task 3.10, so this step drove `fitView()`, which is what `f` calls.
+5. ✔ Geo starts disabled with title `Geo needs real observers · turn MAINNET on`. After `POST /api/live/mainnet {enabled:true}`, `geoAvailable` was true within 1.7 s and auto-Geo switched the mode. Layers: `world-land, pulses, nodes, observer-rings`, with 141 observers drawn and 50 sim peers hidden. Screenshot `walk-06-geo.png` shows the dithered world with Antarctica cropped and only observer rings drawn.
+6. ◐ 200-node timing (Step 1 and Step 2 above): **≥ 30 fps burst ✔, 60 fps idle ✔, no per-frame React render ✔. Cold layout plus first paint ≤ 1 s ✗ on this battery/powersave run (1.47 s).**
+7. Inventory §5 rows:
+   - ✔ Deck canvas: pan, wheel zoom, reticle cursor (`cursor: url(data:image/svg+xml…)`), and an empty click deselects (`selectedPeer` goes from `peer-1` to `null`).
+   - ✔ Palette from tokens: with `data-stage="1"`, `--link-topology` goes from `#f2f2ef29` to `#f2f2ef42` and `--cell-mesh` from 2px to 3px. The canvas picked up 3 px cells and larger particles (`walk-05-stage.png` vs `walk-05-default.png`).
+   - ✔ Layer order: every `layerIds()` read above is a subsequence of `LAYER_IDS`.
+   - ✔ Topology edges toggle: `showEdges:false` gives `pulses, particles, halos, nodes`, and `true` restores `edges, mesh-edges`.
+   - ✔ Attack links: seen in items 1 and 3.
+   - ✔ Mesh overlay: present at 50 (`mesh-edges`) and absent at 200.
+   - ✔ Hover: a real pointer hover found `peer-21`. Layers gained `hover-edges` and `hover-peer-rings`. The tooltip showed `data-show="1"` with text `n21 RECEIVING peer-21 peers 15 score +6.25 sent · recv ↑17 · ↓871` (`walk-04-hover-tooltip.png`).
+   - ✔ Pulses and particles: `pulses` and `particles` are in the layer list while the sim runs. Trigger kinds (message, spam, graft, prune, dht, fault burst) are covered by `particles.test.ts` and the renderer tests.
+   - ✔ Node discs: radius by n, ×1.5 when selected, ×1.15 for attackers. Covered by `renderer.test.ts` (`selection draws the reticle at 2 r and ×1.5 size…`) and visible in the screenshots.
+   - ✔ Halo (dithered cells on the discs, screenshots). ✔ Observer ring (`observer-rings` in Geo).
+   - ✔ Selection reticle (`reticle` layer when selected).
+   - ✔ Event-click highlight: `selectPeer('peer-1', ['peer-2'])` adds `reticle, event-highlight-edges, event-highlight-rings`.
+   - ✔ Labels: `allLabels` at 50 nodes gives a `labels` layer. `showLabels:false` gives no `labels`.
+   - ✔ World map (item 5). ✔ Tooltip (hover row above). ✔ fitView (item 4). ✔ rAF loop idle (Step 2).
+   - ✔ Force / radial / geo layouts: `RADIAL` click → mode `radial`, 1 relayout. `FORCE` → back. Geo as in item 5.
+   - ✔ Visibility rule: Geo draws 141 observers only. Force and Radial draw sim peers only.
+   - ✔ Relayout trigger: 0 `layout` measures over 5 s of a running sim (states changed: 46 receiving, 2 origin, 2 idle).
+   - ✔ Mode switcher:
+     - Disabled reason as in item 5.
+     - Auto-Geo once: from Radial, feed on → `geo` with `layoutBeforeGeo: 'radial'`. Feed off → restored to `radial`. Feed on again → stays `radial`, with `geoAutoDone: true`.
+     - Manual pick clears memory: in Geo, clicking `FORCE` gives `layoutBeforeGeo: null`.
+     - Selection dropped: observer `obs-39a12e6a` was selected in Geo and became `null` after switching to Force.
+     - With manual Geo and memory cleared, feed off → `force`, and GEO is disabled again.
+   - ✔ BlockSeen flash on observers: `pulses` appeared in Geo while observer states moved through `idle → origin/decoded`.
+8. ✔ `list_console_messages` (errors and warnings across the walk) shows only `WebSocket connection to 'ws://localhost:8000/ws/events' failed: WebSocket is closed before the connection is established` ×3. That is the known dev-only StrictMode double-mount from Task 1.7/1.10. There were no errors.
+   - `cd web && npx tsc --noEmit` ✔
+   - `npm run lint` ✔
+   - `npx vitest run` ✔ (26 files, 126 tests)
+   - `npm run build` ✔
+   - `make check` at the root ✔ (exit 0; ruff "All checks passed!", pytest 128 passed, frontend tsc and vite build)
+
+## Gate verdict
+
+Everything in the phase-2 checklist renders on the live backend. Two acceptance lines are short:
+
+- **200-node cold layout and first paint ≤ 1 s** was not met on this run: 1.47 s while throttled on battery, where d3-force alone takes 1.2–1.4 s.
+- **Victim halos going flame** cannot happen with the current backend data, as found in Task 2.5.
+
+Both need an owner decision. The first needs a re-measure at full clock, and possibly a `layout.ts` tick change. The second needs a scenario or backend change, or a different line in the talk.

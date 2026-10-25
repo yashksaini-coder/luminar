@@ -10,10 +10,10 @@ import { isAttackerId, isPruned, isSimPeer, shortName } from '@/lib/format'
 import { monoFamily } from '@/lib/fonts'
 import { reducedMotion } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
-import type { AppEvent, NodeState, PeerNode, RGBA } from '@/lib/types'
+import type { AppEvent, Edge, LayoutMode, NodeState, PeerNode, RGBA } from '@/lib/types'
 import { atlasKey, buildAtlas, type GlyphId, glyphFor, HALO_OUTER, haloFor, type IconAtlas } from './atlas'
 import { bezierPoint, breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA, PARTICLE_CAP, particleFrame, PULSE_CAP, pulseAlpha } from './geometry'
-import { attackerLayoutEdges, computeLayout, GEO_SCALE, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
+import { attackerLayoutEdges, computeLayout, edgesKey, GEO_SCALE, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
 import { PAL, type PaletteKey, PARTICLE_KEY, type ParticleKind, refreshPalette, scoreBand, withAlpha } from './palette'
 
 export const LAYER_IDS = ['world-land', 'edges', 'attack-links', 'mesh-edges', 'hover-edges', 'hover-peer-rings', 'pulses', 'particles', 'halos', 'nodes', 'observer-rings', 'reticle', 'event-highlight-edges', 'event-highlight-rings', 'labels'] as const
@@ -33,6 +33,7 @@ let deck: Deck<OrthographicView> | null = null
 let nodePositions: Pos[] = []
 let nodeIndex = new Map<string, number>()
 let topoKey = ''
+let topoInputs: [PeerNode[], Edge[], LayoutMode] | null = null   // the store refs topoKey was last checked against
 let atlas: IconAtlas | null = null
 let atlasK = ''
 let dirty = false
@@ -185,6 +186,7 @@ export function destroyRenderer(): void {
   atlas = null
   atlasK = ''
   topoKey = ''          // a remount relayouts (warm from layout memory) and refits its fresh view
+  topoInputs = null
   fitPending = false
   dirty = false
   observersVisible = false
@@ -252,14 +254,19 @@ export function renderLayers(): void {
   const { nodes, edges, layoutMode, selectedPeer } = s
   refreshPalette()
 
-  const key = topologyKey(layoutMode, nodes, edges)
-  if (key !== topoKey) {
-    performance.mark('layout:start')
-    nodePositions = computeLayout(layoutMode, nodes, [...edges, ...attackerLayoutEdges(nodes)], key).positions
-    performance.measure('layout', 'layout:start')
-    nodeIndex = new Map(nodes.map((n, i) => [n.peer_id, i]))
-    topoKey = key
-    fitPending = true
+  // The key string is only rebuilt when the store hands over new arrays, not on every animating frame.
+  if (!topoInputs || nodes !== topoInputs[0] || edges !== topoInputs[1] || layoutMode !== topoInputs[2]) {
+    topoInputs = [nodes, edges, layoutMode]
+    const key = topologyKey(layoutMode, nodes, edges)
+    if (key !== topoKey) {
+      performance.mark('layout:start')
+      // Layout memory is keyed by the edge set alone, so a node joining the same topology (an attacker) settles warm around pinned peers.
+      nodePositions = computeLayout(layoutMode, nodes, [...edges, ...attackerLayoutEdges(nodes)], `${edgesKey(edges)}|${layoutMode}`).positions
+      performance.measure('layout', 'layout:start')
+      nodeIndex = new Map(nodes.map((n, i) => [n.peer_id, i]))
+      topoKey = key
+      fitPending = true
+    }
   }
 
   if (nodes !== lastNodes) { diffStates(nodes); lastNodes = nodes }
@@ -533,6 +540,7 @@ export function visiblePositions(): Map<string, Pos> {
 
 export function resetTopology(): void {
   topoKey = ''
+  topoInputs = null
   resetLayoutMemory()
   markDirty()
 }
