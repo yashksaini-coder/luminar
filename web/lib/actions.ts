@@ -224,6 +224,7 @@ export function teardownSim(): void {
   loadAbort?.abort()
   ws.disconnect()
   unloadReel()
+  useStore.setState({ reel: null, reelLoad: null })   // an aborted load leaves enterReel's provisional reel and its progress behind
 }
 
 export async function shareMoment(): Promise<void> {

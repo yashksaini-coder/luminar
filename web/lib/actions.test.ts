@@ -122,10 +122,11 @@ test('enterReel sets a provisional reel before the file loads, so the pill reads
   expect(during).toBe('reel'); expect(seenSignal).toBeInstanceOf(AbortSignal); expect(ws.disconnect).toHaveBeenCalled()
   expect(useStore.getState().reel).toMatchObject({ name: 'sybil-eclipse', title: 'Sybil → Eclipse' })
 })
-test('teardownSim aborts a pending load and the aborted load does not exitReel', async () => {
-  vi.mocked(loadReel).mockImplementation(async (_m, opts) => new Promise(res => opts!.signal!.addEventListener('abort', () => res(false))))
-  const p = bootSim({ reel: meta, search: '' }); teardownSim(); await p
+test('teardownSim aborts a pending load, clears the provisional reel and its progress; the aborted load does not exitReel', async () => {
+  vi.mocked(loadReel).mockImplementation(async (_m, opts) => { useStore.getState().setReelLoad({ loaded: 1, total: 2 }); return new Promise(res => opts!.signal!.addEventListener('abort', () => res(false))) })
+  const p = bootSim({ reel: meta, search: '' }); expect(useStore.getState().reel).not.toBeNull(); teardownSim(); await p
   expect(unloadReel).toHaveBeenCalled(); expect(ws.connect).not.toHaveBeenCalled(); expect(location.pathname).not.toBe('/sim/')
+  expect(useStore.getState().reel).toBeNull(); expect(useStore.getState().reelLoad).toBeNull()   // else the next live boot runs under reelGuard
 })
 test('bootSim in reel mode never opens the socket or calls the API, and applies the moment after load', async () => {
   vi.mocked(loadReel).mockImplementation(async () => { useStore.getState().applySnapshot(snapWith(['peer-0', 'sybil-0'])); return true })
