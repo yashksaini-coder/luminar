@@ -9,7 +9,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "studio": "remotion studio",
-    "video": "remotion render LaunchWide video-out/luminar-16x9.mp4 --codec h264 --crf 18 && remotion render LaunchTall video-out/luminar-9x16.mp4 --codec h264 --crf 18 && remotion still LaunchWide video-out/cover.png --frame 1620 && remotion render LaunchWide public/video/launch-16x9.mp4 --codec h264 --crf 28 --scale 0.6667 && remotion still LaunchWide public/video/poster.png --frame 1620"
+    "video": "remotion render LaunchWide video-out/luminar-16x9.mp4 --codec h264 --crf 18 && remotion render LaunchTall video-out/luminar-9x16.mp4 --codec h264 --crf 18 && remotion still LaunchWide video-out/cover.png --frame 1620 && remotion still LaunchWide public/video/poster.png --frame 1620 && remotion ffmpeg -y -i video-out/luminar-16x9.mp4 -vf scale=1280:720 -c:v libx264 -crf 28 -pix_fmt yuv420p -an public/video/launch-16x9.mp4"
   },
   "dependencies": {
     "@deck.gl/core": "9.4.0",
