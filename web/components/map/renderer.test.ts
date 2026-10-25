@@ -193,6 +193,7 @@ test('edges, mesh-edges and nodes keep their data identity across animating fram
   expect(first('edges')).toBe(e1); expect(first('mesh-edges')).toBe(m1); expect(first('nodes')).toBe(n1)
   // a new edge set from the store is a new array
   useStore.getState().applyEdges({ type: 'edges', edges: ring(10).slice(0, 8) }); flush(); expect(first('edges')).not.toBe(e1); expect(first('edges')).toHaveLength(8)
+  expect(first('nodes')).not.toBe(n1)   // same nodes, new positions: deck only re-reads getPosition on a new data array
 })
 test('selection draws the reticle at 2 r and ×1.5 size; hover draws 2 px edges and r+4 rings; event highlight lines + rings', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(5) }); useStore.getState().applySnapshot(snapWith(peers(5).map(p => p.peer_id))); flush()

@@ -283,7 +283,8 @@ export function renderLayers(): void {
 
   if (nodes !== lastNodes) { diffStates(nodes); lastNodes = nodes }
 
-  const visible = memoBy(visibleMemo, [nodes, layoutMode], () => nodes.filter(n => isNodeVisible(layoutMode, n)))
+  // Keyed on nodePositions too: the nodes layer reads positions through a closure, so a relayout must hand deck a new data array.
+  const visible = memoBy(visibleMemo, [nodes, layoutMode, nodePositions], () => nodes.filter(n => isNodeVisible(layoutMode, n)))
   observersVisible = false
   if (visible.length === 0) { particles = []; pulses = []; setLayers([]); return }
   const posOf = (id: string): Pos | undefined => {
