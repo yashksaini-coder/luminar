@@ -30,13 +30,14 @@ const T_CAPTION_HIGH: Box = { x: 60, y: 360, w: 960, h: 100 }   // scenes whose 
 const T_READOUT: Box = { x: 60, y: 240, w: 960, h: 120 }
 const T_STRIP: Box = { x: 40, y: 1460, w: 1000, h: 140 }
 const T_STAMP: SceneLayout['stamp'] = { anchor: 'tr', inset: [60, 380] }
+const T_STAMP_TOP: SceneLayout['stamp'] = { anchor: 'c', inset: [0, -620] }   // centred at y 340: top third, between SAFE_TALL.top and the square
 const T_STAMP_LOW: SceneLayout['stamp'] = { anchor: 'tr', inset: [60, 480] }   // inside the square's top-right, clear of T_CAPTION_HIGH
 
 const wide = (l: Partial<SceneLayout> = {}): SceneLayout => ({ stamp: W_STAMP, headlinePx: 96, monoPx: 28, cell: 3, ...l })
 const tall = (l: Partial<SceneLayout> = {}): SceneLayout => ({ stamp: T_STAMP, headlinePx: 72, monoPx: 36, cell: 3, ...l })
 
 export const LAYOUT: Record<SceneId, Record<Orientation, SceneLayout>> = {
-  'cold-open': { wide: wide({ mesh: W_MESH, stamp: { anchor: 'c', inset: [0, 0] } }), tall: tall({ mesh: T_MESH, stamp: { anchor: 'c', inset: [0, 0] } }) },
+  'cold-open': { wide: wide({ mesh: W_MESH, stamp: { anchor: 'c', inset: [0, 0] } }), tall: tall({ mesh: T_MESH, stamp: T_STAMP_TOP }) },
   title: { wide: wide({ caption: W_CAPTION }), tall: tall({ caption: T_CAPTION }) },
   healthy: { wide: wide({ mesh: W_MESH, caption: W_CAPTION, readout: W_READOUT }), tall: tall({ mesh: T_MESH, caption: T_CAPTION, readout: T_READOUT }) },
   sybils: { wide: wide({ mesh: W_MESH, readout: W_READOUT }), tall: tall({ mesh: T_MESH, readout: T_READOUT }) },

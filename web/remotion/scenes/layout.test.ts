@@ -17,3 +17,8 @@ test('the stamp never overlaps the caption, readout or strip', () => {
     for (const b of [l.caption, l.readout, l.strip]) if (b) expect(hit(s, b), `${id} ${o}`).toBe(false)
   }
 })
+
+test('the tall cold-open stamp sits in the top third, below the safe zone and above the mesh square', () => {
+  const l = LAYOUT['cold-open'].tall; const s = stampBox(l, SIZE.tall)
+  expect(s.y).toBeGreaterThanOrEqual(SAFE_TALL.top); expect(s.y + s.h).toBeLessThanOrEqual(Math.min(SIZE.tall.height / 3, l.mesh!.y))
+})
