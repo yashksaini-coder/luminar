@@ -139,3 +139,18 @@ test('runKey reel N navigates to the reel route carrying theme/hero; past the la
   runKey('reel', 4); expect(assign).toHaveBeenCalledTimes(1)
   runKey('backToLive'); expect(assign).toHaveBeenLastCalledWith('/sim/?theme=stage')
 })
+test('runKey 0 on a live page with no reel is a no-op: topology, mainnet and socket untouched', () => {
+  vi.stubGlobal('location', { ...location, pathname: '/sim/', search: '', assign: vi.fn() })
+  const mainnet = { slot: 1 } as unknown as ReturnType<typeof useStore.getState>['mainnet']
+  useStore.setState({ mainnet })
+  runKey('backToLive')
+  expect(resetTopology).not.toHaveBeenCalled(); expect(ws.connect).not.toHaveBeenCalled(); expect(useStore.getState().mainnet).toBe(mainnet)
+})
+test('StrictMode boot, teardown, boot on a reel page: the first load aborts quietly, the second lands (no redirect)', async () => {
+  const assign = vi.fn(); vi.stubGlobal('location', { ...location, pathname: `/reels/${meta.name}/`, search: '?t=2', assign })
+  vi.mocked(loadReel).mockImplementation(async (_m, opts) => { await Promise.resolve(); return !opts?.signal?.aborted })
+  const first = bootSim({ reel: meta, search: '?t=2' }); teardownSim(); const second = bootSim({ reel: meta, search: '?t=2' })
+  await Promise.all([first, second])
+  expect(vi.mocked(loadReel).mock.calls[0][1]?.signal?.aborted).toBe(true)
+  expect(assign).not.toHaveBeenCalled(); expect(useStore.getState().reel?.name).toBe(meta.name); expect(seekReelToSimTime).toHaveBeenCalledTimes(1)
+})
