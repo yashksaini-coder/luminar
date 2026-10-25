@@ -1,11 +1,13 @@
 import { test, expect, beforeEach, vi } from 'vitest'
 import * as client from '@/lib/api/client'
-import { toggleReel } from '@/lib/api/replay'
+import { loadReel, seekReelToSimTime, toggleReel, unloadReel } from '@/lib/api/replay'
+import { ws } from '@/lib/api/websocket'
+import { REEL_MANIFEST } from '@/lib/reels'
 import { resetTopology, fitView } from '@/components/map/renderer'
-import { useStore } from '@/lib/store'
+import { selectPill, useStore } from '@/lib/store'
 import { peerNode, snapWith } from '@/lib/fixtures'
 import {
-  autoPauseIfDue, initAutoGeo, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
+  autoPauseIfDue, bootSim, enterReel, initAutoGeo, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
 } from '@/lib/actions'
 
 // Every request function becomes a bare vi.fn(); toastFor stays real so the toast text is the real one.
@@ -19,9 +21,11 @@ let positions = new Map<string, [number, number]>()
 vi.mock('@/components/map/renderer', () => ({ visiblePositions: () => positions, resetTopology: vi.fn(), fitView: vi.fn() }))
 
 const api = vi.mocked(client)
+const meta = REEL_MANIFEST[0]
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
   useStore.setState(useStore.getInitialState(), true)
   localStorage.clear()
   positions = new Map()
@@ -100,4 +104,38 @@ test('initAutoGeo picks Geo when the feed is on and real observers arrive, until
   useStore.setState({ geoAvailable: true }); expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().layoutBeforeGeo).toBe('force')
   stop(); useStore.setState({ geoAvailable: false, mainnet: null, layoutMode: 'force', geoAutoDone: false })
   useStore.setState({ geoAvailable: true, mainnet: { enabled: true, observers: 3 } }); expect(useStore.getState().layoutMode).toBe('force')
+})
+test('enterReel sets a provisional reel before the file loads, so the pill reads REEL and the guards hold', async () => {
+  let during: ReturnType<typeof selectPill> | null = null; let seenSignal: AbortSignal | undefined
+  vi.mocked(loadReel).mockImplementation(async (_m, opts) => { seenSignal = opts?.signal; during = selectPill(useStore.getState()); return true })
+  await enterReel(meta)
+  expect(during).toBe('reel'); expect(seenSignal).toBeInstanceOf(AbortSignal); expect(ws.disconnect).toHaveBeenCalled()
+  expect(useStore.getState().reel).toMatchObject({ name: 'sybil-eclipse', title: 'Sybil → Eclipse' })
+})
+test('teardownSim aborts a pending load and the aborted load does not exitReel', async () => {
+  vi.mocked(loadReel).mockImplementation(async (_m, opts) => new Promise(res => opts!.signal!.addEventListener('abort', () => res(false))))
+  const p = bootSim({ reel: meta, search: '' }); teardownSim(); await p
+  expect(unloadReel).toHaveBeenCalled(); expect(ws.connect).not.toHaveBeenCalled(); expect(location.pathname).not.toBe('/sim/')
+})
+test('bootSim in reel mode never opens the socket or calls the API, and applies the moment after load', async () => {
+  vi.mocked(loadReel).mockImplementation(async () => { useStore.getState().applySnapshot(snapWith(['peer-0', 'sybil-0'])); return true })
+  await bootSim({ reel: meta, search: '?t=12.4&peer=sybil-0' })
+  expect(ws.connect).not.toHaveBeenCalled(); expect(api.scenariosList).not.toHaveBeenCalled(); expect(api.simSnapshot).not.toHaveBeenCalled()
+  expect(seekReelToSimTime).toHaveBeenCalledWith(12.4); expect(useStore.getState().selectedPeer).toBe('sybil-0')
+})
+test('bootSim live connects, fetches topology and scenarios, applies ?peer', async () => {
+  api.simSnapshot.mockResolvedValue({ ok: true, status: 200, data: snapWith(['peer-0']) }); api.topologyEdges.mockResolvedValue({ ok: true, status: 200, data: { edges: [] } }); api.scenariosList.mockResolvedValue({ ok: true, status: 200, data: { scenarios: [] } })
+  await bootSim({ reel: null, search: '?peer=peer-0' })
+  expect(ws.connect).toHaveBeenCalledTimes(1); expect(api.scenariosList).toHaveBeenCalled(); expect(useStore.getState().selectedPeer).toBe('peer-0'); expect(loadReel).not.toHaveBeenCalled()
+})
+test('bootSim live with the backend down: no throw, defaults kept, pill OFFLINE, no toast, socket still asked to connect (global review focus 1)', async () => {
+  const down = { ok: false, status: 0, data: null }; api.simSnapshot.mockResolvedValue(down); api.topologyEdges.mockResolvedValue(down); api.scenariosList.mockResolvedValue(down)
+  await expect(bootSim({ reel: null, search: '' })).resolves.toBeUndefined()
+  expect(ws.connect).toHaveBeenCalledTimes(1); expect(useStore.getState().nodes).toEqual([]); expect(useStore.getState().scenarios).toEqual([]); expect(useStore.getState().toasts).toEqual([]); expect(selectPill(useStore.getState())).toBe('offline')
+})
+test('runKey reel N navigates to the reel route carrying theme/hero; past the last reel is a no-op; 0 leaves a reel page for /sim/', () => {
+  const assign = vi.fn(); vi.stubGlobal('location', { ...location, pathname: '/reels/sybil-eclipse/', search: '?theme=stage&t=3', assign })
+  runKey('reel', 3); expect(assign).toHaveBeenCalledWith('/reels/mainnet-block-wave/?theme=stage')
+  runKey('reel', 4); expect(assign).toHaveBeenCalledTimes(1)
+  runKey('backToLive'); expect(assign).toHaveBeenLastCalledWith('/sim/?theme=stage')
 })

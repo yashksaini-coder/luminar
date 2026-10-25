@@ -2,13 +2,12 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
-import { autoPauseIfDue, fetchScenarios, initAutoGeo, runKey, seekTo } from '@/lib/actions'
-import { getStatic } from '@/lib/api/client'
-import { ws } from '@/lib/api/websocket'
+import { autoPauseIfDue, bootSim, initAutoGeo, runKey, seekTo, teardownSim } from '@/lib/actions'
 import { actionForKey } from '@/lib/keys'
 import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
-import type { Beat, ReelManifest } from '@/lib/types'
+import { REEL_MANIFEST } from '@/lib/reels'
+import type { Beat, ReelMeta } from '@/lib/types'
 import CommandStrip from './CommandStrip'
 import Inspector from './Inspector'
 import KeyHelp from './KeyHelp'
@@ -36,24 +35,25 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select,[
 
 const DeckCanvas = dynamic(() => import('@/components/map/DeckCanvas'), { ssr: false })   // mounts Tooltip itself
 
-export default function SimApp() {
+export interface SimAppProps { reel?: ReelMeta | null }
+
+export default function SimApp({ reel = null }: SimAppProps) {
   const inReel = useStore(s => s.reel !== null)
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [drawer, setDrawer] = useState<'stats' | 'log' | null>(null)
   const railL = useRef<HTMLElement>(null)
   const railR = useRef<HTMLElement>(null)
   const shell = useRef<HTMLDivElement>(null)
-  const [manifest, setManifest] = useState<ReelManifest>([])
+  const manifest = REEL_MANIFEST
   useEffect(() => {
     const stopPrefs = initPrefs()   // R5: data-stage and reduced motion apply before the first frame
-    ws.connect()
     const stopAutoGeo = initAutoGeo()
-    return () => { stopAutoGeo(); ws.disconnect(); stopPrefs() }
+    return () => { stopAutoGeo(); stopPrefs() }
   }, [])
-  useEffect(() => {
-    void fetchScenarios()
-    void getStatic<ReelManifest>('/reels/manifest.json').then(m => setManifest(m ?? []))
-  }, [])
+  useEffect(() => {   // reel → no socket, no API; live → socket + topology + scenarios (A.29)
+    void bootSim({ reel, search: location.search })
+    return teardownSim
+  }, [reel?.name])   // eslint-disable-line react-hooks/exhaustive-deps -- a new reel name is a new boot; the meta object is static
   useEffect(() => useStore.subscribe(s => s.simTime, () => autoPauseIfDue()), [])
   useEffect(() => {   // back above the breakpoint the rails are inline again: drop drawer and overlay state
     const mq = matchMedia(`(max-width: ${SIM_BREAKPOINT}px)`)

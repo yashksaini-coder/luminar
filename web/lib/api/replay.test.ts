@@ -95,3 +95,22 @@ test('priming renders the mesh while the stream is still open, before the reel i
   release()
   expect(await done).toBe(true); expect(useStore.getState().reel?.durationMs).toBe(2100)
 })
+test('parseReelChunk keeps only object lines with a string type or a frame key (R33)', () => {
+  const text = ['null', '42', '"s"', '[1]', '{"t":1}', '{"type":3}', '{"t":1,"frame":{"type":"gap"}}', '{"type":"edges","edges":[]}'].join('\n') + '\n'
+  expect(parseReelChunk(text, '').frames).toEqual([{ t: 1, frame: { type: 'gap' } }, { type: 'edges', edges: [] }])
+})
+test('loadReel drops the previous reel before fetching; a superseded load cannot prime or land (R33)', async () => {
+  await loadReel(meta); expect(reelLoaded()).toBe(true)
+  let release = () => {}
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ReadableStream<Uint8Array>({
+    async start(c) { await new Promise<void>(r => { release = r }); c.enqueue(new TextEncoder().encode(lines)); c.close() },
+  }), { status: 200 })))
+  const first = loadReel(meta); expect(reelLoaded()).toBe(false)
+  await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1))
+  const firstRelease = release
+  useStore.setState(useStore.getInitialState(), true)
+  const second = loadReel({ ...meta, title: 'Second' })
+  await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+  firstRelease(); expect(await first).toBe(false); expect(useStore.getState().nodes).toHaveLength(0); expect(useStore.getState().reel).toBeNull()
+  release(); expect(await second).toBe(true); expect(useStore.getState().reel?.title).toBe('Second')
+})

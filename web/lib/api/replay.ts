@@ -18,6 +18,7 @@ let lastTick = 0
 let timer: ReturnType<typeof setInterval> | null = null
 let playing = false
 let speed = 1
+let loadGen = 0         // bumped by every loadReel; an older load that sees a newer gen stops (R33)
 
 const typeOf = (f: WsFrame): string | null => isTypedFrame(f) ? f.type : null
 
@@ -32,13 +33,21 @@ export function parseReelChunk(text: string, carry: string): { frames: ReelFrame
   const out: ReelFrame[] = []
   for (const line of parts) {
     if (!line) continue
-    try { out.push(JSON.parse(line) as ReelFrame) } catch { /* skip malformed line */ }
+    let v: unknown
+    try { v = JSON.parse(line) } catch { continue }   // skip malformed line
+    if (isFrameLine(v)) out.push(v as ReelFrame)
   }
   return { frames: out, carry: tail }
 }
 
+// R33: only objects carrying a string `type` or a `frame` key; null, numbers, arrays and the rest are dropped.
+const isFrameLine = (v: unknown): boolean =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && (typeof (v as { type?: unknown }).type === 'string' || 'frame' in v)
+
 export async function loadReel(meta: ReelMeta, opts?: { signal?: AbortSignal }): Promise<boolean> {
-  stopReel()
+  unloadReel()   // the previous reel's frames go before the fetch (R33)
+  const gen = ++loadGen
+  const stale = () => gen !== loadGen || !!opts?.signal?.aborted
   const s = useStore.getState()
   const parsed: ReelFrame[] = []
   let primed = false
@@ -48,7 +57,7 @@ export async function loadReel(meta: ReelMeta, opts?: { signal?: AbortSignal }):
       parsed.push(f)
       const type = typeOf(f.frame)
       if (type === 'edges' || type === 'scenario') latest[type] = f.frame
-      if (type !== 'snapshot' || primed) continue
+      if (type !== 'snapshot' || primed || stale()) continue
       primed = true   // priming: render the mesh before the rest of the file arrives
       if (latest.edges) dispatchFrame(latest.edges)
       if (latest.scenario) dispatchFrame(latest.scenario)
@@ -65,6 +74,7 @@ export async function loadReel(meta: ReelMeta, opts?: { signal?: AbortSignal }):
     let carry = '', loaded = 0, lastReport = -Infinity
     for (;;) {
       const { done, value } = await reader.read()
+      if (stale()) { void reader.cancel(); return false }
       if (done) break
       loaded += value.byteLength
       const now = Date.now()
@@ -75,9 +85,10 @@ export async function loadReel(meta: ReelMeta, opts?: { signal?: AbortSignal }):
     }
     take(parseReelChunk(carry + decoder.decode() + '\n', '').frames)   // a line cut at EOF is malformed and skipped
   } catch {
-    s.setReelLoad(null)
+    if (!stale()) s.setReelLoad(null)
     return false
   }
+  if (stale()) return false
   if (parsed.length === 0) { s.setReelLoad(null); return false }
   frames = parsed
   const snaps = parsed.filter(f => typeOf(f.frame) === 'snapshot')

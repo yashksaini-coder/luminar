@@ -9,6 +9,7 @@ import { ws } from '@/lib/api/websocket'
 import { geoOnly, REEL_GUARD } from '@/lib/copy'
 import { isSimPeer, shortId } from '@/lib/format'
 import type { KeyAction } from '@/lib/keys'
+import { carryParams, liveHref, REEL_MANIFEST, reelHref } from '@/lib/reels'
 import { useStore } from '@/lib/store'
 import type { ReelManifest, ReelMeta } from '@/lib/types'
 
@@ -177,21 +178,52 @@ export function initAutoGeo(): () => void {
   )
 }
 
+let loadAbort: AbortController | null = null
+
 export async function enterReel(meta: ReelMeta): Promise<boolean> {
   ws.disconnect()
   useStore.setState({ mainnet: null })   // the reel brings its own status (real reels) or none
   resetTopology()
-  const ok = await loadReel(meta)
-  if (!ok) exitReel()
+  S().setReel({ name: meta.name, title: meta.title, durationMs: 0, durationSim: 0 })   // provisional: pill reads REEL, guards hold while loading
+  loadAbort?.abort()
+  const ctl = new AbortController(); loadAbort = ctl
+  const ok = await loadReel(meta, { signal: ctl.signal })
+  if (!ok && !ctl.signal.aborted) exitReel()   // an aborted load was torn down on purpose
   return ok
 }
 
 export function exitReel(): void {
+  loadAbort?.abort()
   unloadReel()
   S().setReel(null)
   useStore.setState({ mainnet: null })   // a real reel's recorded status must not outlive it
   resetTopology()
-  ws.connect()   // the /reels/<name>/ → /sim/ navigation lands with Task 4.2 (A.0)
+  if (location.pathname.startsWith('/reels/')) location.assign(liveHref(carryParams(location.search, ['theme', 'hero'])))
+  else ws.connect()
+}
+
+export function openReel(name: string): void {
+  location.assign(reelHref(name, carryParams(location.search, ['theme', 'hero'])))
+}
+
+export interface BootOpts { reel: ReelMeta | null; search: string }
+
+/** Reel: no socket, no API. Live: socket, topology, then the moment; failed fetches stay silent (the pill says OFFLINE). */
+export async function bootSim({ reel, search }: BootOpts): Promise<void> {
+  if (reel) {
+    if (await enterReel(reel)) applyUrlMoment(new URLSearchParams(search))
+    return
+  }
+  ws.connect()
+  await fetchTopology()
+  applyUrlMoment(new URLSearchParams(search))
+  void fetchScenarios()
+}
+
+export function teardownSim(): void {
+  loadAbort?.abort()
+  ws.disconnect()
+  unloadReel()
 }
 
 export async function shareMoment(): Promise<void> {
@@ -224,14 +256,14 @@ export function applyUrlMoment(q: URLSearchParams): void {
   if (peer && S().nodeById.has(peer)) S().selectPeer(peer)
 }
 
-export function runKey(action: KeyAction, arg?: number, manifest: ReelManifest = []): void {
+export function runKey(action: KeyAction, arg?: number, manifest: ReelManifest = REEL_MANIFEST): void {
   const s = S()
   switch (action) {
     case 'togglePlay': void togglePlay(); break
     case 'fitView': fitView(); break
     case 'escape': s.selectPeer(null); s.setKeyHelp(false); break
-    case 'reel': { const meta = manifest[arg ?? -1]; if (meta) void enterReel(meta); break }   // no-op past the last
-    case 'backToLive': if (s.reel) exitReel(); break
+    case 'reel': { const meta = manifest[arg ?? -1]; if (meta) openReel(meta.name); break }   // no-op past the last
+    case 'backToLive': if (s.reel || location.pathname.startsWith('/reels/')) exitReel(); break   // live stays put
     case 'share': void shareMoment(); break
     case 'toggleStage': s.setPref('stageTheme'); break
     case 'toggleHero': s.setPref('hero'); break
