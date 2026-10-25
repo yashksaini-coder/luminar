@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, vi } from 'vitest'
+import { test, expect, afterEach, beforeEach, vi } from 'vitest'
 import * as client from '@/lib/api/client'
 import { loadReel, seekReelToSimTime, toggleReel, unloadReel } from '@/lib/api/replay'
 import { ws } from '@/lib/api/websocket'
@@ -23,6 +23,8 @@ vi.mock('@/components/map/renderer', () => ({ visiblePositions: () => positions,
 
 const api = vi.mocked(client)
 const meta = REEL_MANIFEST[0]
+let off = () => {}   // the test's store subscription; afterEach drops it even when an assertion fails
+afterEach(() => off())
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -109,10 +111,10 @@ test('auto-Geo happens once per feed-on', () => {
   useStore.getState().applyTelemetryStatus({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: false, observers: 0 } }); expect(useStore.getState().geoAutoDone).toBe(false)
 })
 test('initAutoGeo picks Geo when the feed is on and real observers arrive, until unsubscribed', () => {
-  const stop = initAutoGeo()
+  off = initAutoGeo()
   useStore.setState({ mainnet: { enabled: true, observers: 3 } }); expect(useStore.getState().layoutMode).toBe('force')   // no observers yet
   useStore.setState({ geoAvailable: true }); expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().layoutBeforeGeo).toBe('force')
-  stop(); useStore.setState({ geoAvailable: false, mainnet: null, layoutMode: 'force', geoAutoDone: false })
+  off(); useStore.setState({ geoAvailable: false, mainnet: null, layoutMode: 'force', geoAutoDone: false })
   useStore.setState({ geoAvailable: true, mainnet: { enabled: true, observers: 3 } }); expect(useStore.getState().layoutMode).toBe('force')
 })
 test('enterReel sets a provisional reel before the file loads, so the pill reads REEL and the guards hold', async () => {
@@ -180,9 +182,9 @@ test('syncUrlMoment writes ?t only while a reel is paused and keeps theme/hero',
   useStore.setState({ reel: null, playing: false }); syncUrlMoment(); expect(location.search).not.toContain('t=')
 })
 test('initUrlMoment mirrors selection and pause changes to the URL', () => {
-  history.replaceState(null, '', '/reels/sybil-eclipse/'); const off = initUrlMoment()
+  history.replaceState(null, '', '/reels/sybil-eclipse/'); off = initUrlMoment()
   useStore.getState().applySnapshot(snapWith(['peer-3'])); useStore.getState().selectPeer('peer-3'); expect(location.search).toBe('?peer=peer-3')
-  useStore.getState().selectPeer(null); expect(location.search).toBe(''); off()
+  useStore.getState().selectPeer(null); expect(location.search).toBe('')
 })
 test('shareMoment copies the current href and toasts Link copied', async () => {
   const writeText = vi.fn(async () => {}); vi.stubGlobal('navigator', { clipboard: { writeText } })
@@ -194,12 +196,12 @@ test('without navigator.clipboard (http on the venue LAN) shareMoment prompts wi
   useStore.getState().applySnapshot(snapWith(['peer-0'])); expect(() => applyUrlMoment(new URLSearchParams('peer=ghost'))).not.toThrow(); expect(useStore.getState().selectedPeer).toBeNull()
 })
 test('initAutoGeo waits for observers, switches to geo once, and re-arms when the feed goes off', () => {
-  const off = initAutoGeo()
-  const obs = { peer_id: 'obs-1', index: 0, state: 'idle' as const, connected_peers: [], is_real: true, x: 10, y: -25, messages_sent: 0, messages_received: 0, gossip_score: 0 }
+  off = initAutoGeo()
+  const obs ={ peer_id: 'obs-1', index: 0, state: 'idle' as const, connected_peers: [], is_real: true, x: 10, y: -25, messages_sent: 0, messages_received: 0, gossip_score: 0 }
   dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 138, slot: 15466393 } })
   expect(useStore.getState().layoutMode).toBe('force')                        // no observers yet
   dispatchFrame({ ...snapWith([]), type: 'snapshot', nodes: [obs] }); expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().layoutBeforeGeo).toBe('force')
   useStore.getState().setLayoutMode('radial'); dispatchFrame({ ...snapWith([]), type: 'snapshot', nodes: [obs] }); expect(useStore.getState().layoutMode).toBe('radial')   // once per feed-on
   dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: false, observers: 0 } })
-  dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 138 } }); expect(useStore.getState().layoutMode).toBe('geo'); off()
+  dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 138 } }); expect(useStore.getState().layoutMode).toBe('geo')
 })
