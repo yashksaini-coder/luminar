@@ -33,9 +33,10 @@ Luminar follows a **client-server architecture** with an event-sourced backend a
 - **Purpose**: User-initiated actions (play, pause, inject fault, apply topology)
 - **Format**: JSON request/response
 - **Endpoints**: generated reference at `/docs` (Swagger UI)
-- **Dev proxy**: Vite (`frontend/vite.config.ts`) proxies `/api` and `/ws` to `http://localhost:8000`
-- **Production**: `backend/main.py` mounts the built `frontend/dist` as a SPA at `/`
-  (same origin, no proxy)
+- **Dev proxy**: Next (`web/next.config.ts`) rewrites `/api` to `http://localhost:8000`; the
+  WebSocket connects to `NEXT_PUBLIC_WS_URL ?? ws://localhost:8000` in dev
+- **Production**: `backend/main.py` mounts `frontend/dist` (= `web/out`, the Next static export)
+  with `StaticFiles(html=True)` at `/` (same origin, no proxy)
 
 ### WebSocket
 - **Purpose**: Real-time event streaming (backend → frontend)
