@@ -313,12 +313,16 @@
 html {
   background: var(--bg);
   color: var(--fg);
+  color-scheme: dark;
+}
+/* The body font lives on <body>, not <html>, so the root stays 16px and rem tokens (--t-poster) resolve as written. */
+body {
+  min-height: 100dvh;
+  background: var(--bg);
   font: 400 var(--t-body)/var(--lh-body) var(--font-mono);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
-  color-scheme: dark;
 }
-body { min-height: 100dvh; background: var(--bg); }
 button, input, select, textarea {
   font: inherit;
   color: inherit;
