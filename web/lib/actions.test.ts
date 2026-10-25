@@ -8,7 +8,7 @@ import { selectPill, useStore } from '@/lib/store'
 import { peerNode, snapWith } from '@/lib/fixtures'
 import { dispatchFrame } from '@/lib/api/dispatch'
 import {
-  applyUrlMoment, autoPauseIfDue, bootSim, enterReel, initAutoGeo, initUrlMoment, shareMoment, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
+  applyUrlMoment, autoPauseIfDue, bootSim, enterReel, initAutoGeo, initUrlMoment, shareMoment, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay, reset, setSpeed,
 } from '@/lib/actions'
 
 // Every request function becomes a bare vi.fn(); toastFor stays real so the toast text is the real one.
@@ -62,6 +62,15 @@ test('togglePlay at the limit extends maxDuration by durationStep before POST pl
   useStore.setState({ simTime: 300, maxDuration: 300, durationStep: 120, playing: false }); api.simPlay.mockResolvedValue({ ok: true, status: 200, data: null })
   await togglePlay(); expect(useStore.getState().maxDuration).toBe(420); expect(api.simPlay).toHaveBeenCalled()
   useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } }); await togglePlay(); expect(toggleReel).toHaveBeenCalled(); expect(api.simPlay).toHaveBeenCalledTimes(1)
+})
+test('play, pause, reset and speed toast only when the POST fails (T9: backend offline on status 0, else the status)', async () => {
+  const texts = () => useStore.getState().toasts.map(t => t.text)
+  api.simSpeed.mockResolvedValue({ ok: false, status: 0, data: null }); await setSpeed(2); expect(texts()).toEqual(['backend offline'])
+  api.simSpeed.mockResolvedValue({ ok: true, status: 200, data: { speed: 4 } }); await setSpeed(4); expect(texts()).toEqual(['backend offline'])
+  api.simReset.mockResolvedValue({ ok: false, status: 500, data: null }); await reset(); expect(texts().at(-1)).toBe('Reset failed · 500')
+  api.simPlay.mockResolvedValue({ ok: false, status: 0, data: null }); await togglePlay(); expect(texts().at(-1)).toBe('backend offline'); expect(texts()).toHaveLength(3)
+  api.simPause.mockResolvedValue({ ok: true, status: 200, data: null }); await togglePlay(); expect(texts()).toHaveLength(3)
+  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } }); await setSpeed(8); expect(texts()).toHaveLength(3); expect(api.simSpeed).toHaveBeenCalledTimes(2)
 })
 test('autoPauseIfDue pauses live at the limit, never in reels', () => {
   api.simPause.mockResolvedValue({ ok: true, status: 200, data: null })
