@@ -1,4 +1,4 @@
-.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check
+.PHONY: help install backend frontend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check web-stats
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -58,6 +58,9 @@ web-test: ## Run web unit tests (vitest)
 
 web-check: ## Web checks (tsc + lint + vitest)
 	cd web && npx tsc --noEmit && npm run lint && npx vitest run
+
+web-stats: ## Regenerate web/lib reel-stats.json + plate-frames.json from the sybil-eclipse reel
+	cd web && npm run reel-stats
 
 # ── Docker ─────────────────────────────────────────────
 

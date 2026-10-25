@@ -7,7 +7,9 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "reel-stats": "node scripts/reel-stats.mjs",
+    "prebuild": "npm run reel-stats"
   },
   "dependencies": {
     "@deck.gl/core": "9.4.0",
