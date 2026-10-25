@@ -12,6 +12,8 @@ web/node_modules
 web/.next
 web/out
 web/remotion/out
+web/video-out
+web/.env*
 
 tests
 report
