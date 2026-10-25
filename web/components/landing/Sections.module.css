@@ -1,0 +1,3 @@
+.section { width: min(var(--col-prose), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
+.h2 { margin: 0 0 42px; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.section p { margin: 0 0 22px; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }
