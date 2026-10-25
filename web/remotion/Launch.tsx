@@ -12,14 +12,10 @@ import Eclipse from './scenes/06-Eclipse'
 import Heal from './scenes/07-Heal'
 import SameNames from './scenes/08-SameNames'
 import Mainnet from './scenes/09-Mainnet'
+import Honesty from './scenes/10-Honesty'
+import End from './scenes/11-End'
 import type { SceneProps } from './scenes/types'
 import { timeline, type SceneId } from './timeline'
-
-const Placeholder: FC<SceneProps> = ({ span }) => (
-  <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', color: 'var(--fg)', fontFamily: 'var(--font-mono)', fontSize: 48 }}>
-    {span.id}
-  </AbsoluteFill>
-)
 
 const SCENES: Record<SceneId, FC<SceneProps>> = {
   'cold-open': ColdOpen,
@@ -31,8 +27,8 @@ const SCENES: Record<SceneId, FC<SceneProps>> = {
   heal: Heal,
   'same-names': SameNames,
   mainnet: Mainnet,
-  honesty: Placeholder,
-  end: Placeholder,
+  honesty: Honesty,
+  end: End,
 }
 
 export const Launch: FC<LaunchProps> = props => {
@@ -50,7 +46,7 @@ export const Launch: FC<LaunchProps> = props => {
         const Scene = SCENES[span.id]
         return (
           <Sequence key={span.id} from={span.from} durationInFrames={span.durationInFrames} name={span.id}>
-            <Scene data={data} orientation={orientation} span={span} />
+            <Scene data={data} orientation={orientation} span={span} repoUrl={props.repoUrl} eventLine={props.eventLine} />
           </Sequence>
         )
       })}
