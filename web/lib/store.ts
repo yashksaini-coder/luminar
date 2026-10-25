@@ -225,6 +225,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     const duration = f.scenario?.duration ?? 0
     if (f.active && duration > 0) put(s, p, 'maxDuration', duration)
     resetNarratorPatch(s, p)
+    put(s, p, 'activeFaults', 0)   // sent only when the backend starts a fresh run (reset, launch, reconfigure): its faults are gone, and their FaultCleared never reaches the socket
     set(p)
   },
 

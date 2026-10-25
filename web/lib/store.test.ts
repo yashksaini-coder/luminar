@@ -90,8 +90,9 @@ test('BlockSeen lights observers between snapshots', () => {
   expect(S().nodeById.get('obs-1')).toMatchObject({ state: 'origin', seen_ms: 320 }); expect(S().nodeById.get('obs-2')?.state).toBe('idle')
 })
 test('applyScenario, applyMetrics, applyTelemetryStatus, applyEdges', () => {
+  const fi = { at: 1, event_type: 'FaultInjected', category: 'fault' as const, fault_type: 'sybil' }; S().applyEvents([fi, fi]); expect(S().activeFaults).toBe(2)
   S().applyScenario({ type: 'scenario', active: true, scenario: { id: 'a', name: 'A', description: '', icon: '', topology_type: 'random', phases: [], duration: 90 } })
-  expect(S().maxDuration).toBe(90); expect(S().activeScenario?.scenario?.id).toBe('a'); expect(S().beats).toEqual([])
+  expect(S().maxDuration).toBe(90); expect(S().activeScenario?.scenario?.id).toBe('a'); expect(S().beats).toEqual([]); expect(S().activeFaults).toBe(0)   // a fresh run: the backend's FaultCleared never reaches the socket
   S().applyScenario({ type: 'scenario', active: false, scenario: null }); expect(S().activeScenario).toBeNull(); expect(S().maxDuration).toBe(90)
   S().applyMetrics({ type: 'metrics', node_count: 50, state_distribution: { idle: 50 }, total_messages_sent: 3, total_messages_received: 9, event_counts: { gossip: 12 }, total_events: 12, stream_manager: { open: 5, max: 64, available: 59 }, dht_coordinator: { active: 1, available: 8 } })
   expect(S().stateDistribution).toEqual({ idle: 50 }); expect(S().streamManager.open).toBe(5)
