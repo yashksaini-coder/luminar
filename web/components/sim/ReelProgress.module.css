@@ -30,5 +30,7 @@
 .fill {
   height: 100%;
   background: var(--dither-50);
-  transition: width var(--d-fast);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  transition: transform var(--d-fast) var(--io);
 }

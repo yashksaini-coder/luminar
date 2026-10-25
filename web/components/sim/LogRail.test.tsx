@@ -32,3 +32,15 @@ test('paused, a batch that trims the 500-row cap leaves the rendered rows (and s
   expect(host.querySelector('header')!.textContent).toContain('following')
   expect(first()).toContain('600.00')
 })
+
+// T8 empty states: no category selected, and no matching row yet.
+test('empty list text: None → "no categories selected · All restores them"; no events → "waiting for the first event"', () => {
+  const list = () => host.querySelector('[role=button]')?.parentElement ?? host.querySelector('[class*=list]')!
+  act(() => [...host.querySelectorAll('button')].find(b => b.textContent === 'None')!.click())
+  expect(host.querySelectorAll('[role=button]').length).toBe(0)
+  expect(list().textContent).toBe('no categories selected · All restores them')
+  act(() => [...host.querySelectorAll('button')].find(b => b.textContent === 'All')!.click())
+  expect(host.querySelectorAll('[role=button]').length).toBe(500)
+  act(() => { useStore.setState({ events: [] }) })
+  expect(list().textContent).toBe('waiting for the first event')
+})

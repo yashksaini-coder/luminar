@@ -83,6 +83,9 @@ export default function LogRail() {
         <span className={styles.hint}>⌥-click isolates</span>
       </div>
       <div ref={listRef} className={styles.list} onScroll={onScroll}>
+        {rows.length === 0 && (
+          <p className={styles.empty}>{active.size === 0 ? 'no categories selected · All restores them' : 'waiting for the first event'}</p>
+        )}
         {rows.map((evt, i) => {
           const { code, tone } = TYPE_CODES[evt.event_type] ?? DEFAULT_TYPE
           const peer = evt.peer_id ?? evt.from_peer

@@ -22,6 +22,7 @@
 .chip[aria-pressed="true"] { color: var(--fg); border-color: var(--fg-3); }
 .chip:hover { color: var(--fg); }
 .hint { font: 400 var(--t-micro)/1.4 var(--font-mono); color: var(--fg-3); }
+.empty { margin: 0; padding: var(--s-3); font: 400 var(--t-label)/1.4 var(--font-mono); color: var(--fg-3); }
 
 .list {
   --log-row: max(var(--row-h), 24px);   /* desktop rows never under 24 px; stage's 26 px wins */
