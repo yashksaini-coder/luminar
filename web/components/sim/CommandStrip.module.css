@@ -1,0 +1,77 @@
+.strip {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  translate: -50%;
+  width: clamp(360px, 76%, 820px);
+  height: var(--strip-h);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-3);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  z-index: 2;
+}
+
+.btn, .speed {
+  font: 500 var(--t-label)/1 var(--font-mono);
+  color: var(--fg-3);
+  background: none;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-0);
+  padding: 6px var(--s-2);
+  cursor: pointer;
+}
+.btn[aria-pressed="true"], .speed[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }
+.btn:hover, .speed:hover { color: var(--fg); }
+
+.time {
+  font: 400 var(--t-label)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.speeds { display: flex; }
+.speeds > .speed + .speed { border-left: 0; }
+.speed { font-variant-numeric: tabular-nums; padding: 6px 6px; }
+
+.menus { display: flex; gap: var(--s-2); }
+
+.kbd {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding-top: var(--s-2);
+  text-align: center;
+  font: 400 var(--t-micro)/1 var(--font-mono);
+  color: var(--fg-3);
+  pointer-events: none;
+}
+
+/* scrubber: 6 px track, nothing on it is dithered */
+.track { position: relative; flex: 1; min-width: 80px; height: 6px; background: var(--hair); }
+.band, .tick, .fill, .head { position: absolute; top: 0; height: 100%; }
+.band { pointer-events: auto; }
+.tick { width: 1px; top: -3px; height: 12px; background: var(--fg-3); }
+.tick[data-kind="prune"], .tick[data-kind="fault"] { background: var(--flame); }
+.fill { left: 0; background: var(--fg); pointer-events: none; }
+.head { width: 2px; top: -4px; height: 14px; translate: -1px; background: var(--paper-0); pointer-events: none; }
+.range { position: absolute; inset: -8px 0; width: 100%; height: 22px; margin: 0; opacity: 0; cursor: pointer; }
+.range[aria-disabled="true"] { cursor: not-allowed; }
+.track:has(.range:focus-visible) { outline: 2px solid var(--focus); outline-offset: 4px; }
+.bubble {
+  position: absolute;
+  bottom: 14px;
+  translate: -50%;
+  padding: 2px var(--s-1);
+  font: 400 var(--t-micro)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  pointer-events: none;
+  white-space: nowrap;
+}
