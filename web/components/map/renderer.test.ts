@@ -31,6 +31,7 @@ vi.mock('@/components/map/atlas', async (importOriginal) => {
   return { ...real, buildAtlas: buildAtlasMock }
 })
 
+import { _deepEqual } from '@deck.gl/core'
 import { RETICLE_CURSOR } from '@/components/dither/Reticle'
 import { resetLayoutMemory, WORLD_BOUNDS } from '@/components/map/layout'
 import { destroyRenderer, fitView, initRenderer, layerIds, resizeRenderer, visiblePositions } from '@/components/map/renderer'
@@ -110,7 +111,8 @@ test('fitView pads 80 px, caps zoom at 4 and is called on the rAF after a relayo
   useStore.getState().applyEdges({ type: 'edges', edges: [] }); useStore.getState().applySnapshot(snapWith(['peer-0'])); flush(); flush()
   const vs = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).at(-1)!.initialViewState; expect(vs.zoom).toBe(4)   // one node → zero bbox → capped
   fitView(); const [prev, last] = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).slice(-2).map(p => p.initialViewState)
-  expect(last).not.toEqual(prev)   // deck drops a deep-equal initialViewState, so a refit after a pan must differ from the last fit
+  // deck 9.4 Deck.setProps (dist/lib/deck.js:347-351) skips an initialViewState that _deepEqual(…, 3) matches, so a refit after a pan must not match the last fit
+  expect(_deepEqual(prev, last, 3)).toBe(false); expect(_deepEqual({ ...prev, fitSeq: 0 }, { ...last, fitSeq: 0 }, 3)).toBe(true)
 })
 
 test('a 0×0 field never produces a NaN view state; the pending fit runs on the next real resize (global review focus 4)', () => {
