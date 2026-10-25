@@ -30,7 +30,7 @@ export default function End({ data, orientation, span, repoUrl, eventLine }: Sce
   return (
     <>
       <Mesh data={data} box={box} camera={{ scale: 1 }} simTime={0} cell={l.cell}
-        style={{ intensity: interpolate(f, out, [0.15, 0], CLAMP), field: interpolate(f, out, [0, 0.02], CLAMP) }} />
+        style={{ edgeAlpha: 1, meshAlpha: 1, intensity: interpolate(f, out, [0.15, 0], CLAMP), field: interpolate(f, out, [0, 0.02], CLAMP) }} />
       <div style={{ position: 'absolute', left: RING_INSET, bottom: tall ? 380 : RING_INSET, lineHeight: 0 }}>
         <HaloRing size={RING} band={2} />
       </div>
