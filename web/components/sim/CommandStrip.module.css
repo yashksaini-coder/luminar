@@ -92,9 +92,11 @@
     gap: var(--s-2);
     padding: var(--s-2);
   }
-  /* bottom stays --strip-bottom: the desktop kbd hint hangs 25 px below the strip inside the clipped canvas */
   .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
   .menus { flex-wrap: wrap; }
+  /* the kbd hint is a third grid row inside the strip, not hung below it: whatever --strip-bottom is, the
+     canvas never clips it (T7 review round 3) */
+  .kbd { position: static; padding-top: 0; }
 }
 
 /* ≤1024: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
