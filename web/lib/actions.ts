@@ -1,5 +1,6 @@
 /** Store actions: what the toolbar, menus and keys do (the old app's luminar:* events, as functions). */
 
+import { shallow } from 'zustand/shallow'
 import { fitView, resetTopology, visiblePositions } from '@/components/map/renderer'
 import * as api from '@/lib/api/client'
 import type { ApiResult } from '@/lib/api/client'
@@ -165,6 +166,15 @@ export function maybeAutoGeo(): void {
   if (!s.mainnet?.enabled || !s.geoAvailable || s.geoAutoDone) return
   s.setLayoutMode('geo', { remember: true })
   useStore.setState({ geoAutoDone: true })
+}
+
+/** The one auto-Geo trigger (A.0): feed on + real observers present → maybeAutoGeo(). Returns the unsubscribe. */
+export function initAutoGeo(): () => void {
+  return useStore.subscribe(
+    s => [s.mainnet?.enabled ?? false, s.geoAvailable] as const,
+    ([on, geo]) => { if (on && geo) maybeAutoGeo() },
+    { equalityFn: shallow },
+  )
 }
 
 export async function enterReel(meta: ReelMeta): Promise<boolean> {

@@ -5,7 +5,7 @@ import { resetTopology, fitView } from '@/components/map/renderer'
 import { useStore } from '@/lib/store'
 import { peerNode, snapWith } from '@/lib/fixtures'
 import {
-  autoPauseIfDue, injectFault, launchScenario, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
+  autoPauseIfDue, initAutoGeo, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
 } from '@/lib/actions'
 
 // Every request function becomes a bare vi.fn(); toastFor stays real so the toast text is the real one.
@@ -87,4 +87,17 @@ test('syncUrlMoment writes ?peer always and ?t only while a reel is paused', () 
   history.replaceState(null, '', '/reels/r/'); useStore.getState().applySnapshot(snapWith(['peer-3'])); useStore.getState().selectPeer('peer-3'); syncUrlMoment(); expect(location.search).toBe('?peer=peer-3')
   useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 }, playing: false, simTime: 12.4 }); syncUrlMoment(); expect(location.search).toBe('?peer=peer-3&t=12.4')
   useStore.setState({ playing: true }); syncUrlMoment(); expect(location.search).toBe('?peer=peer-3')
+})
+test('auto-Geo happens once per feed-on', () => {
+  useStore.setState({ geoAvailable: true }); useStore.getState().applyTelemetryStatus({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 3 } }); maybeAutoGeo()
+  expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().geoAutoDone).toBe(true)
+  useStore.getState().setLayoutMode('force'); maybeAutoGeo(); expect(useStore.getState().layoutMode).toBe('force')
+  useStore.getState().applyTelemetryStatus({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: false, observers: 0 } }); expect(useStore.getState().geoAutoDone).toBe(false)
+})
+test('initAutoGeo picks Geo when the feed is on and real observers arrive, until unsubscribed', () => {
+  const stop = initAutoGeo()
+  useStore.setState({ mainnet: { enabled: true, observers: 3 } }); expect(useStore.getState().layoutMode).toBe('force')   // no observers yet
+  useStore.setState({ geoAvailable: true }); expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().layoutBeforeGeo).toBe('force')
+  stop(); useStore.setState({ geoAvailable: false, mainnet: null, layoutMode: 'force', geoAutoDone: false })
+  useStore.setState({ geoAvailable: true, mainnet: { enabled: true, observers: 3 } }); expect(useStore.getState().layoutMode).toBe('force')
 })

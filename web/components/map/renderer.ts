@@ -1,9 +1,10 @@
 /** deck.gl mesh renderer: a plain module (no React). Reads the store in a rAF loop, lays out once per topology, draws the render table. */
 
 import { Deck, type Layer, OrthographicView } from '@deck.gl/core'
-import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
-import { IconLayer, LineLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { FillStyleExtension, type FillStyleExtensionProps, PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
+import { IconLayer, LineLayer, PathLayer, PolygonLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { RETICLE_CURSOR } from '@/components/dither/Reticle'
+import { getStatic } from '@/lib/api/client'
 import { subscribeEvents } from '@/lib/api/dispatch'
 import { isAttackerId, isPruned, isSimPeer, shortName } from '@/lib/format'
 import { monoFamily } from '@/lib/fonts'
@@ -12,7 +13,7 @@ import { useStore } from '@/lib/store'
 import type { AppEvent, NodeState, PeerNode, RGBA } from '@/lib/types'
 import { atlasKey, buildAtlas, type GlyphId, glyphFor, HALO_OUTER, haloFor, type IconAtlas } from './atlas'
 import { bezierPoint, breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA, PARTICLE_CAP, particleFrame, PULSE_CAP, pulseAlpha } from './geometry'
-import { attackerLayoutEdges, computeLayout, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
+import { attackerLayoutEdges, computeLayout, GEO_SCALE, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
 import { PAL, type PaletteKey, PARTICLE_KEY, type ParticleKind, refreshPalette, scoreBand, withAlpha } from './palette'
 
 export const LAYER_IDS = ['world-land', 'edges', 'attack-links', 'mesh-edges', 'hover-edges', 'hover-peer-rings', 'pulses', 'particles', 'halos', 'nodes', 'observer-rings', 'reticle', 'event-highlight-edges', 'event-highlight-rings', 'labels'] as const
@@ -49,6 +50,9 @@ let particles: Particle[] = []
 let pulses: Pulse[] = []
 let prevStates = new Map<string, string>()
 let lastNodes: PeerNode[] | null = null
+let landPolygons: Pos[][] | null = null
+let landRequest: Promise<void> | null = null
+let checker: HTMLCanvasElement | null = null
 
 const STATE_KEY: Record<NodeState, PaletteKey> = {
   idle: 'nodeIdle', origin: 'nodeOrigin', receiving: 'nodeReceiving', decoded: 'nodeDecoded',
@@ -170,6 +174,8 @@ export function destroyRenderer(): void {
   pulses = []
   prevStates = new Map()
   lastNodes = null
+  landPolygons = null
+  landRequest = null
   raf = 0
   atlas = null
   atlasK = ''
@@ -199,6 +205,32 @@ function ensureAtlas(visibleCount: number): IconAtlas {
     atlasK = key
   }
   return atlas
+}
+
+type LandFile = { features: { geometry: { coordinates: number[][][] } }[] }
+
+/** Fetches the land outlines once per renderer (outer rings, degrees → canvas units); a remount or a failed fetch tries again. */
+function ensureLand(): void {
+  if (landPolygons || landRequest) return
+  const req: Promise<void> = getStatic<LandFile>('/geo/land-110m.json').then(fc => {
+    if (landRequest !== req) return   // destroyed (or remounted) while loading
+    landRequest = null
+    if (!fc) return
+    landPolygons = fc.features.map(f => f.geometry.coordinates[0].map(([lon, lat]) => [lon * GEO_SCALE, lat * GEO_SCALE] as Pos))
+    markDirty()
+  })
+  landRequest = req
+}
+
+/** 2×2 mask: paper at (0,0) and (1,1), transparent elsewhere — a 50 % checker. */
+function checkerAtlas(): HTMLCanvasElement {
+  if (!checker) {
+    checker = document.createElement('canvas')
+    checker.width = checker.height = 2
+    const ctx = checker.getContext('2d')
+    if (ctx) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 1, 1); ctx.fillRect(1, 1, 1, 1) }
+  }
+  return checker
 }
 
 function setLayers(layers: Layer[]): void {
@@ -241,6 +273,20 @@ export function renderLayers(): void {
   const getPosition = (d: PeerNode) => posOf(d.peer_id)!
 
   const layers: Layer[] = []
+  if (layoutMode === 'geo') {
+    ensureLand()
+    if (landPolygons) {
+      layers.push(new PolygonLayer<Pos[], FillStyleExtensionProps<Pos[]>>({
+        id: 'world-land', data: landPolygons, getPolygon: d => d,
+        filled: true, stroked: true, getFillColor: PAL.paper0, getLineColor: withAlpha(PAL.paper0, 0.16), lineWidthMinPixels: 1,
+        pickable: false,
+        extensions: [new FillStyleExtension({ pattern: true })],
+        fillPatternAtlas: checkerAtlas(), fillPatternMapping: { checker: { x: 0, y: 0, width: 2, height: 2 } },
+        getFillPattern: () => 'checker', fillPatternMask: true,
+        fillPatternSizeUnits: 'pixels', getFillPatternScale: 1, getFillPatternOffset: [0, 0],   // one pattern pixel = one CSS px at any zoom
+      }))
+    }
+  }
   if (s.showEdges) {
     const edgeData: Seg[] = []
     for (const [src, tgt] of edges) {

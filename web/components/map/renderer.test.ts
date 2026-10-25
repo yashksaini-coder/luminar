@@ -20,6 +20,7 @@ const { FakeDeck, buildAtlasMock, reducedMotionMock } = vi.hoisted(() => {
   return { FakeDeck, buildAtlasMock, reducedMotionMock }
 })
 
+vi.mock('@/lib/api/client', () => ({ getStatic: vi.fn(async () => ({ features: [{ geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 0]]] } }] })) }))
 vi.mock('@deck.gl/core', async (importOriginal) => ({ ...await importOriginal<object>(), Deck: FakeDeck }))
 vi.mock('@/lib/prefs', async (importOriginal) => ({ ...await importOriginal<object>(), reducedMotion: reducedMotionMock }))
 vi.mock('@/components/map/atlas', async (importOriginal) => {
@@ -35,10 +36,11 @@ vi.mock('@/components/map/atlas', async (importOriginal) => {
 
 import { _deepEqual } from '@deck.gl/core'
 import { RETICLE_CURSOR } from '@/components/dither/Reticle'
-import { resetLayoutMemory, WORLD_BOUNDS } from '@/components/map/layout'
+import { GEO_SCALE, resetLayoutMemory, WORLD_BOUNDS } from '@/components/map/layout'
 import { nodeRadiusPx } from '@/components/map/geometry'
 import { PAL } from '@/components/map/palette'
 import { destroyRenderer, fitView, fontsReadyForTest, initRenderer, layerIds, resizeRenderer, spawnParticle, visiblePositions } from '@/components/map/renderer'
+import { getStatic } from '@/lib/api/client'
 import { dispatchFrame, flushEvents } from '@/lib/api/dispatch'
 import { peers, ring, snapWith } from '@/lib/fixtures'
 import { monoFamily } from '@/lib/fonts'
@@ -50,6 +52,7 @@ beforeEach(() => {
   FakeDeck.instances = []
   useStore.setState(useStore.getInitialState(), true)
   reducedMotionMock.mockReturnValue(false)
+  vi.mocked(getStatic).mockClear()
   const st = document.documentElement.style
   st.setProperty('--font-mono', '"__IBM_Plex_Mono_test", monospace')
   // distinct label colours so getColor assertions are not grey == grey
@@ -227,4 +230,12 @@ test('event subscription spawns from the batch; pulses on state change to non-id
   vi.advanceTimersByTime(900); flush(); expect(layerIds()).not.toContain('pulses')
   reducedMotionMock.mockReturnValue(true); destroyRenderer(); mount(); useStore.getState().applySnapshot(snapWith(peers(4).map(p => p.peer_id))); flush()
   useStore.getState().applySnapshot({ ...snapWith(peers(4).map(p => p.peer_id)), nodes: peers(4).map(p => ({ ...p, state: 'decoded' as const })) }); flush(); expect(layerIds()).not.toContain('pulses')
+})
+
+test('geo loads land once and draws it under everything with the checker fill', async () => {
+  mount(); useStore.setState({ geoAvailable: true }); useStore.getState().setLayoutMode('geo'); useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [{ ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 10, y: -25 }] }); flush(); await Promise.resolve(); flush()
+  expect(getStatic).toHaveBeenCalledTimes(1); expect(getStatic).toHaveBeenCalledWith('/geo/land-110m.json')
+  expect(layerIds()[0]).toBe('world-land'); const land = FakeDeck.instances[0].lastLayer('world-land')
+  expect(land.props.getPolygon(land.props.data[0])[1]).toEqual([10 * GEO_SCALE, 0]); expect(land.props.extensions.some((e: any) => e.constructor.extensionName === 'FillStyleExtension')).toBe(true); expect(land.props.fillPatternMask).toBe(true); expect(land.props.pickable).toBe(false)   // eslint-disable-line @typescript-eslint/no-explicit-any
+  useStore.getState().setLayoutMode('force'); flush(); expect(layerIds()).not.toContain('world-land'); useStore.getState().setLayoutMode('geo'); flush(); expect(getStatic).toHaveBeenCalledTimes(1)
 })

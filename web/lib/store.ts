@@ -313,7 +313,8 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
   setLayoutMode(mode, opts) {
     const s = get(), p: Patch = {}
     const next = mode === 'geo' && !s.geoAvailable ? 'force' : mode
-    if (opts?.remember && s.layoutMode !== 'geo') p.layoutBeforeGeo = s.layoutMode
+    if (!opts?.remember) put(s, p, 'layoutBeforeGeo', null)   // R9: a manual pick forgets the layout auto-Geo remembered
+    else if (s.layoutMode !== 'geo') p.layoutBeforeGeo = s.layoutMode
     p.layoutMode = next
     const sel = s.selectedPeer ? s.nodeById.get(s.selectedPeer) : undefined
     if (sel && (next === 'geo') === isSimPeer(sel)) {

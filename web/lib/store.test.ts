@@ -106,3 +106,7 @@ test('setPref flips scale; toasts queue; resetRun clears the run; selectors', ()
   // R2: flat primitives so useShallow can compare them
   expect(selectKpis(S())).toEqual({ delivery: null, propagationMs: null, hops: null, degAvg: null, degMin: null, degMax: null })
 })
+test('setLayoutMode without remember forgets the remembered layout (R9)', () => {
+  useStore.setState({ geoAvailable: true, layoutMode: 'geo', layoutBeforeGeo: 'radial' }); S().setLayoutMode('force')
+  expect(S().layoutMode).toBe('force'); expect(S().layoutBeforeGeo).toBeNull()
+})
