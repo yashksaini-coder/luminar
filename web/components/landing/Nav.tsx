@@ -70,7 +70,7 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
 
   return (
     <header className={styles.nav}>
-      <Link href="/" className={styles.brand} aria-current={cur('/')}>LUMINAR <span className={styles.sub}>gossipsub v1.1</span></Link>
+      <Link href="/" className={styles.brand} aria-current={cur('/')}><span className={styles.word}>LUMINAR</span> <span className={styles.sub}>gossipsub v1.1</span></Link>
       <nav className={styles.links} aria-label="Primary">
         <a href="/sim/" aria-current={cur('/sim/')}>Simulator</a>
         <a href={`/reels/${reels[0].name}/`} aria-current={cur(`/reels/${reels[0].name}/`)}>Recordings</a>
