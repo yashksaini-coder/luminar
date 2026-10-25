@@ -1,4 +1,5 @@
 /** The PAPER layer of the video mesh (the part that gets dithered): topology, mesh edges, honest discs, halos, message squares. */
+import { DITHER_CONTRAST } from '../../components/dither/dither'
 import { BAND_DENSITY, scoreBand } from '../../components/map/palette'
 import { snapshotAt, type ReelData } from '../reel/parse'
 import { activeParticles, flightS } from './particles'
@@ -23,8 +24,9 @@ export function drawMesh(
   ctx.save()
   // opaque pitch ground: the dither reads RGB luma, so paper at alpha a must composite onto black to read as a
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgb(0,0,0)'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore()
+  // noise field: full alpha (independent of intensity), pre-compensated for DITHER_CONTRAST so `field` ≈ lit-cell density
+  if (s.field) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = paper(0.5 + (s.field - 0.5) / DITHER_CONTRAST); ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore() }
   ctx.globalAlpha = s.intensity
-  if (s.field) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = paper(s.field); ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore() }
 
   ctx.lineWidth = 1; ctx.strokeStyle = paper(s.edgeAlpha); ctx.beginPath()
   for (const [a, b] of d.edges) if (honest(a) && honest(b)) line(a, b)
