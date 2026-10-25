@@ -18,7 +18,6 @@
 
 .cell { display: flex; align-items: center; gap: var(--s-2); min-width: 0; flex: none; }
 .cell:first-child { flex: 0 1 auto; }   /* the phase cell truncates, never wraps */
-.cell:first-child .value { min-width: 4ch; }   /* floor so the cell never shrinks under its own key label */
 
 .key {
   font: 600 var(--t-label)/1 var(--font-ui);
@@ -41,3 +40,9 @@
   padding-bottom: .15em;                 /* room for descenders in the phase text */
 }
 .cell[data-danger] .value { color: var(--flame); }
+
+/* Touch band: smaller numbers, tighter gaps, the phase cell truncates and the rest scrolls */
+@media (max-width: 1024px) {
+  .ticker { --t-hero-n: clamp(20px, 3.2vw, 44px); gap: var(--s-3); overflow-x: auto; scrollbar-width: none; }
+  .cell:first-child { min-width: 0; overflow: hidden; }
+}
