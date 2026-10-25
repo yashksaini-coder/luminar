@@ -56,6 +56,16 @@ let landPolygons: Pos[][] | null = null
 let landRequest: Promise<void> | null = null
 let checker: HTMLCanvasElement | null = null
 let viewZoom = 0   // current deck zoom: the land checker's pattern scale follows it
+// deck re-tessellates and re-uploads a layer whenever `data` is a new array, so arrays derived from the frozen topology
+// are rebuilt only when an input changes identity (at 200 nodes the per-frame rebuild of ~1 600 dashed paths cost 20 fps).
+type Memo<T> = { inputs: unknown[] | null; value: T | null }
+const visibleMemo: Memo<PeerNode[]> = { inputs: null, value: null }
+const edgeMemo: Memo<Seg[]> = { inputs: null, value: null }
+const meshMemo: Memo<Seg[]> = { inputs: null, value: null }
+function memoBy<T>(m: Memo<T>, inputs: unknown[], build: () => T): T {
+  if (!m.inputs || inputs.some((v, i) => v !== m.inputs![i])) { m.inputs = inputs; m.value = build() }
+  return m.value as T
+}
 
 const STATE_KEY: Record<NodeState, PaletteKey> = {
   idle: 'nodeIdle', origin: 'nodeOrigin', receiving: 'nodeReceiving', decoded: 'nodeDecoded',
@@ -271,7 +281,7 @@ export function renderLayers(): void {
 
   if (nodes !== lastNodes) { diffStates(nodes); lastNodes = nodes }
 
-  const visible = nodes.filter(n => isNodeVisible(layoutMode, n))
+  const visible = memoBy(visibleMemo, [nodes, layoutMode], () => nodes.filter(n => isNodeVisible(layoutMode, n)))
   observersVisible = false
   if (visible.length === 0) { particles = []; pulses = []; setLayers([]); return }
   const posOf = (id: string): Pos | undefined => {
@@ -304,11 +314,14 @@ export function renderLayers(): void {
     }
   }
   if (s.showEdges) {
-    const edgeData: Seg[] = []
-    for (const [src, tgt] of edges) {
-      const p = posOf(src), q = posOf(tgt)
-      if (p && q) edgeData.push([p, q])
-    }
+    const edgeData = memoBy(edgeMemo, [edges, nodePositions, layoutMode], () => {
+      const out: Seg[] = []
+      for (const [src, tgt] of edges) {
+        const p = posOf(src), q = posOf(tgt)
+        if (p && q) out.push([p, q])
+      }
+      return out
+    })
     if (edgeData.length) {
       const c = PAL.linkTopology
       layers.push(new PathLayer<Seg, PathStyleExtensionProps<Seg>>({
@@ -341,19 +354,22 @@ export function renderLayers(): void {
 
   if (s.showEdges) {
     // The live GossipSub mesh, honest pairs only (attacker pairs are attack links), deduped undirected.
-    const seen = new Set<string>()
-    const meshData: Seg[] = []
-    for (const [src, peers] of Object.entries(s.mesh)) {
-      const p = isAttackerId(src) ? undefined : posOf(src)
-      if (!p) continue
-      for (const tgt of peers) {
-        const pairKey = src < tgt ? `${src}|${tgt}` : `${tgt}|${src}`
-        if (isAttackerId(tgt) || seen.has(pairKey)) continue
-        seen.add(pairKey)
-        const q = posOf(tgt)
-        if (q) meshData.push([p, q])
+    const meshData = memoBy(meshMemo, [s.mesh, nodePositions, layoutMode], () => {
+      const seen = new Set<string>()
+      const out: Seg[] = []
+      for (const [src, peers] of Object.entries(s.mesh)) {
+        const p = isAttackerId(src) ? undefined : posOf(src)
+        if (!p) continue
+        for (const tgt of peers) {
+          const pairKey = src < tgt ? `${src}|${tgt}` : `${tgt}|${src}`
+          if (isAttackerId(tgt) || seen.has(pairKey)) continue
+          seen.add(pairKey)
+          const q = posOf(tgt)
+          if (q) out.push([p, q])
+        }
       }
-    }
+      return out
+    })
     if (meshData.length) {
       layers.push(new LineLayer<Seg>({
         id: 'mesh-edges', data: meshData, getSourcePosition: d => d[0], getTargetPosition: d => d[1],

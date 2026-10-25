@@ -181,6 +181,19 @@ test('attack-links and labels exist empty before any attacker at 200 nodes, so t
   expect(FakeDeck.instances[0].lastLayer('attack-links').props.data).toEqual([])
   expect(FakeDeck.instances[0].lastLayer('labels').props.data).toEqual([])
 })
+test('edges, mesh-edges and nodes keep their data identity across animating frames when the topology is unchanged, so deck does not re-tessellate and re-upload them per frame', () => {
+  // at 200 nodes the per-frame rebuild of ~1 600 dashed paths held a 1440×900 DPR 1.5 burst at 37 fps; with the identity kept it runs at 60
+  const ids = peers(10).map(p => p.peer_id)
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(10) }); useStore.getState().applySnapshot(snapWith(ids, { gossip: { mesh: { 'peer-0': ['peer-1', 'peer-2'], 'peer-1': ['peer-0'] } } })); flush()
+  spawnParticle('peer-0', 'peer-1'); flush()
+  const first = (id: string) => FakeDeck.instances[0].lastLayer(id).props.data
+  const e1 = first('edges'), m1 = first('mesh-edges'), n1 = first('nodes'); expect(e1).toHaveLength(10); expect(m1).toHaveLength(2)
+  vi.advanceTimersByTime(100); flush()   // another animating frame: the particle is still alive
+  expect(FakeDeck.instances[0].setPropsCalls.filter(p => p.layers).length).toBeGreaterThanOrEqual(3)
+  expect(first('edges')).toBe(e1); expect(first('mesh-edges')).toBe(m1); expect(first('nodes')).toBe(n1)
+  // a new edge set from the store is a new array
+  useStore.getState().applyEdges({ type: 'edges', edges: ring(10).slice(0, 8) }); flush(); expect(first('edges')).not.toBe(e1); expect(first('edges')).toHaveLength(8)
+})
 test('selection draws the reticle at 2 r and ×1.5 size; hover draws 2 px edges and r+4 rings; event highlight lines + rings', () => {
   mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(5) }); useStore.getState().applySnapshot(snapWith(peers(5).map(p => p.peer_id))); flush()
   useStore.getState().selectPeer('peer-0', ['peer-2', 'peer-3']); useStore.getState().hoverPeer('peer-1'); flush()
