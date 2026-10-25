@@ -3,13 +3,13 @@
 
 Record:  uv run python scripts/record_reel.py record sybil-eclipse demo_sybil_eclipse \
              --nodes 50 --duration 40
-Check:   uv run python scripts/record_reel.py check frontend/public/reels/sybil-eclipse.jsonl \
+Check:   uv run python scripts/record_reel.py check web/public/reels/sybil-eclipse.jsonl \
              --min-score-prunes 1
 
 The backend must run with LUMINAR_ALLOW_RECORD=1 (recording is off by default because it
 writes unbounded files). Recording talks to that backend (default http://localhost:8000):
 reconfigures the pool, opens /ws/events?record=<name>, launches the scenario at 1x, waits,
-then copies recordings/<name>.jsonl to frontend/public/reels/. Uses the `websockets` package
+then copies recordings/<name>.jsonl to web/public/reels/. Uses the `websockets` package
 that uvicorn[standard] already pulls in — no new dependency.
 """
 
@@ -26,7 +26,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REELS_DIR = ROOT / "frontend" / "public" / "reels"
+REELS_DIR = ROOT / "web" / "public" / "reels"
 
 
 def _token_header() -> dict[str, str]:
