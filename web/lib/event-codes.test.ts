@@ -16,3 +16,6 @@ test('details', () => {
   expect(inspectorDetail({ at: 0, event_type: 'GossipMessage', category: 'gossip', msg_id: 'spam-1' })).toBe('spam')
   expect(inspectorDetail({ at: 0, event_type: 'GossipIHave', category: 'gossip', msg_ids: ['a', 'b', 'c'] })).toBe('3 ids')
 })
+test('fi detail reads the backend sybil count from params.n_attackers', () => {
+  expect(buildDetail({ at: 0, event_type: 'FaultInjected', category: 'fault', fault_type: 'sybil', params: { n_attackers: 5, fault_id: 'f-1' } })).toBe('sybil × 5')
+})

@@ -17,13 +17,17 @@ function activate(evt: AppEvent) {
 }
 
 export default function LogRail() {
-  const events = useStore(s => s.events)
+  const live = useStore(s => s.events)
   const eventCount = useStore(s => s.eventCount)
   const dropped = useStore(s => s.droppedEvents)
   const selectedPeer = useStore(s => s.selectedPeer)
   const [active, setActive] = useState<Set<EventCategory>>(initialFilters)
-  const [following, setFollowing] = useState(true)
+  // Paused holds the events as rendered when the user scrolled away, so new batches (and cap trims) cannot move the view.
+  const [frozen, setFrozen] = useState<AppEvent[] | null>(null)
+  const following = frozen === null
+  const events = frozen ?? live
   const listRef = useRef<HTMLDivElement>(null)
+  const pausedNow = useRef(false)   // set in onScroll, before React re-renders, so an already-queued follow frame cannot yank a paused view to the bottom
   const autoTop = useRef(-1)   // scrollTop we set; its async scroll event can land after new rows grew the list
   const rows = useMemo(() => visibleRows(events, active), [events, active])
 
@@ -31,7 +35,7 @@ export default function LogRail() {
     if (!following) return
     const raf = requestAnimationFrame(() => {
       const el = listRef.current
-      if (!el) return
+      if (!el || pausedNow.current) return
       el.scrollTop = el.scrollHeight
       autoTop.current = el.scrollTop
     })
@@ -40,7 +44,13 @@ export default function LogRail() {
 
   const onScroll = () => {
     const el = listRef.current
-    if (el && el.scrollTop !== autoTop.current) setFollowing(el.scrollHeight - el.scrollTop - el.clientHeight < 30)
+    if (!el) return
+    const ours = el.scrollTop === autoTop.current
+    autoTop.current = -1   // consumed either way, so a user scroll back to that same bottom still resumes following
+    if (ours) return
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30
+    pausedNow.current = !atBottom
+    setFrozen(f => (atBottom ? null : (f ?? live)))
   }
 
   return (

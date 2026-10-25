@@ -7,7 +7,8 @@
   font: 500 var(--t-label)/1.2 var(--font-mono);
 }
 .label { letter-spacing: .12em; color: var(--fg-3); }
-.meta { display: flex; gap: var(--s-2); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+/* Stacked and unwrapped so the header height does not change when following/paused or a count gains a digit: a header that re-wraps resizes the list and fires a scroll that flips following. */
+.meta { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; color: var(--fg-2); font-variant-numeric: tabular-nums; }
 .gap { color: var(--flame-text); }
 
 .chips {
