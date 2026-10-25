@@ -4,7 +4,8 @@
   top: 50%;
   left: 50%;
   z-index: 3;
-  width: 320px;
+  width: max-content;   /* a long title widens the backing with the label */
+  min-width: 320px;
   max-width: calc(100% - 2 * var(--s-4));
   transform: translate(-50%, -50%);
   padding: var(--s-3);
