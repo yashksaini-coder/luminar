@@ -162,7 +162,7 @@
   --font-ui:      "Manrope", -apple-system, "Segoe UI", sans-serif;
   --tnum: "tnum" 1, "zero" 1;                       /* tabular + slashed zero */
 
-  --t-poster: clamp(3.5rem, 13.5vw, 13rem);  /* landing hero line, 56 → 208px  */
+  --t-poster: clamp(3.5rem, min(13.5vw, 22dvh), 13rem);  /* landing hero line, 56 → 208px; dvh keeps the CTA above a landscape fold */
   --t-h1:     clamp(34px, 5.4vw, 76px);      /* section display                */
   --t-hero-n: clamp(44px, 5.2vw, 88px);      /* stage / broadcast numbers      */
   --t-kpi:    clamp(28px, 2.6vw, 40px);      /* panel readout numbers          */
@@ -223,6 +223,13 @@
   --d-caption:  4000ms;  /* narrator drain bar            */
   --stagger:    40ms;
   --parallax-travel: -170px;  /* × data-depth across the plate's scroll life */
+
+  /* ---- section reveal + counters (design-to-motion B6; D2/D9) ------------- */
+  --e:  var(--ease);                     /* transforms on entrance             */
+  --e2: cubic-bezier(.33, 1, .68, 1);    /* opacity + blur                     */
+  --io: cubic-bezier(.65, 0, .35, 1);    /* wipes, fills, sweeps               */
+  --d-rise:  1050ms;  --d-fade: 750ms;  --d-wipe: 700ms;  --d-count: 900ms;
+  --stagger-sec: 85ms;                   /* reading-order step inside a section */
 }
 
 /* OKLCH overrides — same colours, perceptual authoring, wide-gamut ready. */
@@ -300,10 +307,13 @@
 }
 
 @media (max-width: 390px) { :root { --gutter: 16px; } }
+/* touch band (D1 = 1024px): phone type floor — 12px mono labels, 13px rows (D3) */
+@media (max-width: 1024px) { :root { --t-label: 12px; --t-micro: 12px; --t-body: 13px; } }
 @media (prefers-reduced-motion: reduce) {
   :root { --d-press: 0ms; --d-fast: 0ms; --d-menu: 0ms; --d-row: 0ms; --d-reveal: 0ms;
           --d-rail: 0ms; --d-pulse: 0ms; --d-particle: 0ms; --stagger: 0ms;
-          --parallax-travel: 0px; }
+          --parallax-travel: 0px;
+          --d-rise: 0ms; --d-fade: 0ms; --d-wipe: 0ms; --d-count: 0ms; --stagger-sec: 0ms; }
 }
 
 /* ===== base rules (phase 0; tokens above are verbatim from docs/design/tokens.css — edit them only there) ===== */

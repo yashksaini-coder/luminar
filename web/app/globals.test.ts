@@ -26,3 +26,19 @@ test('no network stylesheet or shard/slab decoration', () => {
 test('primary button keeps its fg field on hover', () => {
   expect(globals.slice(tokens.length)).toMatch(/\.btn-primary:hover\s*\{[^}]*background:\s*var\(--fg\)/)
 })
+
+test('reveal + counter durations collapse to 0ms under reduced motion', () => {
+  const reduce = tokens.match(/@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\n\}/)![0]
+  for (const d of ['--d-rise', '--d-fade', '--d-wipe', '--d-count', '--stagger-sec']) expect(reduce).toContain(`${d}: 0ms`)
+})
+
+test('phone type floor sits under the 1024px touch band', () => {
+  expect(tokens).toMatch(/@media \(max-width: 1024px\)\s*\{\s*:root\s*\{[^}]*--t-label: 12px;[^}]*--t-micro: 12px;[^}]*--t-body: 13px;/)
+  expect(tokens).not.toMatch(/1023px/)
+})
+
+test('motion tokens: easing family and section durations declared once in :root', () => {
+  const root = tokens.match(/^:root \{[\s\S]*?\n\}/m)![0]
+  for (const t of ['--e:', '--e2:', '--io:', '--d-rise:', '--d-fade:', '--d-wipe:', '--d-count:', '--stagger-sec:']) expect(root.split(t).length).toBe(2)
+  expect(root).toMatch(/--t-poster:\s*clamp\(3\.5rem, min\(13\.5vw, 22dvh\), 13rem\)/)
+})
