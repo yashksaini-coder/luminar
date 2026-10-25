@@ -77,3 +77,21 @@ test('a file truncated mid-line at EOF loads with the frames before the cut (glo
   vi.stubGlobal('fetch', vi.fn(async () => new Response(cut, { status: 200 })))
   expect(await loadReel(meta)).toBe(true); expect(useStore.getState().reel?.durationMs).toBe(2000); expect(reelLoaded()).toBe(true)
 })
+test('priming renders the mesh while the stream is still open, before the reel is set (review round 2)', async () => {
+  const enc = new TextEncoder()
+  const cut = lines.indexOf('\n', lines.indexOf('\n') + 1) + 1               // edges + first snapshot only
+  let release = () => {}
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ReadableStream<Uint8Array>({
+    async start(c) {
+      c.enqueue(enc.encode(lines.slice(0, cut)))
+      await new Promise<void>(r => { release = r })
+      c.enqueue(enc.encode(lines.slice(cut))); c.close()
+    },
+  }), { status: 200 })))
+  const done = loadReel(meta)
+  await vi.waitFor(() => expect(useStore.getState().nodes).toHaveLength(2))
+  expect(useStore.getState().edges).toEqual([['peer-0', 'peer-1']])
+  expect(useStore.getState().reel).toBeNull(); expect(useStore.getState().reelLoad).not.toBeNull(); expect(reelLoaded()).toBe(false)
+  release()
+  expect(await done).toBe(true); expect(useStore.getState().reel?.durationMs).toBe(2100)
+})
