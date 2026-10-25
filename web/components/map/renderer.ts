@@ -44,6 +44,7 @@ let lastLayerIds: string[] = []
 let W = 0, H = 0
 let fontsReady = false
 let observersVisible = false
+let tipEl: HTMLElement | null = null
 let frameNow = 0
 let unsubEvents: (() => void) | null = null
 let particles: Particle[] = []
@@ -95,6 +96,7 @@ export function particlesFor(evt: AppEvent, pick: (ids: string[]) => string | un
 }
 
 const randomPick = (ids: string[]) => ids[Math.floor(Math.random() * ids.length)]
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi))   // lo wins when the field is narrower than the card
 const neighboursOf = (id: string) => useStore.getState().nodeById.get(id)?.connected_peers ?? []
 
 /** Cap 600; no-op when particles are off or either peer is unknown. Hidden endpoints drop at the next frame. */
@@ -135,7 +137,7 @@ function tick(now: number): void {
 
 export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement | null): void {
   if (deck) destroyRenderer()   // StrictMode mounts twice; the second mount owns the deck
-  void tooltipEl                // positioned by the renderer once Task 2.8 lands the Tooltip
+  tipEl = tooltipEl
   refreshPalette()
   W = canvas.parentElement?.clientWidth || window.innerWidth
   H = canvas.parentElement?.clientHeight || window.innerHeight
@@ -187,6 +189,7 @@ export function destroyRenderer(): void {
   dirty = false
   observersVisible = false
   lastLayerIds = []
+  tipEl = null
 }
 
 export function resizeRenderer(w: number, h: number): void {
@@ -432,7 +435,13 @@ export function renderLayers(): void {
       const id = info.object?.peer_id
       if (id) useStore.getState().selectPeer(useStore.getState().selectedPeer === id ? null : id)
     },
-    onHover: info => useStore.getState().hoverPeer(info.object?.peer_id ?? null),
+    onHover: info => {
+      useStore.getState().hoverPeer(info.object?.peer_id ?? null)
+      if (!tipEl) return
+      if (!info.object) { tipEl.dataset.show = '0'; return }
+      tipEl.dataset.show = '1'   // React's <Tooltip> fills it; the 200 px card is clamped inside the field
+      tipEl.style.transform = `translate(${clamp(info.x + 16, 0, W - 216)}px, ${clamp(info.y - 10, 0, H - tipEl.offsetHeight - 8)}px)`
+    },
     updateTriggers: { getSize: [selectedPeer, atlasK], getIcon: atlasK },
   }))
 
