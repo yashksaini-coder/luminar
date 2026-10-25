@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import type { GlyphId } from '@/components/map/atlas'
 
-const { FakeDeck, buildAtlasMock } = vi.hoisted(() => {
+const { FakeDeck, buildAtlasMock, reducedMotionMock } = vi.hoisted(() => {
   type Props = Record<string, any>   // eslint-disable-line @typescript-eslint/no-explicit-any
   class FakeDeck {
     static instances: FakeDeck[] = []
@@ -16,10 +16,12 @@ const { FakeDeck, buildAtlasMock } = vi.hoisted(() => {
     }
   }
   const buildAtlasMock = vi.fn()
-  return { FakeDeck, buildAtlasMock }
+  const reducedMotionMock = vi.fn(() => false)
+  return { FakeDeck, buildAtlasMock, reducedMotionMock }
 })
 
 vi.mock('@deck.gl/core', async (importOriginal) => ({ ...await importOriginal<object>(), Deck: FakeDeck }))
+vi.mock('@/lib/prefs', async (importOriginal) => ({ ...await importOriginal<object>(), reducedMotion: reducedMotionMock }))
 vi.mock('@/components/map/atlas', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/components/map/atlas')>()
   const ids: GlyphId[] = ['disc', 'idle', 'origin', 'decoded', 'observer', 'joining', 'failed', 'error', 'attacker', 'pruned', 'reticle', 'square', 'squareTrail', 'halo-0', 'halo-1', 'halo-2', 'halo-3']
@@ -34,14 +36,23 @@ vi.mock('@/components/map/atlas', async (importOriginal) => {
 import { _deepEqual } from '@deck.gl/core'
 import { RETICLE_CURSOR } from '@/components/dither/Reticle'
 import { resetLayoutMemory, WORLD_BOUNDS } from '@/components/map/layout'
-import { destroyRenderer, fitView, initRenderer, layerIds, resizeRenderer, visiblePositions } from '@/components/map/renderer'
+import { nodeRadiusPx } from '@/components/map/geometry'
+import { PAL } from '@/components/map/palette'
+import { destroyRenderer, fitView, fontsReadyForTest, initRenderer, layerIds, resizeRenderer, visiblePositions } from '@/components/map/renderer'
 import { peers, ring, snapWith } from '@/lib/fixtures'
+import { monoFamily } from '@/lib/fonts'
 import { useStore } from '@/lib/store'
+import type { PeerNode } from '@/lib/types'
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })   // real performance.mark/measure
   FakeDeck.instances = []
   useStore.setState(useStore.getInitialState(), true)
+  reducedMotionMock.mockReturnValue(false)
+  const st = document.documentElement.style
+  st.setProperty('--font-mono', '"__IBM_Plex_Mono_test", monospace')
+  // distinct label colours so getColor assertions are not grey == grey
+  st.setProperty('--paper-0', '#eeeeee'); st.setProperty('--paper-2', '#999999'); st.setProperty('--paper-3', '#555555'); st.setProperty('--flame', '#ff5a2c')
   resetLayoutMemory()
   destroyRenderer()
 })
@@ -128,4 +139,54 @@ test('atlas is rebuilt when data-stage flips or the node-count bucket changes', 
   useStore.getState().setPref('stageTheme', true); document.documentElement.dataset.stage = '1'; flush(); expect(buildAtlasMock.mock.calls.length).toBe(n0 + 1)
   useStore.getState().applySnapshot(snapWith(peers(200).map(p => p.peer_id))); flush(); expect(buildAtlasMock.mock.calls.length).toBe(n0 + 1)   // radius clamps at 8 px for every n ≤ 625
   useStore.getState().applySnapshot(snapWith(peers(700).map(p => p.peer_id))); flush(); expect(buildAtlasMock.mock.calls.length).toBe(n0 + 2)   // 200/√700 < 8: the bucket changed
+})
+
+const grafted: PeerNode = { ...peers(1)[0], peer_id: 'sybil-0', index: 50, state: 'attacker', connected_peers: ['peer-1', 'peer-2'], gossip_score: -0.3 }
+const pruned: PeerNode = { ...grafted, peer_id: 'sybil-1', connected_peers: [], last_targets: ['peer-3'] }
+
+test('glyphs per state; halos only on participating honest peers, band from gossip_score', () => {
+  mount(); const nodes = [...peers(6).map((p, i) => ({ ...p, state: (['idle', 'origin', 'receiving', 'decoded', 'joining', 'failed'] as const)[i], gossip_score: [0, 1, 3, 7, 0, 0][i] })), grafted, pruned]
+  useStore.getState().applyEdges({ type: 'edges', edges: ring(6) }); useStore.getState().applySnapshot({ ...snapWith(nodes.map(n => n.peer_id)), nodes }); flush()
+  const nl = FakeDeck.instances[0].lastLayer('nodes'); expect(nl.props.data.map((d: PeerNode) => nl.props.getIcon(d))).toEqual(['idle', 'origin', 'disc', 'decoded', 'joining', 'failed', 'attacker', 'pruned'])
+  const halos = FakeDeck.instances[0].lastLayer('halos'); expect(halos.props.data.map((d: PeerNode) => d.peer_id)).toEqual(['peer-1', 'peer-2', 'peer-3'])   // origin, receiving, decoded; never idle/joining/failed/attacker
+  expect(halos.props.data.map((d: PeerNode) => halos.props.getIcon(d))).toEqual(['halo-1', 'halo-2', 'halo-3']); expect(halos.props.pickable).toBe(false)
+  expect(layerIds().indexOf('halos')).toBeLessThan(layerIds().indexOf('nodes'))
+})
+test('negative score → flame halo-0; attack links dashed 4/3 from grafted attackers to each victim; pruned has none', () => {
+  mount(); const nodes = [...peers(4).map(p => ({ ...p, state: 'receiving' as const, gossip_score: -0.25 })), grafted, pruned]
+  useStore.getState().applyEdges({ type: 'edges', edges: ring(4) }); useStore.getState().applySnapshot({ ...snapWith(nodes.map(n => n.peer_id)), nodes }); flush()
+  const halos = FakeDeck.instances[0].lastLayer('halos'); expect(halos.props.data.every((d: PeerNode) => halos.props.getIcon(d) === 'halo-0')).toBe(true)
+  const al = FakeDeck.instances[0].lastLayer('attack-links'); expect(al.props.data).toHaveLength(2); expect(al.props.getDashArray).toEqual([4, 3]); expect(al.props.widthUnits).toBe('pixels')
+  expect(layerIds().indexOf('attack-links')).toBeGreaterThan(layerIds().indexOf('edges')); expect(layerIds().indexOf('attack-links')).toBeLessThan(layerIds().indexOf('mesh-edges') === -1 ? 99 : layerIds().indexOf('mesh-edges'))
+})
+test('selection draws the reticle at 2 r and ×1.5 size; hover draws 2 px edges and r+4 rings; event highlight lines + rings', () => {
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(5) }); useStore.getState().applySnapshot(snapWith(peers(5).map(p => p.peer_id))); flush()
+  useStore.getState().selectPeer('peer-0', ['peer-2', 'peer-3']); useStore.getState().hoverPeer('peer-1'); flush()
+  const nl = FakeDeck.instances[0].lastLayer('nodes'); const d0 = nl.props.data.find((d: PeerNode) => d.peer_id === 'peer-0'); const d4 = nl.props.data.find((d: PeerNode) => d.peer_id === 'peer-4')
+  expect(nl.props.getSize(d0) / nl.props.getSize(d4)).toBeCloseTo(1.5)
+  const ret = FakeDeck.instances[0].lastLayer('reticle'); expect(ret.props.data).toHaveLength(1); expect(ret.props.getIcon(ret.props.data[0])).toBe('reticle')
+  expect(FakeDeck.instances[0].lastLayer('hover-edges').props.data).toHaveLength(2); expect(FakeDeck.instances[0].lastLayer('hover-edges').props.getWidth).toBe(2)
+  expect(FakeDeck.instances[0].lastLayer('hover-peer-rings').props.data).toHaveLength(2); expect(FakeDeck.instances[0].lastLayer('hover-peer-rings').props.getRadius).toBe(nodeRadiusPx(5, 'force', 1) + 4)
+  expect(FakeDeck.instances[0].lastLayer('event-highlight-edges').props.data).toHaveLength(2); expect(FakeDeck.instances[0].lastLayer('event-highlight-rings').props.data).toHaveLength(2)
+  useStore.getState().selectPeer(null); flush(); expect(layerIds()).not.toContain('reticle'); expect(layerIds()).not.toContain('event-highlight-edges')
+})
+test('observer rings breathe .2→.75 and are static at .5 under reduced motion', () => {
+  mount(); const obs = { ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 1, y: 1 }; useStore.setState({ geoAvailable: true }); useStore.getState().setLayoutMode('geo')
+  useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [obs] }); flush()
+  const r1 = FakeDeck.instances[0].lastLayer('observer-rings'); expect(r1.props.data).toHaveLength(1); const a1 = r1.props.getLineColor[3]
+  vi.advanceTimersByTime(1400); flush(); expect(FakeDeck.instances[0].lastLayer('observer-rings').props.getLineColor[3]).not.toBe(a1)
+  reducedMotionMock.mockReturnValue(true); destroyRenderer(); mount(); useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [obs] }); flush()
+  expect(FakeDeck.instances[1].lastLayer('observer-rings').props.getLineColor[3]).toBe(Math.round(0.5 * 255))
+})
+test('labels: attackers always (raw id, flame / paper-2 when pruned per R6), selected + hovered as nN, all labels when ≤ 50 visible, none when showLabels off or fonts not ready', () => {
+  mount(); const nodes = [...peers(3), grafted, pruned]; useStore.getState().applyEdges({ type: 'edges', edges: ring(3) }); useStore.getState().applySnapshot({ ...snapWith(nodes.map(n => n.peer_id)), nodes }); flush()
+  expect(layerIds()).not.toContain('labels')   // fonts not ready yet
+  fontsReadyForTest(true); flush()
+  let L = FakeDeck.instances[0].lastLayer('labels'); expect(L.props.data.map((d: PeerNode) => L.props.getText(d))).toEqual(['sybil-0', 'sybil-1']); expect(L.props.fontFamily).toBe(monoFamily()); expect(L.props.fontWeight).toBe(500); expect(L.props.getSize).toBe(10)
+  expect(L.props.getColor(grafted)).toEqual(PAL.flame); expect(L.props.getColor(pruned)).toEqual(PAL.paper2); expect(PAL.paper2).not.toEqual(PAL.flame)
+  useStore.getState().selectPeer('peer-0'); useStore.getState().hoverPeer('peer-2'); flush(); L = FakeDeck.instances[0].lastLayer('labels'); expect(L.props.data.map((d: PeerNode) => L.props.getText(d)).sort()).toEqual(['n0', 'n2', 'sybil-0', 'sybil-1'])
+  useStore.getState().setDisplay({ allLabels: true }); flush(); expect(FakeDeck.instances[0].lastLayer('labels').props.data).toHaveLength(5)
+  useStore.getState().applySnapshot(snapWith(peers(60).map(p => p.peer_id))); flush(); expect(FakeDeck.instances[0].lastLayer('labels')?.props.data.length ?? 0).toBeLessThanOrEqual(2)   // > 50 visible: all-labels ignored
+  useStore.getState().setPref('stageTheme', true); flush(); expect(FakeDeck.instances[0].lastLayer('labels')?.props.getSize ?? 12).toBe(12)
+  useStore.getState().setDisplay({ showLabels: false }); flush(); expect(layerIds()).not.toContain('labels')
 })
