@@ -310,6 +310,9 @@ export function renderLayers(): void {
         extensions: [new FillStyleExtension({ pattern: true })],
         fillPatternAtlas: checkerAtlas(), fillPatternMapping: { checker: { x: 0, y: 0, width: 2, height: 2 } },
         getFillPattern: () => 'checker', fillPatternMask: true,
+        // PolygonLayerProps does not declare textureParameters, but deck reads it when it turns the atlas into a texture (image prop transform);
+        // the 1-bit checker needs nearest: linear blends the 2×2 mask into a grey wash at DPR 1.5.
+        ...{ textureParameters: { minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' } } as object,
         // deck's 'pixels' units snap to the nearest whole zoom (a texel is 2^-round(zoom) common units); the scale makes up the
         // fractional part so one texel is exactly one CSS px, otherwise the checker beats into grey bands at a fit zoom like -0.28.
         fillPatternSizeUnits: 'pixels', getFillPatternScale: 2 ** (Math.round(viewZoom) - viewZoom), getFillPatternOffset: [0, 0],

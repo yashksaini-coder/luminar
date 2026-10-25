@@ -271,7 +271,7 @@ test('geo loads land once, crops Antarctica and draws it under everything with t
   mount(); useStore.setState({ geoAvailable: true }); useStore.getState().setLayoutMode('geo'); useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [{ ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 10, y: -25 }] }); flush(); await Promise.resolve(); flush()
   expect(getStatic).toHaveBeenCalledTimes(1); expect(getStatic).toHaveBeenCalledWith('/geo/land-110m.json')
   expect(layerIds()[0]).toBe('world-land'); const land = FakeDeck.instances[0].lastLayer('world-land')
-  expect(land.props.data).toHaveLength(1); expect(land.props.getPolygon(land.props.data[0])[1]).toEqual([10 * GEO_SCALE, 0]); expect(land.props.extensions.some((e: any) => e.constructor.extensionName === 'FillStyleExtension')).toBe(true); expect(land.props.fillPatternMask).toBe(true); expect(land.props.pickable).toBe(false)   // eslint-disable-line @typescript-eslint/no-explicit-any
+  expect(land.props.data).toHaveLength(1); expect(land.props.getPolygon(land.props.data[0])[1]).toEqual([10 * GEO_SCALE, 0]); expect(land.props.extensions.some((e: any) => e.constructor.extensionName === 'FillStyleExtension')).toBe(true); expect(land.props.fillPatternMask).toBe(true); expect(land.props.pickable).toBe(false); expect(land.props.textureParameters).toMatchObject({ minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' })   // eslint-disable-line @typescript-eslint/no-explicit-any
   useStore.getState().setLayoutMode('force'); flush(); expect(layerIds()).not.toContain('world-land'); useStore.getState().setLayoutMode('geo'); flush(); expect(getStatic).toHaveBeenCalledTimes(1)
 })
 
