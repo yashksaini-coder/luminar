@@ -156,7 +156,7 @@ export function setDurationPreset(sec: 60 | 120 | 300 | 600): void {
 export async function toggleMainnet(): Promise<void> {
   if (reelGuard()) return
   const r = await api.liveMainnet(!S().mainnet?.enabled)
-  if (!r.ok || !r.data) { toast(r, 'MAINNET'); return }   // R19: status 0 → offline, else the status
+  if (!r.ok || !r.data) { toast(r.ok ? { ...r, ok: false } : r, 'MAINNET'); return }   // R19: status 0 → offline, else the status; a 2xx without a body is a failure too
   const wasOn = S().mainnet?.enabled
   useStore.setState(wasOn && !r.data.enabled ? { mainnet: r.data, geoAutoDone: false } : { mainnet: r.data })   // feed-off re-arms auto-Geo, as applyTelemetryStatus does
   maybeAutoGeo()

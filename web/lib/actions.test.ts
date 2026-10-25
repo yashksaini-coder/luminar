@@ -87,6 +87,8 @@ test('toggleMainnet on → off → on re-arms auto-Geo from the POST response al
 test('toggleMainnet: a non-zero failure status names the status, not offline (R19)', async () => {
   api.liveMainnet.mockResolvedValue({ ok: false, status: 403, data: null }); await toggleMainnet()
   expect(useStore.getState().toasts.at(-1)?.text).toBe('MAINNET failed · 403')
+  api.liveMainnet.mockResolvedValue({ ok: true, status: 200, data: null }); await toggleMainnet()   // a 2xx with a non-JSON body (SPA fallback) is not "injected"
+  expect(useStore.getState().toasts.at(-1)).toMatchObject({ text: 'MAINNET failed · 200', kind: 'fail' }); expect(useStore.getState().mainnet).toBeNull()
 })
 test('runKey dispatch table', () => {
   useStore.getState().applySnapshot(snapWith(['peer-0'])); useStore.getState().selectPeer('peer-0'); useStore.getState().setKeyHelp(true)
