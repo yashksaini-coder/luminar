@@ -38,3 +38,8 @@
 @media (prefers-reduced-motion: reduce) {
   .drain { animation: none; width: 100% }
 }
+
+/* ≤1023 the strip wraps to two rows (Task 3.11) and the canvas is full-bleed: clear both rows, stay inside the gutters. */
+@media (max-width: 1023px) {
+  .card { bottom: calc(36px + 2 * var(--strip-h) + var(--s-6)); right: var(--s-4); }
+}
