@@ -63,7 +63,7 @@
 }
 button.badge, .preset, .menuBtn { cursor: pointer; }
 .badge[aria-pressed="true"], .preset[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }
-.badge:hover, .preset:hover, .link:hover, .menuBtn:hover { color: var(--fg); }
+.badge:hover, .preset:not(:disabled):hover, .link:hover, .menuBtn:hover { color: var(--fg); }
 
 .presets { display: flex; gap: var(--s-3); }
 .group { display: flex; }
