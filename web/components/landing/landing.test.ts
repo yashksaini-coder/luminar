@@ -24,7 +24,7 @@ test('What it does: h2, three paragraphs, chevron link; eclipse sentence from co
 })
 test('VideoPlate: native video, metadata preload, playsinline, controls, no autoplay/muted, dithered poster overlay, Fig. 3 caption', () => {
   const m = r(h(VideoPlate)); expect(m).toContain('<video'); expect(m).toContain('src="/video/launch-16x9.mp4"'); expect(m).toContain('preload="metadata"'); expect(m).toMatch(/playsinline/i); expect(m).toContain('controls')
-  expect(m).not.toMatch(/autoplay|muted/); expect(m).toContain('/video/poster.png'); expect(m).toContain('Fig. 3'); expect(m).toContain(`<em>${FIG3}</em>`); expect(m).not.toContain('youtube')
+  expect(m).not.toMatch(/autoplay|muted/); expect(m).toContain('/video/poster.png'); expect(m).toContain('aria-label="Play the launch video"'); expect(m).toContain('Fig. 3'); expect(m).toContain(`<em>${FIG3}</em>`); expect(m).not.toContain('youtube')
 })
 test('Same names: two dithered stills at depths .6/.9, the seven gossipsub_* series, Lighthouse wording', () => {
   const m = r(h(SameNames)); expect(m).toContain('/stills/grafana.png'); expect(m).toContain('/stills/jaeger.png'); expect(m).toContain('data-depth="0.6"'); expect(m).toContain('data-depth="0.9"'); expect(m).toContain(SAME_NAMES); expect(m).not.toContain('every client')
