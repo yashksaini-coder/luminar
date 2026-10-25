@@ -37,6 +37,13 @@ test('injectFault toasts from {ok}; reel guard refuses', async () => {
   useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } }); await injectFault('clear-all')
   expect(useStore.getState().toasts.at(-1)?.text).toBe('Press 0 to leave the reel first'); expect(api.faultClearAll).not.toHaveBeenCalled()
 })
+test('in a reel, launchScenario, setNodePreset and toggleMainnet toast the guard and call no API', async () => {
+  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } })
+  for (const act of [() => launchScenario('demo'), () => setNodePreset(100), () => toggleMainnet()]) {
+    await act(); expect(useStore.getState().toasts.at(-1)?.text).toBe('Press 0 to leave the reel first')
+  }
+  expect(api.scenarioLaunch).not.toHaveBeenCalled(); expect(api.simReconfigure).not.toHaveBeenCalled(); expect(api.liveMainnet).not.toHaveBeenCalled()
+})
 test('partition splits visible sim peers by median x', async () => {
   positions = new Map([['peer-0', [-10, 0]], ['peer-1', [-5, 0]], ['peer-2', [5, 0]], ['peer-3', [10, 0]]]); useStore.getState().applySnapshot(snapWith(['peer-0', 'peer-1', 'peer-2', 'peer-3']))
   api.faultPartition.mockResolvedValue({ ok: true, status: 200, data: null }); await injectFault('partition')
