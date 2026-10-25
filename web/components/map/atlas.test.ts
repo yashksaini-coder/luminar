@@ -31,3 +31,8 @@ test('haloFor and glyphFor follow the render table', () => {
   expect(g({ is_real: true })).toBe('observer'); expect(g({ is_telemetry: true, state: 'decoded' })).toBe('observer')
 })
 test('atlasKey changes with any input', () => { expect(atlasKey(10, 2, 2, 'dark|')).not.toBe(atlasKey(10, 3, 2, 'dark|1')); expect(atlasKey(10, 2, 2, 'a')).toBe(atlasKey(10, 2, 2, 'a')) })
+test('atlasLayout keeps every box on whole device pixels at a fractional dpr', () => {
+  const L = atlasLayout(10, 2, 1.25)                      // cellPx 2 × 1.25 = 2.5 rounds to a 3 px device cell
+  for (const b of Object.values(L.mapping)) for (const v of [b.x, b.width, b.height]) expect(Number.isInteger(v)).toBe(true)
+  expect(L.mapping.square.width).toBe(6); expect(L.mapping.squareTrail.width).toBe(9); expect(Number.isInteger(L.width)).toBe(true)
+})

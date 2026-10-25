@@ -14,17 +14,19 @@ export interface IconAtlas { image: HTMLCanvasElement; mapping: Record<GlyphId, 
 
 export const HALO_OUTER = 1.7, HALO_INNER = 1.2           // × node radius [spec §6.2 "halo at 1.7 r"]; inner is plan
 const GUTTER = 2
+/** Whole device px per dither cell, so boxes and halo cells stay on the pixel grid at fractional dpr (1.25, 1.5). */
+const deviceCell = (cellPx: number, dpr: number) => Math.max(1, Math.round(cellPx * dpr))
 
 /** Pure; one row, 2 px gutters. nodePx is the node diameter in CSS px. */
 export function atlasLayout(nodePx: number, cellPx: number, dpr: number): { width: number; height: number; mapping: Record<GlyphId, GlyphBox> } {
   const css = (px: number) => Math.ceil(px * dpr)
-  const disc = css(nodePx + 2), diamond = css(nodePx * 1.15) + 4, halo = css(nodePx * HALO_OUTER) + 4, sq = 2 * cellPx * dpr
+  const disc = css(nodePx + 2), diamond = css(nodePx * 1.15) + 4, halo = css(nodePx * HALO_OUTER) + 4, cell = deviceCell(cellPx, dpr), sq = 2 * cell
   const sizes: [GlyphId, number, number][] = [
     ['disc', disc, disc], ['idle', disc, disc], ['origin', disc, disc],
     ['decoded', css(nodePx * 1.6 + 2), css(nodePx * 1.6 + 2)], ['observer', css(nodePx * 2 + 2), css(nodePx * 2 + 2)],
     ['joining', disc, disc], ['failed', disc, disc], ['error', disc, disc],
     ['attacker', diamond, diamond], ['pruned', diamond, diamond], ['reticle', css(nodePx * 2 + 8), css(nodePx * 2 + 8)],
-    ['square', sq, sq], ['squareTrail', 3 * cellPx * dpr, sq],
+    ['square', sq, sq], ['squareTrail', 3 * cell, sq],
     ['halo-0', halo, halo], ['halo-1', halo, halo], ['halo-2', halo, halo], ['halo-3', halo, halo],
   ]
   const mapping = {} as Record<GlyphId, GlyphBox>
@@ -127,11 +129,6 @@ export function buildAtlas(opts: { nodePx: number; cellPx: number; dpr: number; 
       for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) { ctx.moveTo(dx * nodePx, dy * nodePx); ctx.lineTo(dx * (nodePx + 4), dy * (nodePx + 4)) }
       ctx.strokeStyle = css(pal.paper0); ctx.lineWidth = 1; ctx.stroke()
     },
-    square: () => { ctx.fillStyle = css(pal.paper0); ctx.fillRect(-cellPx, -cellPx, 2 * cellPx, 2 * cellPx) },
-    squareTrail: () => {
-      ctx.fillStyle = css(pal.paper0); ctx.fillRect(-cellPx / 2, -cellPx, 2 * cellPx, 2 * cellPx)
-      ctx.fillStyle = css(pal.paper0, 0.5); ctx.fillRect(-1.5 * cellPx, -cellPx / 2, cellPx, cellPx)
-    },
   }
   for (const [id, fn] of Object.entries(draw) as [GlyphId, () => void][]) {
     const b = mapping[id]
@@ -139,9 +136,15 @@ export function buildAtlas(opts: { nodePx: number; cellPx: number; dpr: number; 
     fn()
   }
 
-  // Halos in device px (R21: the renderer passes a diameter, so radii are nodePx·HALO/2).
+  // Squares and halos in whole device px on the deviceCell grid (R21: the renderer passes a diameter, so radii are nodePx·HALO/2).
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  const outer = (nodePx * HALO_OUTER * dpr) / 2, inner = (nodePx * HALO_INNER * dpr) / 2, cell = cellPx * dpr
+  const cell = deviceCell(cellPx, dpr), sq = mapping.square, tr = mapping.squareTrail
+  ctx.fillStyle = css(pal.paper0)
+  ctx.fillRect(sq.x, sq.y, 2 * cell, 2 * cell)
+  ctx.fillRect(tr.x + cell, tr.y, 2 * cell, 2 * cell)              // head on the right, trailing cell on the left (−x)
+  ctx.fillStyle = css(pal.paper0, 0.5)
+  ctx.fillRect(tr.x, tr.y + Math.floor(cell / 2), cell, cell)
+  const outer = (nodePx * HALO_OUTER * dpr) / 2, inner = (nodePx * HALO_INNER * dpr) / 2
   for (const band of [0, 1, 2, 3] as const) {
     const b = mapping[`halo-${band}`]
     const ox = b.x + b.width / 2 - outer, oy = b.y + b.height / 2 - outer
