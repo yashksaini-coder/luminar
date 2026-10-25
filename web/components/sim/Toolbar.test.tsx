@@ -18,8 +18,9 @@ test('clock shows seconds under a minute and m:ss past it', () => {
   act(() => useStore.setState({ simTime: 12.34 })); expect(q('clock').textContent).toBe('T+ 12.3s')
   act(() => useStore.setState({ simTime: 62 })); expect(q('clock').textContent).toBe('T+ 1:02')
 })
-test('pill reads OFFLINE, LIVE, then REEL · title', () => {
-  expect(q('pill').textContent).toBe('OFFLINE'); expect(q('pill').getAttribute('data-state')).toBe('offline')
+test('pill reads CONNECTING…, OFFLINE, LIVE, then REEL · title', () => {
+  expect(q('pill').textContent).toBe('CONNECTING…'); expect(q('pill').getAttribute('data-state')).toBe('connecting')
+  act(() => useStore.getState().setConnected(false)); expect(q('pill').textContent).toBe('OFFLINE'); expect(q('pill').getAttribute('data-state')).toBe('offline')
   act(() => useStore.setState({ connected: true })); expect(q('pill').textContent).toBe('LIVE')
   act(() => useStore.setState({ reel: { name: 'r', title: 'Eclipse', durationMs: 1, durationSim: 1 } }))
   expect(q('pill').textContent).toBe('REEL · Eclipse'); expect(q('pill').getAttribute('data-state')).toBe('reel')

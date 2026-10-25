@@ -17,6 +17,7 @@ type Narrator = { firstSybilPrunedAt: number | null; healStartAt: number | null;
 
 export interface AppState {
   connected: boolean
+  connecting: boolean   // true until the first socket open/close; the pill reads CONNECTING… meanwhile
   simState: SimState
   simTime: number
   simSpeed: number
@@ -123,7 +124,7 @@ function resetNarratorPatch(s: AppState, p: Patch) {
 }
 
 const initialState: AppState = {
-  connected: false,
+  connected: false, connecting: true,
   simState: 'stopped', simTime: 0, simSpeed: 1, nodeCount: 0, eventCount: 0, playing: false,
   nodes: NONE, nodeById: new Map(), edges: NONE, mesh: {},
   layoutMode: 'force', geoAvailable: false, layoutBeforeGeo: null, geoAutoDone: false,
@@ -305,7 +306,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     set(p)
   },
 
-  setConnected: v => set({ connected: v }),
+  setConnected: v => set({ connected: v, connecting: false }),
   setPlaying: v => set({ playing: v }),
 
   selectPeer(id, highlight = NONE) {
@@ -369,7 +370,9 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
 
 // selectors: components never call useStore() without one
 export const selectTimelineTotal = (s: AppState) => s.reel ? s.reel.durationSim : s.maxDuration
-export const selectPill = (s: AppState): ConnectionPill => s.reel ? 'reel' : s.connected ? 'live' : 'offline'
+export type Pill = ConnectionPill | 'connecting'
+export const selectPill = (s: AppState): Pill =>
+  s.reel ? 'reel' : s.connecting ? 'connecting' : s.connected ? 'live' : 'offline'
 export const selectSelectedNode = (s: AppState) => s.selectedPeer ? s.nodeById.get(s.selectedPeer) : undefined
 export const selectHoveredNode = (s: AppState) => s.hoveredPeer ? s.nodeById.get(s.hoveredPeer) : undefined
 export const selectAttackers = (s: AppState) => s.nodes.filter(n => n.state === 'attacker')   // use with useShallow

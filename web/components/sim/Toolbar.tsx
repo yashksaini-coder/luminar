@@ -16,7 +16,7 @@ function Pill() {
     <span data-testid="pill" data-state={pill} className={styles.pill}>
       {pill === 'live' && <i aria-hidden className={styles.dot} />}
       {pill === 'reel' && <i aria-hidden className={styles.square} />}
-      {pill === 'offline' ? 'OFFLINE' : pill === 'live' ? 'LIVE' : `REEL · ${title}`}
+      {pill === 'connecting' ? 'CONNECTING…' : pill === 'offline' ? 'OFFLINE' : pill === 'live' ? 'LIVE' : `REEL · ${title}`}
     </span>
   )
 }
