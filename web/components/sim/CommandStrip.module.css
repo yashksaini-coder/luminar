@@ -98,4 +98,6 @@
   .menus { flex-wrap: wrap; }
   .range { inset: -19px 0; height: 44px; }
   .kbd { display: none; }
+  /* hero: the 56 px ticker owns the bottom edge; sit the strip on --strip-bottom (60 px) above it */
+  :global(:root[data-hero="1"]) .strip { bottom: var(--strip-bottom); }
 }

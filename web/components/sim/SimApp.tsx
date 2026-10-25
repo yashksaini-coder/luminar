@@ -43,7 +43,8 @@ export default function SimApp({ reel = null }: SimAppProps) {
   const inReel = useStore(s => s.reel !== null)
   const hero = useStore(s => s.hero)
   const [overlayOpen, setOverlayOpen] = useState(false)
-  const [drawer, setDrawer] = useState<'stats' | 'log' | null>(null)
+  const [openDrawer, setDrawer] = useState<'stats' | 'log' | null>(null)
+  const drawer = hero ? null : openDrawer   // hero hides the rails: a drawer left open would inert a blank shell
   const railL = useRef<HTMLElement>(null)
   const railR = useRef<HTMLElement>(null)
   const shell = useRef<HTMLDivElement>(null)
