@@ -12,4 +12,5 @@ test('FigureFrame: lazy iframe with the spec title; press passthrough only when 
 })
 test('FigurePlate: Fig. 2 with stamp, paper rectangle, one halo ring, caption from copy.ts', () => {
   const m = r(h(FigurePlate)); expect(m).toContain('Fig. 2'); expect(m).toContain(`<em>${FIG2}</em>`); expect(m).toContain('RELAY GLOBE No. 1'); expect(m).toContain('#f4f1e8'); expect((m.match(/<pattern /g) ?? []).length).toBe(1); expect(m).toContain('<iframe')
+  expect(m).toMatch(/<figure[^>]*data-reveal=""/); expect(m).toMatch(/<div[^>]*class="plate [^"]*"[^>]*data-k="card"/); expect(m).toMatch(/<figcaption data-k="up" style="--i:1"/)
 })

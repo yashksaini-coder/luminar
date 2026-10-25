@@ -1,6 +1,6 @@
 'use client'
 // Fig. 1: the live dithered replay of the sybil-eclipse reel (spec §7.4). The base is dithered;
-// attackers, readouts and the stamp stay crisp; the loupe shows the ids. Paused on hover or focus.
+// attackers, readouts and the stamp stay crisp; the loupe shows the ids. Paused on hover, focus or off screen.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Diamond from '@/components/dither/Diamond'
 import DitherCanvas from '@/components/dither/DitherCanvas'
@@ -34,7 +34,16 @@ export default function PlateReplay({ plate, className }: PlateReplayProps) {
   const [hover, setHover] = useState(false)
   const [focus, setFocus] = useState(false)
   const [final, setFinal] = useState<ImageData | null>(null)
-  const paused = hover || focus
+  const [offscreen, setOffscreen] = useState(false)
+  const paused = hover || focus || offscreen
+
+  useEffect(() => {   // the story clock stops while the plate is out of the viewport (design-to-motion website rules)
+    const el = root.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setOffscreen(!e.isIntersecting), { threshold: 0 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(() => { idx.current = still ? stillIdx : 0 }, [still, stillIdx])   // animated runs start at T+8 once revealed
   const onFinal = useCallback((img: ImageData) => { setFinal(img); setView(idx.current) }, [])

@@ -6,11 +6,11 @@ import stats from '@/lib/reel-stats.json'
 import Hero from './Hero'
 import Readouts from './Readouts'
 import Footer from './Footer'
-import { LiveMainnet, SameNames, WhatItDoes } from './Sections'
+import { LiveMainnet, SameNames, SLOT_SENTENCE, WhatItDoes } from './Sections'
 import VideoPlate from './VideoPlate'
 
 test('hero: two-line poster with italic second line, lead ends with the mechanism sentence, two CTAs, Fig. 1', () => {
-  const m = r(h(Hero)); expect(m).toMatch(/<h1[^>]*>Gossip,<br\/?><em>scored\.<\/em><\/h1>/)
+  const m = r(h(Hero)); expect(m).toMatch(/<h1[^>]*><span[^>]*>Gossip,<\/span><br\/?><span[^>]*><em>scored\.<\/em><\/span><\/h1>/)
   expect(m).toContain(`${MECHANISM}</p>`); expect(m).toContain('href="/sim/"'); expect(m).toContain('Open the simulator'); expect(m).toContain('href="/reels/sybil-eclipse/"'); expect(m).toContain('Watch a recording')
   expect(m).toContain('Fig. 1'); expect(m).toContain(`<em>${FIG1}</em>`); expect(m).not.toContain('var(--flame)" class="btn')   // flame never a CTA
 })
@@ -32,6 +32,17 @@ test('Same names: two dithered stills at depths .6/.9, the seven gossipsub_* ser
 })
 test('Live mainnet: arrival sentence, reel link, provenance credit verbatim', () => {
   const m = r(h(LiveMainnet)); expect(m).toContain(ARRIVAL); expect(m).toContain('href="/reels/mainnet-block-wave/"'); expect(m).toContain(PROVENANCE)
+})
+test('Live mainnet (D6): aria-hidden observer glyph, the slot sentence from the manifest, no LIVE pill', () => {
+  const m = r(h(LiveMainnet))
+  expect(m).toMatch(/<span[^>]*aria-hidden="true"[^>]*><svg[^>]*aria-hidden="true"/); expect(m).toContain('The recording covers slots 15466393–15466400 with 138 observer nodes.'); expect(m).toContain(SLOT_SENTENCE)
+  expect(m).not.toMatch(/>\s*LIVE\s*</)
+})
+test('every landing section is a reveal section; children carry up kinds in reading order; Jaeger still delayed 90 ms', () => {
+  for (const C of [WhatItDoes, SameNames, LiveMainnet]) { const m = r(h(C)); expect(m).toMatch(/^<section[^>]*data-reveal=""/); expect(m).toContain('data-k="up" style="--i:0"') }
+  const w = r(h(WhatItDoes)); for (const i of [1, 2, 3]) expect(w).toContain(`<p data-k="up" style="--i:${i}"`); expect(w).toMatch(/<div data-k="up" style="--i:4"><a class="chev"/)   // wrapper, never .chev
+  const s = r(h(SameNames)); expect(s).toMatch(/class="plate [^"]*" data-k="card" style="--i:1"/); expect(s).toContain('<p data-k="up" style="--i:2"'); expect(s).toMatch(/<ul class="mono [^"]*" data-k="up" style="--i:3"/)
+  const l = r(h(LiveMainnet)); expect(l).toContain('<p data-k="up" style="--i:1"'); expect(l).toMatch(/<p class="[^"]*credit[^"]*" data-k="up" style="--i:2"/)
 })
 test('Footer: three columns, event line, routes, source, licence and credit', () => {
   const m = r(h(Footer)); expect(m).toContain('LUMINAR'); expect(m).toContain(`<em>${EVENT_LINE}</em>`); for (const href of ['/', '/sim/', '/reels/sybil-eclipse/', '/figure/', `https://${REPO_URL}`]) expect(m).toContain(`href="${href}"`)

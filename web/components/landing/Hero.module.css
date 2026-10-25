@@ -1,8 +1,16 @@
 .hero { padding: var(--s-16) var(--gutter) 0; }
 .prose { width: min(var(--col-prose), 100%); margin-inline: auto; }
-.plate { width: min(var(--col-wide), 100%); margin: var(--s-12) auto 0; }   /* row → plate 48 */
+.plate { width: min(var(--col-wide), 100%); margin: var(--s-12) auto 0; }   /* proof → plate 48 */
 .poster { margin: 0; font: 400 var(--t-poster)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.poster > span { display: inline-block; }   /* the reveal transform needs a box */
 .poster em { font-style: italic; }
 .lead { margin: 22px 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }   /* h1 → lead 22 */
 .row { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-8); }   /* lead → row 28 */
-.cta { display: inline-flex; align-items: center; height: 42px; padding: 0 var(--s-5); font: 500 var(--t-ui)/1 var(--font-ui); text-decoration: none; }
+.cta { display: inline-flex; align-items: center; height: 44px; padding: 0 var(--s-5); font: 500 var(--t-ui)/1 var(--font-ui); text-decoration: none; }
+.proof { margin-top: var(--s-4); font: 500 var(--t-body) var(--font-mono); color: var(--paper-2); }
+/* phone landscape (844×390): the whole CTA sits above the fold */
+@media (max-height: 500px) {
+  .hero { padding-top: var(--s-6); }
+  .lead { margin-top: var(--s-3); }
+  .row { margin-top: var(--s-4); }
+}

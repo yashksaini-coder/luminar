@@ -14,6 +14,8 @@ export interface DitherCanvasProps {
   reveal?: boolean
   loop?: { fps: number; paused?: boolean }
   focus?: [number, number]
+  /** Extra ms before the first reveal step, so a plate can land after its card frame (T4). */
+  delay?: number
   loupe?: boolean
   onFinal?: (img: ImageData) => void
   className?: string; 'aria-label'?: string; depth?: number
@@ -21,7 +23,7 @@ export interface DitherCanvasProps {
 
 interface Final { img: ImageData; source: HTMLImageElement | HTMLCanvasElement; cover: [number, number, number, number] }
 
-export default function DitherCanvas({ source, cell, reveal, loop, focus, loupe, onFinal, className, 'aria-label': label, depth }: DitherCanvasProps) {
+export default function DitherCanvas({ source, cell, reveal, loop, focus, delay, loupe, onFinal, className, 'aria-label': label, depth }: DitherCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const plateRef = useRef<HTMLElement | null>(null)
   const [final, setFinal] = useState<Final | null>(null)
@@ -70,7 +72,7 @@ export default function DitherCanvas({ source, cell, reveal, loop, focus, loupe,
         if (!entries.some(e => e.intersectionRatio >= 0.3)) return
         io?.disconnect()
         const steps = revealSteps(finalCell)
-        steps.forEach((c, i) => timers.push(setTimeout(() => (i === steps.length - 1 ? settle() : render(c)), i * REVEAL_STEP_MS)))
+        steps.forEach((c, i) => timers.push(setTimeout(() => (i === steps.length - 1 ? settle() : render(c)), i * REVEAL_STEP_MS + (delay ?? 0))))
       }, { threshold: 0.3 })
       io.observe(canvas)
     } else settle()
@@ -85,7 +87,7 @@ export default function DitherCanvas({ source, cell, reveal, loop, focus, loupe,
       io?.disconnect(); ro?.disconnect()
       timers.forEach(clearTimeout); clearTimeout(debounce); clearInterval(interval)
     }
-  }, [source, cell, reveal, fps, fx, fy])
+  }, [source, cell, reveal, fps, fx, fy, delay])
 
   return (
     <>
