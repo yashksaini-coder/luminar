@@ -2,7 +2,7 @@
 .card {
   position: absolute;
   left: var(--s-4);
-  bottom: calc(36px + var(--strip-h) + var(--s-6));
+  bottom: calc(var(--strip-bottom) + var(--strip-h) + var(--s-6));
   z-index: 2;
   max-width: 420px;
   pointer-events: none;
@@ -41,5 +41,5 @@
 
 /* ≤1023 the strip wraps to two rows (Task 3.11) and the canvas is full-bleed: clear both rows, stay inside the gutters. */
 @media (max-width: 1023px) {
-  .card { bottom: calc(36px + 2 * var(--strip-h) + var(--s-6)); right: var(--s-4); }
+  .card { bottom: calc(var(--strip-bottom) + 2 * var(--strip-h) + var(--s-6)); right: var(--s-4); }
 }

@@ -44,7 +44,7 @@ export default function CommandStrip({ manifest, drawer, onDrawer }: {
           <FaultMenu />
         </div>
       </div>
-      <div className={`${s.kbd} kbdHint`}>{KBD_HINT}</div>
+      <div className={`${s.kbd} kbdHint`} data-hero-hide>{KBD_HINT}</div>
     </div>
   )
 }

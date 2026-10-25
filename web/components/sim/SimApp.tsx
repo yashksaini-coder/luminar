@@ -21,6 +21,7 @@ import ReelProgress from './ReelProgress'
 import styles from './SimApp.module.css'
 import StatsRail from './StatsRail'
 import Toasts from './Toasts'
+import Ticker from './Ticker'
 import Toolbar from './Toolbar'
 
 // Live: the caption re-announces the beat; reel: seek to it.
@@ -40,6 +41,7 @@ export interface SimAppProps { reel?: ReelMeta | null }
 
 export default function SimApp({ reel = null }: SimAppProps) {
   const inReel = useStore(s => s.reel !== null)
+  const hero = useStore(s => s.hero)
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [drawer, setDrawer] = useState<'stats' | 'log' | null>(null)
   const railL = useRef<HTMLElement>(null)
@@ -91,7 +93,7 @@ export default function SimApp({ reel = null }: SimAppProps) {
   return (
     <div ref={shell} className={styles.shell} data-reel={inReel ? '' : undefined}>
       <Toolbar menuOpen={overlayOpen} onMenu={() => setOverlayOpen(o => !o)} />
-      <aside ref={railL} data-rail="l" className={styles.railL} {...railProps(drawer === 'stats', 'Stats')}>
+      <aside ref={railL} data-rail="l" className={styles.railL} data-hero-hide {...railProps(drawer === 'stats', 'Stats')}>
         <StatsRail onBeat={onBeat} />
       </aside>
       <main data-slot="canvas" className={styles.canvas}>
@@ -99,18 +101,19 @@ export default function SimApp({ reel = null }: SimAppProps) {
         {reel && <ReelProgress title={reel.title} />}
         <ModeSwitcher />
         <Provenance />
-        <Legend />
+        <div data-hero-hide className={styles.contents}><Legend /></div>
         <Narrator />
         <CommandStrip manifest={manifest} drawer={drawer} onDrawer={d => setDrawer(cur => (cur === d ? null : d))} />
+        {hero && <Ticker />}
         <Toasts />
         <KeyHelp />
       </main>
       {drawer && <button type="button" aria-label="Close panel" className={styles.scrim} onClick={() => setDrawer(null)} />}
-      <aside ref={railR} data-rail="r" className={styles.railR} {...railProps(drawer === 'log', 'Log')}>
+      <aside ref={railR} data-rail="r" className={styles.railR} data-hero-hide {...railProps(drawer === 'log', 'Log')}>
         <LogRail />
       </aside>
       {/* outside the rail so the bottom sheet is not trapped by the closed drawer's transform; on desktop it sits on the rail-r grid area */}
-      <Inspector />
+      <div data-hero-hide className={styles.contents}><Inspector /></div>
       <MenuOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} manifest={manifest} />
     </div>
   )

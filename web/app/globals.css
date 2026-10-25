@@ -415,3 +415,9 @@ kbd {
 .chev { display: inline-flex; align-items: center; gap: .35em; min-height: 42px; font: 500 var(--t-ui)/1 var(--font-ui); color: var(--fg); text-decoration: none; }
 .chev > span { transition: transform var(--d-fast) var(--ease); }
 .chev:hover > span { transform: translateX(3px); }
+
+/* hero broadcast layout (Task 4.8): the strip rises above the 56 px ticker, the caption grows, chrome hides */
+:root { --strip-bottom: 36px; }
+:root[data-hero="1"] { --strip-bottom: 60px; --t-narr: 24px; }
+:root[data-hero="1"] [data-hero-hide],
+:root[data-hero="1"] [role="tooltip"] { display: none; }

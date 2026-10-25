@@ -1,6 +1,6 @@
 .strip {
   position: absolute;
-  bottom: 36px;
+  bottom: var(--strip-bottom);
   left: 50%;
   translate: -50%;
   width: clamp(360px, 76%, 820px);
