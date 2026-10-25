@@ -10,7 +10,7 @@ import { LiveMainnet, SameNames, WhatItDoes } from './Sections'
 import VideoPlate from './VideoPlate'
 
 test('hero: two-line poster with italic second line, lead ends with the mechanism sentence, two CTAs, Fig. 1', () => {
-  const m = r(h(Hero)); expect(m).toMatch(/<h1[^>]*>Gossip,<br\/?><em>scored\.<\/em><\/h1>/)
+  const m = r(h(Hero)); expect(m).toMatch(/<h1[^>]*><span[^>]*>Gossip,<\/span><br\/?><span[^>]*><em>scored\.<\/em><\/span><\/h1>/)
   expect(m).toContain(`${MECHANISM}</p>`); expect(m).toContain('href="/sim/"'); expect(m).toContain('Open the simulator'); expect(m).toContain('href="/reels/sybil-eclipse/"'); expect(m).toContain('Watch a recording')
   expect(m).toContain('Fig. 1'); expect(m).toContain(`<em>${FIG1}</em>`); expect(m).not.toContain('var(--flame)" class="btn')   // flame never a CTA
 })
