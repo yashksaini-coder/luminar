@@ -2,7 +2,7 @@
 
 Verified against web/ at 52790f4 on 2026-10-25. Trust code over this file.
 
-The reference for whoever presents Luminar and whoever touches `web/`. The design and its reasons live in `docs/superpowers/specs/2026-10-24-ui-overhaul-design.md`; this file only says what each screen does and which file does it. Paths in backticks starting `web/` exist at the commit above; paths marked † (`app/reels/[name]/page.tsx` and friends) are the reel, stage and hero surfaces of phase 4 and land with its merge. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
+The reference for whoever presents Luminar and whoever touches `web/`. The design and its reasons live in `docs/superpowers/specs/2026-10-24-ui-overhaul-design.md`; this file only says what each screen does and which file does it. Paths in backticks starting `web/` exist at the commit above; paths marked † (`app/reels/[name]/page.tsx` and friends) are the reel, stage and hero surfaces of phase 4 and land with its merge; until then their behaviour here follows `docs/superpowers/plans/parts/phase-4.md`. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
 
 ## 1. Routes and URL parameters
 
@@ -166,7 +166,7 @@ cd web && npm run build && python3 -m http.server -d out 9000
 # open http://localhost:9000/reels/sybil-eclipse/?theme=stage&hero=1
 ```
 
-The reel loads under the progress bar, plays, pauses at the end; `1`–`4` switch reels; `0` opens `/sim/` reading `OFFLINE` without errors; Network shows one `.jsonl`, no `/ws/events`, no `/api/*`.
+The reel loads under the progress bar, plays, pauses at the end; while in the reel Network shows one `.jsonl`, no `/ws/events`, no `/api/*`. `1`–`4` switch reels. `0` opens `/sim/?theme=stage&hero=1` reading `OFFLINE` with an empty canvas and no uncaught exception; the console then shows only the browser's failed `ws://localhost:9000/ws/events` connection and `/api/*` 404 lines.
 
 ## 10. Telemetry and live mainnet
 
