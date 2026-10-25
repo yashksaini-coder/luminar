@@ -1,5 +1,8 @@
 # Luminar frontend — feature inventory for the Next.js port
 
+> Historical record of the `frontend/` tree at git tag `pre-overhaul` (eb26490, 2026-10-24);
+> the shipped frontend is `web/`.
+
 Acceptance checklist for the `feat/ui-overhaul` rewrite. Verified against `eb26490` (2026-10-24) by reading every file under `frontend/src/`, `frontend/index.html`, `frontend/public/reels/manifest.json` and `docs/ui.md` (ui.md is partly stale: it lists 3 reels and a "grid" mode; the code has 4 reels and `force | radial | geo`). Trust the "Where in code" column over ui.md.
 
 Verdict key: **Keep** = must survive the port unchanged in behaviour · **Improve** = keep, but fix the noted flaw · **Drop** = may be removed (dead or redundant).

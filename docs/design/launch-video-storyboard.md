@@ -1,5 +1,8 @@
 # Luminar launch video — storyboard
 
+> Historical record of the `frontend/` tree at git tag `pre-overhaul` (eb26490, 2026-10-24);
+> the shipped frontend is `web/`.
+
 Remotion (React video) launch/demo cut for social, in the dither aesthetic of the UI overhaul.
 Two cuts from one component tree: **16:9 1920×1080** (X, LinkedIn, YouTube) and **9:16 1080×1920**
 (Reels, Shorts). 30 fps. Wide cut 57 s (1710 frames), tall cut 48 s (1440 frames).

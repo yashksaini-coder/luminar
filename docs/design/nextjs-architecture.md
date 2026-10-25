@@ -1,5 +1,8 @@
 # Next.js architecture for the UI overhaul
 
+> Historical record of the `frontend/` tree at git tag `pre-overhaul` (eb26490, 2026-10-24);
+> the shipped frontend is `web/`.
+
 Decision record for porting `frontend/` (vanilla TS + Vite + deck.gl, ~3.7k lines) to
 Next.js on `feat/ui-overhaul`. Every section ends with **Recommended** and the tradeoff.
 Verified 2026-10-24 against npm (`npm view <pkg> version`), Node v26.8.2, npm 11.

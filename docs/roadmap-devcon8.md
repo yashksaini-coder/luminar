@@ -15,7 +15,8 @@
 > params are already live), F8 OTel-in, F9 Jaeger deep link, F10 eth-mainnet-mesh preset,
 > F11 booth mode, F12 Playwright smoke. Deferred deliberately: role-token refactor of the
 > duplicated colour tables; OTLP badge in the toolbar; gzip for reels.
-> Paths under frontend/ in the tables below describe the pre-overhaul tree (git tag pre-overhaul); the shipped frontend is web/ since the 1 Nov swap.
+> Paths under frontend/ in the tables below describe the pre-overhaul tree (git tag
+> pre-overhaul, eb26490); the shipped frontend is web/ since the swap in 00bb473 (25 Oct).
 
 Verified against commit `a2d8a76` on 2026-10-09; external facts re-verified the same day by a second pass (see §11). All paths relative to `/home/yks/Projects/luminar`. Base proposal: **Stage-Demo First** (favoured by 2 of 3 judges), with grafts from the Ethereum-credibility, Observability and Lessons proposals and the fatal flaws the judges named removed. Effort estimates are full-day equivalents for one developer.
 
