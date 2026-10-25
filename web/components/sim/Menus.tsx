@@ -4,7 +4,7 @@
 
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode, type ToggleEvent } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { enterReel, exitReel, injectFault, launchScenario, setDurationPreset, setNodePreset } from '@/lib/actions'
+import { exitReel, injectFault, launchScenario, openReel, setDurationPreset, setNodePreset } from '@/lib/actions'
 import { faultItems, type FaultItem } from '@/lib/fault-items'
 import { nextMenuIndex } from '@/lib/menu-keys'
 import { useStore } from '@/lib/store'
@@ -116,12 +116,12 @@ export function scenarioRows(scenarios: ScenarioDefinition[], activeId: string |
   }))
 }
 
-/** The one reel-entry call site: phase 4 may swap enterReel for navigation to /reels/<name>/. */
+/** Reel rows navigate by route: a row opens /reels/<name>/, `0` goes back to /sim/. */
 export function reelRows(manifest: ReelManifest, activeName: string | null): MenuRow[] {
   return [
     ...manifest.map((meta, i) => ({
       key: meta.name, kbd: String(i + 1), name: meta.title, meta: meta.blurb, tag: meta.real ? 'REAL' : undefined,
-      active: meta.name === activeName, onSelect: () => void enterReel(meta),
+      active: meta.name === activeName, onSelect: () => openReel(meta.name),
     })),
     { key: 'live', kbd: '0', name: 'Back to live', onSelect: exitReel },
   ]

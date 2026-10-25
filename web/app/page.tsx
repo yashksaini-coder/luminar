@@ -6,13 +6,14 @@ import Nav from '@/components/landing/Nav'
 import Readouts from '@/components/landing/Readouts'
 import { LiveMainnet, SameNames, WhatItDoes } from '@/components/landing/Sections'
 import VideoPlate from '@/components/landing/VideoPlate'
+import ReelRedirect from '@/components/sim/ReelRedirect'
 import cards from '@/lib/reel-cards.json'
 import { REEL_MANIFEST } from '@/lib/reels'
 
 export default function Home() {
   return (
     <>
-    {/* ReelRedirect slot (phase 4, spec §4.8): `<ReelRedirect />` goes here, first, before <Nav/> */}
+    <ReelRedirect />
     <Nav reels={REEL_MANIFEST} cards={cards as unknown as Record<string, PlateFrames>} />
     <main>
       <Hero />
