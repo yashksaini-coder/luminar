@@ -1,0 +1,26 @@
+/* No dither, no flame (spec §6.2 Canvas overlays). */
+.card {
+  position: absolute;
+  top: var(--s-3);
+  left: var(--s-3);
+  z-index: 2;
+  max-width: 320px;
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  font: 400 var(--t-micro)/1.5 var(--font-mono);
+  color: var(--fg-2);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-1);
+  font: 600 var(--t-label)/1 var(--font-ui);
+  letter-spacing: .12em;
+  color: var(--fg);
+}
+
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
+.body { margin: 0; font-variant-numeric: tabular-nums; }

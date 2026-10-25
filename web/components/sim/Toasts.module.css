@@ -1,0 +1,22 @@
+/* Menu/toast surfaces carry no dither (spec §7). */
+.stack {
+  position: absolute;
+  top: calc(var(--toolbar-h) + var(--s-3));
+  left: var(--s-3);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 260px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: var(--s-2) var(--s-3);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  font: 400 var(--t-label)/1.4 var(--font-mono);
+}
+.toast[data-kind="fail"] { color: var(--flame-text); }
+.toast[data-kind="ok"] { color: var(--fg); }
+.toast[data-kind="info"] { color: var(--fg-2); }
