@@ -2,6 +2,8 @@
 .prose { width: min(var(--col-prose), 100%); margin-inline: auto; }
 .plate { width: min(var(--col-wide), 100%); margin: var(--s-12) auto 0; }   /* row → plate 48 */
 .poster { margin: 0; font: 400 var(--t-poster)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+/* --t-poster's rem bounds resolve against html's 12.24px mono body size (56→208 became 43→159); restate them in px. */
+.poster { font-size: clamp(56px, 13.5vw, 208px); }
 .poster em { font-style: italic; }
 .lead { margin: 22px 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }   /* h1 → lead 22 */
 .row { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-8); }   /* lead → row 28 */
