@@ -39,7 +39,8 @@
   .drain { animation: none; width: 100% }
 }
 
-/* ≤1023 the strip wraps to two rows (Task 3.11) and the canvas is full-bleed: clear both rows, stay inside the gutters. */
+/* ≤1023 the strip wraps to two or three rows of auto height, so no bottom offset is safe: the caption
+   sits under the mode switcher instead, inside the gutters. */
 @media (max-width: 1023px) {
-  .card { bottom: calc(var(--strip-bottom) + 2 * var(--strip-h) + var(--s-6)); right: var(--s-4); }
+  .card { top: calc(var(--s-3) + 80px); bottom: auto; left: var(--s-3); right: var(--s-3); max-width: none; }
 }

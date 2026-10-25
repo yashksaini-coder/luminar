@@ -17,7 +17,11 @@ let collapsedNow: boolean | null = null
 const collapseListeners = new Set<() => void>()
 function readCollapsed(): boolean {
   if (collapsedNow === null) {
-    try { collapsedNow = localStorage.getItem(LEGEND_KEY) === 'collapsed' } catch { collapsedNow = false }
+    // No stored choice on a phone: start collapsed, or the 176px panel covers the RADIAL/GEO tabs.
+    try {
+      const stored = localStorage.getItem(LEGEND_KEY)
+      collapsedNow = stored ? stored === 'collapsed' : matchMedia('(max-width: 1023px)').matches
+    } catch { collapsedNow = false }
   }
   return collapsedNow
 }
