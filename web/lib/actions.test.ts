@@ -6,6 +6,7 @@ import { REEL_MANIFEST } from '@/lib/reels'
 import { resetTopology, fitView } from '@/components/map/renderer'
 import { selectPill, useStore } from '@/lib/store'
 import { peerNode, snapWith } from '@/lib/fixtures'
+import { dispatchFrame } from '@/lib/api/dispatch'
 import {
   applyUrlMoment, autoPauseIfDue, bootSim, enterReel, initAutoGeo, initUrlMoment, shareMoment, teardownSim, injectFault, launchScenario, maybeAutoGeo, runKey, setNodePreset, syncUrlMoment, toggleMainnet, togglePlay,
 } from '@/lib/actions'
@@ -188,4 +189,14 @@ test('without navigator.clipboard (http on the venue LAN) shareMoment prompts wi
   vi.stubGlobal('navigator', {}); const prompt = vi.fn(); vi.stubGlobal('prompt', prompt)
   await shareMoment(); expect(prompt).toHaveBeenCalledWith('Copy this link', location.href); expect(useStore.getState().toasts.at(-1)?.text).toBe('Link copied')
   useStore.getState().applySnapshot(snapWith(['peer-0'])); expect(() => applyUrlMoment(new URLSearchParams('peer=ghost'))).not.toThrow(); expect(useStore.getState().selectedPeer).toBeNull()
+})
+test('initAutoGeo waits for observers, switches to geo once, and re-arms when the feed goes off', () => {
+  const off = initAutoGeo()
+  const obs = { peer_id: 'obs-1', index: 0, state: 'idle' as const, connected_peers: [], is_real: true, x: 10, y: -25, messages_sent: 0, messages_received: 0, gossip_score: 0 }
+  dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 138, slot: 15466393 } })
+  expect(useStore.getState().layoutMode).toBe('force')                        // no observers yet
+  dispatchFrame({ ...snapWith([]), type: 'snapshot', nodes: [obs] }); expect(useStore.getState().layoutMode).toBe('geo'); expect(useStore.getState().layoutBeforeGeo).toBe('force')
+  useStore.getState().setLayoutMode('radial'); dispatchFrame({ ...snapWith([]), type: 'snapshot', nodes: [obs] }); expect(useStore.getState().layoutMode).toBe('radial')   // once per feed-on
+  dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: false, observers: 0 } })
+  dispatchFrame({ type: 'telemetry_status', active: false, peer_count: 0, peers: [], mainnet: { enabled: true, observers: 138 } }); expect(useStore.getState().layoutMode).toBe('geo'); off()
 })
