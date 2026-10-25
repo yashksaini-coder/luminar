@@ -7,6 +7,9 @@ import ColdOpen from './scenes/01-ColdOpen'
 import Title from './scenes/02-Title'
 import Healthy from './scenes/03-Healthy'
 import Sybils from './scenes/04-Sybils'
+import Pruned from './scenes/05-Pruned'
+import Eclipse from './scenes/06-Eclipse'
+import Heal from './scenes/07-Heal'
 import type { SceneProps } from './scenes/types'
 import { timeline, type SceneId } from './timeline'
 
@@ -21,9 +24,9 @@ const SCENES: Record<SceneId, FC<SceneProps>> = {
   title: Title,
   healthy: Healthy,
   sybils: Sybils,
-  pruned: Placeholder,
-  eclipse: Placeholder,
-  heal: Placeholder,
+  pruned: Pruned,
+  eclipse: Eclipse,
+  heal: Heal,
   'same-names': Placeholder,
   mainnet: Placeholder,
   honesty: Placeholder,
