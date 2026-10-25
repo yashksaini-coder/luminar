@@ -16,6 +16,9 @@ Built for a talk at Devcon 8 (Mumbai, 3–6 Nov 2026). _Talk link added once pub
 
 ## See it
 
+> [!NOTE]
+> The screen captures below (both GIFs, `ui-main`, `ui-radial`, `stage-hero`) were shot on the retired Vite frontend. `web/` keeps the same map, keys and reels, but its rails and inspector differ: [docs/ui.md](docs/ui.md) describes the current screens, [docs/readme-assets.md](docs/readme-assets.md) how to re-shoot them.
+
 ![Hero mode, 50 peers, reel sybil-eclipse: at T+10 s five Sybil nodes (red) graft into the mesh and flood it; P4 drives their score past −10 and the mesh prunes them with reason=score within two heartbeats, their markers turning hollow. At T+16 s four silent attackers close around peer-10; scoring sees only a small P3 deficit and never prunes them. At T+24 s the faults clear and the mesh heals in about 1.4 s.](assets/readme/demo-sybil-eclipse.gif)
 
 ![Geo layout, live Ethereum mainnet, Free Play underneath: 140 real observer nodes light up across the world map in the order they saw one slot's block, first sighting and p50 in the ticker. Arrival at observer nodes, ~2.5 min behind, not mesh paths.](assets/readme/live-mainnet.gif)
