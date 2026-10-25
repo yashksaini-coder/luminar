@@ -144,15 +144,23 @@ export function seekReel(ms: number, opts?: { eventTailMs?: number }): void {
   }
   for (const f of tail) dispatchFrame(f)
   flushEvents()
+  // Events are skipped, so the phase state they build (hero PHASE cell, caption, phase beats) comes from the scenario instead.
+  const s = useStore.getState()
+  const fired = (s.activeScenario?.scenario?.phases ?? []).filter(p => p.at <= s.simTime)
+  const phase = fired[fired.length - 1]
+  if (phase) {
+    useStore.setState({ phaseLabel: phase.label, beats: fired.map(p => ({ label: p.label, time: p.at, kind: 'phase' as const })) })
+    s.setCaption({ text: phase.label, kind: 'phase', at: phase.at })
+  }
   cursor = i
   elapsed = target
   lastTick = performance.now()
 }
 
-/** Seek by simulation seconds (what the scrubber shows) rather than reel ms. */
 /** Half the ?t= precision (0.1 s): recorded times are float sums (12.8999…), so a rounded 12.9 still names that snapshot. */
 const SEEK_SLACK_SEC = 0.05
 
+/** Seek by simulation seconds (what the scrubber shows) rather than reel ms. */
 export function seekReelToSimTime(sec: number): void {
   const hit = frames.find(f => typeOf(f.frame) === 'snapshot' && (f.frame as SnapshotFrame).time >= sec - SEEK_SLACK_SEC)
   seekReel(hit ? hit.t : reelDurationMs())

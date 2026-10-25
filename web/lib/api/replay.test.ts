@@ -123,3 +123,21 @@ test('seekReelToSimTime lands on the snapshot a rounded ?t= names, not the next 
   vi.stubGlobal('fetch', vi.fn(async () => new Response(drift, { status: 200 })))
   await loadReel(meta); seekReelToSimTime(12.9); expect(reelElapsedMs()).toBe(500)
 })
+test('seek derives phaseLabel, caption and phase beats from the scenario phases at or before t (events are skipped)', async () => {
+  const phases = [{ at: 1, label: 'Sybils graft in', action: 'inject_sybil' }, { at: 3, label: 'Faults cleared', action: 'clear_faults' }]
+  const scenario = { id: 's', name: 'S', description: '', icon: '', topology_type: 'random', phases, duration: 5 }
+  const reel = [
+    { t: 0, frame: { type: 'scenario', active: true, scenario } },
+    { t: 100, frame: snapWith(['peer-0'], { time: 0 }) },
+    { t: 1200, frame: { at: 1.1, event_type: 'ScenarioPhaseFired', category: 'simulation', label: 'Sybils graft in' } },
+    { t: 1500, frame: snapWith(['peer-0'], { time: 1.5 }) },
+    { t: 3500, frame: snapWith(['peer-0'], { time: 3.5 }) },
+  ].map(l => JSON.stringify(l)).join('\n') + '\n'
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(reel, { status: 200 })))
+  await loadReel(meta); expect(useStore.getState().phaseLabel).toBe('')
+  seekReelToSimTime(1.5)
+  expect(useStore.getState().phaseLabel).toBe('Sybils graft in'); expect(useStore.getState().caption).toMatchObject({ text: 'Sybils graft in', kind: 'phase', at: 1 })
+  expect(useStore.getState().beats).toEqual([{ label: 'Sybils graft in', time: 1, kind: 'phase' }]); expect(useStore.getState().events).toHaveLength(0)
+  seekReelToSimTime(3.5); expect(useStore.getState().phaseLabel).toBe('Faults cleared'); expect(useStore.getState().beats).toHaveLength(2)
+  seekReelToSimTime(0); expect(useStore.getState().phaseLabel).toBe(''); expect(useStore.getState().beats).toEqual([])
+})
