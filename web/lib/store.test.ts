@@ -76,6 +76,14 @@ test('narrator beats: phase, first score prune to a sybil, fault cleared, healed
   expect(S().beats).toHaveLength(4)   // healed announced once
   expect(S().analyticsHistory).toHaveLength(2); expect(S().analyticsHistory[0]).toEqual({ t: 25.5, delivery: 0.97, propagationMs: 190, hops: 4, degree: 0 })
 })
+test('activeFaults counts injections since the last clear, past the events ring', () => {
+  const fi = { at: 1, event_type: 'FaultInjected', category: 'fault' as const, fault_type: 'sybil' }
+  S().applyEvents([fi, fi])
+  S().applyEvents(Array.from({ length: MAX_EVENTS }, (_, i) => ({ at: 2 + i, event_type: 'GossipMessage', category: 'gossip' as const })))
+  expect(S().events.some(e => e.event_type === 'FaultInjected')).toBe(false); expect(S().activeFaults).toBe(2)
+  S().applyEvents([{ at: 9000, event_type: 'FaultCleared', category: 'fault' }, fi])
+  expect(S().activeFaults).toBe(1)
+})
 test('BlockSeen lights observers between snapshots', () => {
   S().applySnapshot({ ...snapWith([]), nodes: [peerNode('obs-1', 0, { is_real: true }), peerNode('obs-2', 1, { is_real: true, state: 'decoded' })] })
   S().applyEvents([{ at: 1, event_type: 'BlockSeen', category: 'live', peer_id: 'obs-1', seen_ms: 320, first: true, slot: 1 }])

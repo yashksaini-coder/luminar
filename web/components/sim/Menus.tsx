@@ -169,7 +169,7 @@ const clampN = (v: number) => Math.min(10, Math.max(1, v))
 
 export function FaultMenu() {
   const [n, setN] = useState(5)
-  const st = useStore(useShallow(x => ({ selectedPeer: x.selectedPeer, nodeById: x.nodeById, events: x.events })))
+  const st = useStore(useShallow(x => ({ selectedPeer: x.selectedPeer, nodeById: x.nodeById, activeFaults: x.activeFaults })))
   const rows = faultRows(faultItems(st, n), n)
   const step = (d: number) => (e: MouseEvent) => { e.stopPropagation(); setN(v => clampN(v + d)) }
   return (

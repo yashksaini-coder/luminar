@@ -37,6 +37,7 @@ export interface AppState {
   scoreHistory: { t: number; v: number }[]
   events: AppEvent[]
   droppedEvents: number
+  activeFaults: number   // FaultInjected since the last FaultCleared; counted here, not from the events ring
   scenarios: ScenarioDefinition[]
   activeScenario: ScenarioStatus | null
   reel: ReelState | null
@@ -127,7 +128,7 @@ const initialState: AppState = {
   nodes: NONE, nodeById: new Map(), edges: NONE, mesh: {},
   layoutMode: 'force', geoAvailable: false, layoutBeforeGeo: null, geoAutoDone: false,
   selectedPeer: null, hoveredPeer: null, highlightPeers: NONE, scoreHistory: NONE,
-  events: NONE, droppedEvents: 0,
+  events: NONE, droppedEvents: 0, activeFaults: 0,
   scenarios: NONE, activeScenario: null, reel: null, reelLoad: null, mainnet: null,
   telemetry: { active: false, peerCount: 0 },
   stateDistribution: {}, totalMessagesSent: 0, totalMessagesReceived: 0, eventCounts: {},
@@ -237,7 +238,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     p.events = s.events.concat(batch).slice(-MAX_EVENTS)
     p.eventCount = s.eventCount + batch.length
 
-    let nar = s.narrator, beats = s.beats, invalid = s.invalidCount
+    let nar = s.narrator, beats = s.beats, invalid = s.invalidCount, faults = s.activeFaults
     let nodes: PeerNode[] | null = null, byId: Map<string, PeerNode> | null = null
     for (const evt of batch) {
       switch (evt.event_type) {
@@ -285,9 +286,11 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
           if (evt.msg_id?.startsWith('spam-')) invalid++
           break
         case 'FaultInjected':
+          faults++
           beats = [...beats, { label: `${evt.fault_type ?? 'fault'} injected`, time: evt.at, kind: 'fault' }]
           break
         case 'FaultCleared':
+          faults = 0
           beats = [...beats, { label: `${evt.fault_type ?? 'faults'} cleared`, time: evt.at, kind: 'fault' }]
           if (nar.healStartAt === null) nar = { ...nar, healStartAt: evt.at, healedAnnounced: false }
           break
@@ -297,6 +300,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     put(s, p, 'narrator', nar)
     put(s, p, 'beats', beats)
     put(s, p, 'invalidCount', invalid)
+    put(s, p, 'activeFaults', faults)
     set(p)
   },
 
