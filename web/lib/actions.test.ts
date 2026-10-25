@@ -65,6 +65,13 @@ test('toggleMainnet posts the inverse and stores the status; fail → backend of
   api.liveMainnet.mockResolvedValue({ ok: true, status: 200, data: { enabled: true, observers: 3 } as never }); await toggleMainnet(); expect(api.liveMainnet).toHaveBeenCalledWith(true); expect(useStore.getState().mainnet?.enabled).toBe(true)
   api.liveMainnet.mockResolvedValue({ ok: false, status: 0, data: null }); await toggleMainnet(); expect(api.liveMainnet).toHaveBeenLastCalledWith(false); expect(useStore.getState().toasts.at(-1)?.text).toBe('backend offline')
 })
+test('toggleMainnet on → off → on re-arms auto-Geo from the POST response alone', async () => {
+  useStore.setState({ geoAvailable: true, layoutMode: 'radial' })
+  api.liveMainnet.mockResolvedValue({ ok: true, status: 200, data: { enabled: true, observers: 3 } as never }); await toggleMainnet(); expect(useStore.getState().layoutMode).toBe('geo')
+  api.liveMainnet.mockResolvedValue({ ok: true, status: 200, data: { enabled: false, observers: 0 } as never }); await toggleMainnet(); expect(useStore.getState().geoAutoDone).toBe(false)
+  useStore.getState().setLayoutMode('radial')
+  api.liveMainnet.mockResolvedValue({ ok: true, status: 200, data: { enabled: true, observers: 3 } as never }); await toggleMainnet(); expect(useStore.getState().layoutMode).toBe('geo')
+})
 test('toggleMainnet: a non-zero failure status names the status, not offline (R19)', async () => {
   api.liveMainnet.mockResolvedValue({ ok: false, status: 403, data: null }); await toggleMainnet()
   expect(useStore.getState().toasts.at(-1)?.text).toBe('MAINNET failed · 403')

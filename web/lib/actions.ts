@@ -155,7 +155,8 @@ export async function toggleMainnet(): Promise<void> {
   if (reelGuard()) return
   const r = await api.liveMainnet(!S().mainnet?.enabled)
   if (!r.ok || !r.data) { toast(r, 'MAINNET'); return }   // R19: status 0 → offline, else the status
-  useStore.setState({ mainnet: r.data })
+  const wasOn = S().mainnet?.enabled
+  useStore.setState(wasOn && !r.data.enabled ? { mainnet: r.data, geoAutoDone: false } : { mainnet: r.data })   // feed-off re-arms auto-Geo, as applyTelemetryStatus does
   maybeAutoGeo()
 }
 
