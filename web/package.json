@@ -1,6 +1,9 @@
 {
   "name": "luminar-web",
   "private": true,
+  "engines": {
+    "node": ">=22.22.2"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -8,8 +8,11 @@ __pycache__
 .pytest_cache
 .ruff_cache
 
-frontend/node_modules
-frontend/dist
+web/node_modules
+web/.next
+web/out
+web/remotion/out
+frontend
 
 tests
 report
