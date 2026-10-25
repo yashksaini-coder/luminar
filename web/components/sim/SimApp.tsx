@@ -2,12 +2,12 @@
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import { autoPauseIfDue, fetchScenarios, initAutoGeo } from '@/lib/actions'
+import { autoPauseIfDue, fetchScenarios, initAutoGeo, seekTo } from '@/lib/actions'
 import { getStatic } from '@/lib/api/client'
 import { ws } from '@/lib/api/websocket'
 import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
-import type { ReelManifest } from '@/lib/types'
+import type { Beat, ReelManifest } from '@/lib/types'
 import CommandStrip from './CommandStrip'
 import ModeSwitcher from './ModeSwitcher'
 import Provenance from './Provenance'
@@ -15,6 +15,13 @@ import styles from './SimApp.module.css'
 import StatsRail from './StatsRail'
 import Toasts from './Toasts'
 import Toolbar from './Toolbar'
+
+// Live: the caption re-announces the beat; reel: seek to it.
+const onBeat = (b: Beat) => {
+  const s = useStore.getState()
+  if (s.reel) seekTo(b.time)
+  else s.setCaption({ text: b.label, kind: b.kind === 'phase' ? 'phase' : 'narrator', at: b.time })
+}
 
 const DeckCanvas = dynamic(() => import('@/components/map/DeckCanvas'), { ssr: false })   // mounts Tooltip itself
 
@@ -37,7 +44,7 @@ export default function SimApp() {
     <div className={styles.shell} data-reel={inReel ? '' : undefined}>
       <Toolbar onMenu={() => setOverlayOpen(true)} />
       <aside data-rail="l" className={styles.railL}>
-        <StatsRail onBeat={() => {}} />
+        <StatsRail onBeat={onBeat} />
       </aside>
       <main data-slot="canvas" className={styles.canvas}>
         <DeckCanvas />
