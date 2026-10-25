@@ -21,4 +21,6 @@ test('redirectTarget', () => {
 test('loadLabel', () => {
   expect(loadLabel({ loaded: 2_100_000, total: 3_500_000 })).toBe('2.1 / 3.5 MB · 60%')
   expect(loadLabel({ loaded: 2_100_000, total: 0 })).toBe('2.1 MB'); expect(loadLabel(null)).toBe('')
+  expect(loadLabel({ loaded: 5_000_000, total: 3_500_000 })).toBe('5.0 / 3.5 MB · 100%')   // gzip: content-length is the compressed size
+  expect(loadLabel({ loaded: NaN, total: 1 })).toMatch(/· 0%$/); expect(loadLabel({ loaded: -1, total: 1 })).toMatch(/· 0%$/)
 })

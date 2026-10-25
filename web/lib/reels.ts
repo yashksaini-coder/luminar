@@ -28,5 +28,6 @@ const mb = (bytes: number) => (bytes / 1e6).toFixed(1)
 export function loadLabel(p: { loaded: number; total: number } | null): string {
   if (!p) return ''
   if (!p.total) return `${mb(p.loaded)} MB`
-  return `${mb(p.loaded)} / ${mb(p.total)} MB · ${Math.round((p.loaded / p.total) * 100)}%`
+  const pct = Math.min(100, Math.max(0, Math.round((p.loaded / p.total) * 100))) || 0   // content-length is the compressed size: loaded can pass it
+  return `${mb(p.loaded)} / ${mb(p.total)} MB · ${pct}%`
 }
