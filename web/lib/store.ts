@@ -37,6 +37,7 @@ export interface AppState {
   scoreHistory: { t: number; v: number }[]
   events: AppEvent[]
   droppedEvents: number
+  activeFaults: number   // FaultInjected since the last FaultCleared; counted here, not from the events ring
   scenarios: ScenarioDefinition[]
   activeScenario: ScenarioStatus | null
   reel: ReelState | null
@@ -127,7 +128,7 @@ const initialState: AppState = {
   nodes: NONE, nodeById: new Map(), edges: NONE, mesh: {},
   layoutMode: 'force', geoAvailable: false, layoutBeforeGeo: null, geoAutoDone: false,
   selectedPeer: null, hoveredPeer: null, highlightPeers: NONE, scoreHistory: NONE,
-  events: NONE, droppedEvents: 0,
+  events: NONE, droppedEvents: 0, activeFaults: 0,
   scenarios: NONE, activeScenario: null, reel: null, reelLoad: null, mainnet: null,
   telemetry: { active: false, peerCount: 0 },
   stateDistribution: {}, totalMessagesSent: 0, totalMessagesReceived: 0, eventCounts: {},
@@ -237,7 +238,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     p.events = s.events.concat(batch).slice(-MAX_EVENTS)
     p.eventCount = s.eventCount + batch.length
 
-    let nar = s.narrator, beats = s.beats, invalid = s.invalidCount
+    let nar = s.narrator, beats = s.beats, invalid = s.invalidCount, faults = s.activeFaults
     let nodes: PeerNode[] | null = null, byId: Map<string, PeerNode> | null = null
     for (const evt of batch) {
       switch (evt.event_type) {
@@ -285,9 +286,11 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
           if (evt.msg_id?.startsWith('spam-')) invalid++
           break
         case 'FaultInjected':
+          faults++
           beats = [...beats, { label: `${evt.fault_type ?? 'fault'} injected`, time: evt.at, kind: 'fault' }]
           break
         case 'FaultCleared':
+          faults = 0
           beats = [...beats, { label: `${evt.fault_type ?? 'faults'} cleared`, time: evt.at, kind: 'fault' }]
           if (nar.healStartAt === null) nar = { ...nar, healStartAt: evt.at, healedAnnounced: false }
           break
@@ -297,6 +300,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     put(s, p, 'narrator', nar)
     put(s, p, 'beats', beats)
     put(s, p, 'invalidCount', invalid)
+    put(s, p, 'activeFaults', faults)
     set(p)
   },
 
@@ -370,14 +374,15 @@ export const selectHoveredNode = (s: AppState) => s.hoveredPeer ? s.nodeById.get
 export const selectAttackers = (s: AppState) => s.nodes.filter(n => n.state === 'attacker')   // use with useShallow
 export const selectPrunedCount = (s: AppState) => s.nodes.reduce((k, n) => k + (isPruned(n) ? 1 : 0), 0)
 
-/** stateDistribution with pruned attackers split out; fresh object, read with useShallow (R2). */
+/** stateDistribution (node-pool peers only) plus attacker/pruned taken from the snapshot nodes, the same
+ *  source as selectAttackers, since synthetic attackers never reach the backend count; fresh object, read with useShallow (R2). */
 export const selectStateCounts = (s: AppState): Record<string, number> => {
   const counts = { ...s.stateDistribution }
-  const pruned = selectPrunedCount(s)
-  if (pruned > 0) {
-    counts.attacker = Math.max(0, (counts.attacker ?? 0) - pruned)
-    counts.pruned = pruned
-  }
+  delete counts.attacker
+  let attacker = 0, pruned = 0
+  for (const n of s.nodes) if (n.state === 'attacker') { if (isPruned(n)) pruned++; else attacker++ }
+  if (attacker) counts.attacker = attacker
+  if (pruned) counts.pruned = pruned
   return counts
 }
 

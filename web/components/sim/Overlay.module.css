@@ -1,0 +1,26 @@
+/* Full-screen dialog on --bg at .96; no dither on the surface (spec §7). */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  padding: var(--s-12) var(--s-4);
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  color: var(--fg);
+}
+
+.close {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  width: 44px; height: 44px; padding: 0;
+  background: none; border: 0; border-radius: var(--r-0);
+  color: var(--paper-1); font: 400 24px/1 var(--font-mono); cursor: pointer;
+}
+.close:hover { color: var(--paper-0); }
+.close:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
+
+/* Rows rise in; reduced motion zeroes --d-row and --stagger in the tokens. */
+.overlay [data-row] { animation: rise var(--d-row) var(--ease) both; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

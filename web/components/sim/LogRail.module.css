@@ -1,0 +1,48 @@
+/* Event log rail. Stays position: relative so the Inspector (Task 3.7) slides over it. Text only: no dither. */
+.rail { position: relative; height: 100%; display: flex; flex-direction: column; min-height: 0; }
+
+.header {
+  display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-2);
+  padding: var(--s-3) var(--s-3) var(--s-2);
+  font: 500 var(--t-label)/1.2 var(--font-mono);
+}
+.label { letter-spacing: .12em; color: var(--fg-3); }
+/* Stacked and unwrapped so the header height does not change when following/paused or a count gains a digit: a header that re-wraps resizes the list and fires a scroll that flips following. */
+.meta { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.gap { color: var(--flame-text); }
+
+.chips {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1);
+  padding: 0 var(--s-3) var(--s-2); border-bottom: 1px solid var(--hair);
+}
+.chip {
+  padding: 2px var(--s-2); border: 1px solid var(--hair-strong); background: none;
+  font: 400 var(--t-label)/1.4 var(--font-mono); color: var(--fg-3); cursor: pointer;
+}
+.chip[aria-pressed="true"] { color: var(--fg); border-color: var(--fg-3); }
+.chip:hover { color: var(--fg); }
+.hint { font: 400 var(--t-micro)/1.4 var(--font-mono); color: var(--fg-3); }
+
+.list {
+  flex: 1; min-height: 0; overflow-y: auto;
+  overflow-anchor: none;   /* trimming the 500-row cap must not shift the view and fire a scroll that pauses following */
+  scrollbar-width: thin; scrollbar-color: var(--hair-strong) transparent;
+}
+.row {
+  display: grid; grid-template-columns: 7ch 8ch 3ch minmax(0, 1fr); align-items: center; gap: var(--s-2);
+  height: 22px; padding: 0 var(--s-3);
+  font: 400 var(--t-label)/22px var(--font-mono); font-variant-numeric: tabular-nums;
+  color: var(--fg-2); cursor: pointer;
+}
+.row:hover { background: var(--hair); }
+.row[aria-current] { background: var(--hair); color: var(--fg); }
+.at { color: var(--fg-3); }
+.node { overflow: hidden; white-space: nowrap; }
+.node[data-attacker] { color: var(--flame-text); }
+.detail { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.code[data-tone="ok"] { color: var(--signal-text); }
+.code[data-tone="alarm"] { color: var(--flame-text); }
+.code[data-tone="fg"] { color: var(--fg); }
+.code[data-tone="fg2"] { color: var(--fg-2); }
+.code[data-tone="fg3"] { color: var(--fg-3); }

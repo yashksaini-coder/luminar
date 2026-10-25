@@ -1,5 +1,5 @@
 import { test, expect, beforeEach } from 'vitest'
-import { useStore, MAX_EVENTS, selectPill, selectTimelineTotal, selectStateCounts, selectKpis, selectPrunedCount } from '@/lib/store'
+import { useStore, MAX_EVENTS, selectPill, selectTimelineTotal, selectStateCounts, selectKpis, selectPrunedCount, selectAttackers } from '@/lib/store'
 import { snapWith, peerNode } from '@/lib/fixtures'
 import type { AppEvent } from '@/lib/types'
 beforeEach(() => useStore.setState(useStore.getInitialState(), true))
@@ -76,6 +76,14 @@ test('narrator beats: phase, first score prune to a sybil, fault cleared, healed
   expect(S().beats).toHaveLength(4)   // healed announced once
   expect(S().analyticsHistory).toHaveLength(2); expect(S().analyticsHistory[0]).toEqual({ t: 25.5, delivery: 0.97, propagationMs: 190, hops: 4, degree: 0 })
 })
+test('activeFaults counts injections since the last clear, past the events ring', () => {
+  const fi = { at: 1, event_type: 'FaultInjected', category: 'fault' as const, fault_type: 'sybil' }
+  S().applyEvents([fi, fi])
+  S().applyEvents(Array.from({ length: MAX_EVENTS }, (_, i) => ({ at: 2 + i, event_type: 'GossipMessage', category: 'gossip' as const })))
+  expect(S().events.some(e => e.event_type === 'FaultInjected')).toBe(false); expect(S().activeFaults).toBe(2)
+  S().applyEvents([{ at: 9000, event_type: 'FaultCleared', category: 'fault' }, fi])
+  expect(S().activeFaults).toBe(1)
+})
 test('BlockSeen lights observers between snapshots', () => {
   S().applySnapshot({ ...snapWith([]), nodes: [peerNode('obs-1', 0, { is_real: true }), peerNode('obs-2', 1, { is_real: true, state: 'decoded' })] })
   S().applyEvents([{ at: 1, event_type: 'BlockSeen', category: 'live', peer_id: 'obs-1', seen_ms: 320, first: true, slot: 1 }])
@@ -103,6 +111,10 @@ test('setPref flips scale; toasts queue; resetRun clears the run; selectors', ()
   S().applySnapshot({ ...snapWith([]), nodes: [peerNode('peer-0', 0), peerNode('sybil-0', 1, { state: 'attacker' }), peerNode('sybil-1', 2, { state: 'attacker', connected_peers: ['peer-0'] })] })
   S().applyMetrics({ type: 'metrics', node_count: 1, state_distribution: { idle: 1, attacker: 2 }, total_messages_sent: 0, total_messages_received: 0, event_counts: {}, total_events: 0, stream_manager: { open: 0, max: 64, available: 64 }, dht_coordinator: { active: 0, available: 8 } })
   expect(selectPrunedCount(S())).toBe(1); expect(selectStateCounts(S())).toEqual({ idle: 1, attacker: 1, pruned: 1 })
+  // backend state_distribution never counts synthetic attackers: the snapshot nodes are the source for both
+  S().applyMetrics({ type: 'metrics', node_count: 1, state_distribution: { idle: 1 }, total_messages_sent: 0, total_messages_received: 0, event_counts: {}, total_events: 0, stream_manager: { open: 0, max: 64, available: 64 }, dht_coordinator: { active: 0, available: 8 } })
+  expect(selectStateCounts(S())).toEqual({ idle: 1, attacker: 1, pruned: 1 })
+  expect(selectAttackers(S()).length).toBe((selectStateCounts(S()).attacker ?? 0) + (selectStateCounts(S()).pruned ?? 0))
   // R2: flat primitives so useShallow can compare them
   expect(selectKpis(S())).toEqual({ delivery: null, propagationMs: null, hops: null, degAvg: null, degMin: null, degMax: null })
 })

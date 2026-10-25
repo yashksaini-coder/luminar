@@ -67,7 +67,8 @@ export function buildDetail(evt: AppEvent): string {
     case 'FaultInjected':
     case 'FaultCleared': {
       const name = String(evt.fault_type ?? evt.fault_id ?? '')
-      return typeof evt.count === 'number' ? `${name} × ${evt.count}` : name
+      const n = evt.count ?? evt.params?.n_attackers   // the backend's sybil/eclipse FaultInjected carries params.n_attackers
+      return typeof n === 'number' ? `${name} × ${n}` : name
     }
     case 'DHTQueryStarted': return `target=${evt.target ? shortId(evt.target) : '?'}`
     case 'DHTQueryCompleted': return evt.hops ? `${evt.hops} hops` : ''

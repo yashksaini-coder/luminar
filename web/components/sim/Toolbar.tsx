@@ -6,8 +6,8 @@ import { formatTime } from '@/lib/format'
 import { selectPill, useStore } from '@/lib/store'
 import styles from './Toolbar.module.css'
 
-const DURATIONS = [[60, '1m'], [120, '2m'], [300, '5m'], [600, '10m']] as const
-const NODES = [20, 50, 100, 200] as const
+export const DURATIONS = [[60, '1m'], [120, '2m'], [300, '5m'], [600, '10m']] as const
+export const NODES = [20, 50, 100, 200] as const
 
 function Pill() {
   const pill = useStore(selectPill)
@@ -59,7 +59,7 @@ function Clock() {
   return <time data-testid="clock" className={styles.clock}>{`T+ ${formatTime(t)}`}</time>
 }
 
-export default function Toolbar({ onMenu }: { onMenu: () => void }) {
+export default function Toolbar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
     <header className={styles.bar}>
       <span className={styles.brand}>
@@ -71,7 +71,7 @@ export default function Toolbar({ onMenu }: { onMenu: () => void }) {
       <Presets />
       <Clock />
       <a className={styles.link} href={`https://${REPO_URL}`} rel="noopener" target="_blank">GitHub</a>
-      <button type="button" className={styles.menuBtn} onClick={onMenu}>Menu +</button>
+      <button type="button" className={styles.menuBtn} aria-expanded={menuOpen} onClick={onMenu}>{menuOpen ? 'Menu ×' : 'Menu +'}</button>
     </header>
   )
 }
