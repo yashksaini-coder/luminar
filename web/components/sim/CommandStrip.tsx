@@ -36,8 +36,8 @@ export default function CommandStrip({ manifest, drawer, onDrawer }: {
             <button key={v} type="button" className={s.speed} aria-pressed={simSpeed === v} onClick={() => void setSpeed(v)}>{label}</button>
           ))}
         </span>
-        <button type="button" className={`${s.btn} ${s.drawerBtn}`} data-hero-hide aria-expanded={drawer === 'stats'} onClick={() => onDrawer('stats')}>Stats</button>
-        <button type="button" className={`${s.btn} ${s.drawerBtn}`} data-hero-hide aria-expanded={drawer === 'log'} onClick={() => onDrawer('log')}>Log</button>
+        <button type="button" className={`${s.btn} ${s.drawerBtn}`} data-hero-hide aria-controls="rail-stats" aria-expanded={drawer === 'stats'} onClick={() => onDrawer('stats')}>Stats</button>
+        <button type="button" className={`${s.btn} ${s.drawerBtn}`} data-hero-hide aria-controls="rail-log" aria-expanded={drawer === 'log'} onClick={() => onDrawer('log')}>Log</button>
         <div className={s.menus}>
           <ScenariosMenu />
           <ReelsMenu manifest={manifest} />

@@ -32,7 +32,9 @@ const onBeat = (b: Beat) => {
 }
 
 /** Widths at or below this run the drawer shell: rails slide in, the inspector is a bottom sheet. */
-export const SIM_BREAKPOINT = 1023
+export const SIM_BREAKPOINT = 1024
+const narrowQuery = () => matchMedia(`(max-width: ${SIM_BREAKPOINT}px)`)
+const isNarrow = () => narrowQuery().matches
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select,[tabindex]:not([tabindex="-1"])'
 
 const DeckCanvas = dynamic(() => import('@/components/map/DeckCanvas'), { ssr: false })   // mounts Tooltip itself
@@ -62,8 +64,10 @@ export default function SimApp({ reel = null }: SimAppProps) {
     return () => { live = false; stopUrlMoment(); teardownSim() }
   }, [reel?.name])   // eslint-disable-line react-hooks/exhaustive-deps -- a new reel name is a new boot; the meta object is static
   useEffect(() => useStore.subscribe(s => s.simTime, () => autoPauseIfDue()), [])
+  // D10: at narrow widths the inspector sheet and a drawer never coexist: a selection closes the drawer.
+  useEffect(() => useStore.subscribe(s => s.selectedPeer, id => { if (id && isNarrow()) setDrawer(null) }), [])
   useEffect(() => {   // back above the breakpoint the rails are inline again: drop drawer and overlay state
-    const mq = matchMedia(`(max-width: ${SIM_BREAKPOINT}px)`)
+    const mq = narrowQuery()
     const onChange = () => { if (!mq.matches) { setDrawer(null); setOverlayOpen(false) } }
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
@@ -94,7 +98,7 @@ export default function SimApp({ reel = null }: SimAppProps) {
   return (
     <div ref={shell} className={styles.shell} data-reel={inReel ? '' : undefined}>
       <Toolbar menuOpen={overlayOpen} onMenu={() => setOverlayOpen(o => !o)} />
-      <aside ref={railL} data-rail="l" className={styles.railL} data-hero-hide {...railProps(drawer === 'stats', 'Stats')}>
+      <aside id="rail-stats" ref={railL} data-rail="l" className={styles.railL} data-hero-hide {...railProps(drawer === 'stats', 'Stats')}>
         <StatsRail onBeat={onBeat} />
       </aside>
       <main data-slot="canvas" className={styles.canvas}>
@@ -107,14 +111,14 @@ export default function SimApp({ reel = null }: SimAppProps) {
         <CommandStrip manifest={manifest} drawer={drawer} onDrawer={d => setDrawer(cur => (cur === d ? null : d))} />
         {hero && <Ticker />}
         <Toasts />
-        <KeyHelp />
       </main>
       {drawer && <button type="button" aria-label="Close panel" className={styles.scrim} onClick={() => setDrawer(null)} />}
-      <aside ref={railR} data-rail="r" className={styles.railR} data-hero-hide {...railProps(drawer === 'log', 'Log')}>
+      <aside id="rail-log" ref={railR} data-rail="r" className={styles.railR} data-hero-hide {...railProps(drawer === 'log', 'Log')}>
         <LogRail />
       </aside>
       {/* outside the rail so the bottom sheet is not trapped by the closed drawer's transform; on desktop it sits on the rail-r grid area */}
       <div data-hero-hide className={styles.contents}><Inspector /></div>
+      <KeyHelp />   {/* outside .canvas: it is a size container (D8), which would box a fixed overlay */}
       <MenuOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} manifest={manifest} />
     </div>
   )
@@ -127,7 +131,7 @@ export function inertExcept(shell: HTMLElement, open: HTMLElement): () => void {
   return () => { for (const el of others) el.removeAttribute('inert') }
 }
 
-// Drawer semantics only while open (≤1023 px); inline rails stay plain asides.
+// Drawer semantics only while open (≤1024 px); inline rails stay plain asides.
 function railProps(open: boolean, label: string) {
   return open
     ? { 'data-open': 'true', role: 'dialog', 'aria-modal': true, 'aria-label': label, tabIndex: -1 }
