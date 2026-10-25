@@ -9,6 +9,7 @@ import { initPrefs } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
 import type { Beat, ReelManifest } from '@/lib/types'
 import CommandStrip from './CommandStrip'
+import LogRail from './LogRail'
 import ModeSwitcher from './ModeSwitcher'
 import Provenance from './Provenance'
 import styles from './SimApp.module.css'
@@ -53,7 +54,9 @@ export default function SimApp() {
         <CommandStrip manifest={manifest} onDrawer={() => {}} />
         <Toasts />
       </main>
-      <aside data-rail="r" className={styles.railR} />
+      <aside data-rail="r" className={styles.railR}>
+        <LogRail />
+      </aside>
     </div>
   )
 }
