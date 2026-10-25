@@ -88,5 +88,16 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
 
 /* ≤1024 (D1) the 44 px mode switcher owns the top row; the legend header drops under it. */
 @media (max-width: 1024px) {
-  .legend { top: calc(var(--s-3) + 44px + var(--s-2)); }
+  .legend {
+    top: calc(var(--s-3) + 44px + var(--s-2));
+    max-height: calc(100dvh - 44px - 44px - 80px);   /* toolbar, mode switcher, the strip's band */
+    overflow-y: auto;
+  }
+  .head { gap: var(--s-2); padding: 0 0 0 var(--s-2); }
+  .btn { width: 44px; height: 44px; }
+  .row { min-height: 44px; }
+  .switch { width: 40px; height: 24px; }
+  .switch::after { width: 20px; height: 20px; }
+  .switch:checked::after { transform: translateX(16px); }
+  .input { min-height: 36px; }
 }

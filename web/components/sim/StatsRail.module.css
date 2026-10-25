@@ -66,3 +66,8 @@
 .segs { display: flex; gap: 2px; height: 12px; }
 .seg { width: 10px; height: 12px; background: var(--pitch-3); }
 .seg[data-on] { background: var(--fg); }
+
+/* ≤1024 (D1): beats are the rail's only buttons */
+@media (max-width: 1024px) {
+  .beat { min-height: 44px; }
+}

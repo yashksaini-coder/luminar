@@ -26,3 +26,8 @@
 .tab[aria-pressed="true"] { color: var(--paper-0); text-decoration: underline 1px; text-underline-offset: 4px; }
 .tab:disabled { color: var(--paper-2); cursor: not-allowed; }   /* greyed; --paper-2 is the dimmest text allowed */
 .tab:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
+
+/* ≤1024 (D1): 44 px targets */
+@media (max-width: 1024px) {
+  .tab { min-height: 44px; padding-inline: var(--s-4); }
+}
