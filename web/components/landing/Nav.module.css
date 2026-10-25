@@ -10,6 +10,7 @@
 .links a { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--d-fast) var(--ease); }
 .links a:hover { text-decoration: underline; text-underline-offset: .35em; }
 .links a:active { transform: translateY(1px); }
+.brand[aria-current], .links [aria-current], .rows [aria-current] .name { text-decoration: underline; text-underline-offset: .35em; text-decoration-thickness: 1px; }
 .menuBtn { display: flex; align-items: center; gap: .6em; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; }
 .plus { position: relative; width: 11px; height: 11px; transition: transform var(--d-menu) var(--ease); }
 .plus::before, .plus::after { content: ''; position: absolute; background: currentColor; }

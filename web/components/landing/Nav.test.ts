@@ -3,10 +3,13 @@ import { join } from 'node:path'
 import { act, createElement as h } from 'react'
 import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup as r } from 'react-dom/server'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { REPO_URL } from '@/lib/copy'
 import type { ReelManifest } from '@/lib/types'
 import Nav from './Nav'
+
+const route = vi.hoisted(() => ({ path: '/' }))
+vi.mock('next/navigation', () => ({ usePathname: () => route.path }))
 
 const reels: ReelManifest = JSON.parse(readFileSync(join(__dirname, '../../public/reels/manifest.json'), 'utf8'))
 const cards = JSON.parse(readFileSync(join(__dirname, '../../lib/reel-cards.json'), 'utf8'))
@@ -28,4 +31,11 @@ test('menu opens with four reel rows (kbd, blurb, REAL tag, card) and three rout
   act(() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })) })
   expect(host.querySelector('[role="dialog"]')).toBeNull(); expect(document.body.style.overflow).toBe(''); expect(document.activeElement).toBe(btn)
   act(() => btn.click()); act(() => root.unmount()); expect(document.body.style.overflow).toBe('')   // unmount while open restores scroll
+})
+test.each([['/', 'LUMINAR'], ['/sim/', '>Simulator<'], ['/reels/sybil-eclipse/', '>Recordings<']])('aria-current="page" on exactly one element for %s', (path, text) => {
+  route.path = path
+  const m = r(h(Nav, { reels, cards }))
+  expect(m.match(/aria-current="page"/g)).toHaveLength(1)
+  const i = m.indexOf('aria-current="page"'); expect(m.slice(i, i + 160)).toContain(text)   // and it is the element carrying this text
+  route.path = '/'
 })
