@@ -9,7 +9,7 @@ import { monoFamily } from '@/lib/fonts'
 import { reducedMotion } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
 import type { PeerNode } from '@/lib/types'
-import { atlasKey, buildAtlas, type GlyphId, glyphFor, haloFor, type IconAtlas } from './atlas'
+import { atlasKey, buildAtlas, type GlyphId, glyphFor, HALO_OUTER, haloFor, type IconAtlas } from './atlas'
 import { breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA } from './geometry'
 import { attackerLayoutEdges, computeLayout, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
 import { PAL, refreshPalette, scoreBand, withAlpha } from './palette'
@@ -42,6 +42,7 @@ let frameNow = 0
 
 /** Peers with a gossip history worth a score halo; idle has none yet, the rest carry their own glyphs. */
 const HALO_STATES = new Set<PeerNode['state']>(['origin', 'receiving', 'decoded'])
+const hasHalo = (n: PeerNode) => isSimPeer(n) && HALO_STATES.has(n.state)
 
 export function markDirty(): void { dirty = true }
 
@@ -246,13 +247,15 @@ export function renderLayers(): void {
     }
   }
 
-  const haloData = visible.filter(n => isSimPeer(n) && HALO_STATES.has(n.state))
+  const haloData = visible.filter(hasHalo)
   if (haloData.length) {
     const bandKey = haloData.map(n => scoreBand(n.gossip_score)).join('')
     layers.push(new IconLayer<PeerNode>({
       id: 'halos', data: haloData, ...atlasProps,
       getIcon: d => haloFor(d.gossip_score), getSize: iconSize('halo-0'), getPosition,
       pickable: false,
+      // 1:1 with the atlas: nearest keeps the dither cells square at a fractional screen position (linear smears them).
+      textureParameters: { minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' },
       updateTriggers: { getIcon: [bandKey, atlasK] },
     }))
   }
@@ -318,7 +321,8 @@ export function renderLayers(): void {
         getSize: s.stageTheme ? 12 : 10, sizeUnits: 'pixels',
         fontFamily: monoFamily(), fontWeight: 500, characterSet: 'auto',
         getTextAnchor: 'start', getAlignmentBaseline: 'center',
-        getPixelOffset: d => [r * glyphScale(d, d.peer_id === selectedPeer) + 3, 0],
+        // Start past whatever rings the glyph, so no label sits on the reticle's ticks (2 r + 4 px) or the halo cells (1.7 r).
+        getPixelOffset: d => [(d.peer_id === selectedPeer ? 2 * r + 4 : hasHalo(d) ? HALO_OUTER * r : r * glyphScale(d, false)) + 3, 0],
         updateTriggers: { getPixelOffset: [selectedPeer, r] },
       }))
     }

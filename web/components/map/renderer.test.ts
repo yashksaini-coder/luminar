@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import type { GlyphId } from '@/components/map/atlas'
+import { type GlyphId, HALO_OUTER } from '@/components/map/atlas'
 
 const { FakeDeck, buildAtlasMock, reducedMotionMock } = vi.hoisted(() => {
   type Props = Record<string, any>   // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -150,6 +150,8 @@ test('glyphs per state; halos only on participating honest peers, band from goss
   const nl = FakeDeck.instances[0].lastLayer('nodes'); expect(nl.props.data.map((d: PeerNode) => nl.props.getIcon(d))).toEqual(['idle', 'origin', 'disc', 'decoded', 'joining', 'failed', 'attacker', 'pruned'])
   const halos = FakeDeck.instances[0].lastLayer('halos'); expect(halos.props.data.map((d: PeerNode) => d.peer_id)).toEqual(['peer-1', 'peer-2', 'peer-3'])   // origin, receiving, decoded; never idle/joining/failed/attacker
   expect(halos.props.data.map((d: PeerNode) => halos.props.getIcon(d))).toEqual(['halo-1', 'halo-2', 'halo-3']); expect(halos.props.pickable).toBe(false)
+  // drawn 1:1 from the atlas, so nearest sampling keeps the 2 px cells square at a fractional screen position (linear smeared them ~65 % into the next row)
+  expect(halos.props.textureParameters).toMatchObject({ minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' })
   expect(layerIds().indexOf('halos')).toBeLessThan(layerIds().indexOf('nodes'))
 })
 test('negative score → flame halo-0; attack links dashed 4/3 from grafted attackers to each victim; pruned has none', () => {
@@ -189,4 +191,11 @@ test('labels: attackers always (raw id, flame / paper-2 when pruned per R6), sel
   useStore.getState().applySnapshot(snapWith(peers(60).map(p => p.peer_id))); flush(); expect(FakeDeck.instances[0].lastLayer('labels')?.props.data.length ?? 0).toBeLessThanOrEqual(2)   // > 50 visible: all-labels ignored
   useStore.getState().setPref('stageTheme', true); flush(); expect(FakeDeck.instances[0].lastLayer('labels')?.props.getSize ?? 12).toBe(12)
   useStore.getState().setDisplay({ showLabels: false }); flush(); expect(layerIds()).not.toContain('labels')
+})
+test('labels start past what surrounds the glyph: the reticle (2 r + 4 px ticks) when selected, the halo (1.7 r) when it has one, else the glyph', () => {
+  mount(); fontsReadyForTest(true); const nodes = peers(5).map((p, i) => ({ ...p, state: (i === 1 ? 'receiving' : 'idle') as PeerNode['state'] }))
+  useStore.getState().applyEdges({ type: 'edges', edges: ring(5) }); useStore.getState().applySnapshot({ ...snapWith(nodes.map(n => n.peer_id)), nodes })
+  useStore.getState().selectPeer('peer-0'); useStore.getState().setDisplay({ allLabels: true }); flush()
+  const L = FakeDeck.instances[0].lastLayer('labels'); const r = nodeRadiusPx(5, 'force', 1); const by = (id: string) => L.props.data.find((d: PeerNode) => d.peer_id === id)
+  expect(L.props.getPixelOffset(by('peer-0'))).toEqual([2 * r + 4 + 3, 0]); expect(L.props.getPixelOffset(by('peer-1'))).toEqual([HALO_OUTER * r + 3, 0]); expect(L.props.getPixelOffset(by('peer-2'))).toEqual([r + 3, 0])
 })
