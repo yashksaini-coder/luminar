@@ -26,7 +26,6 @@ export default function Mainnet({ orientation }: SceneProps) {
       <Parallax depth={0.4} pan={f * 0.1} style={{ position: 'absolute', left: OCEAN.x, top: OCEAN.y, lineHeight: 0 }}>
         <HaloRing size={RING} band={2} />
       </Parallax>
-      <div style={{ position: 'absolute', left: l.caption!.x - 24, top: l.caption!.y - 16, width: l.caption!.w + 40, height: l.caption!.h + 32, background: 'var(--bg)' }} />
       <Fig n={FIG_N.mainnet!} orientation={orientation} box={l.caption!} at={10}>{FIG.mainnet!}</Fig>
     </>
   )

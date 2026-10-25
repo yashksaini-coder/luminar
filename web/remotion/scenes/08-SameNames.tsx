@@ -20,7 +20,6 @@ export default function SameNames({ orientation }: SceneProps) {
   const l = LAYOUT['same-names'][orientation]
   const tall = orientation === 'tall'
   const slide = (from: number) => interpolate(f, [0, 12], [from, 0], { extrapolateRight: 'clamp' })
-  const enter = interpolate(f, [0, 12], [0, 1], { extrapolateRight: 'clamp' })
   const names = tall ? SERIES.slice(0, 4) : SERIES
   const px = l.monoPx!
   const namesTop = tall ? l.mesh!.y + l.mesh!.h + 40 : CARD_Y + CARD.h + 60
@@ -28,16 +27,16 @@ export default function SameNames({ orientation }: SceneProps) {
     <>
       {tall ? (
         <DitheredStill src="stills/grafana.png" box={l.mesh!} focus={[0.5, 0.35]} border cell={l.cell}
-          style={{ opacity: enter, transform: `translateX(${slide(-120)}px)` }} />
+          style={{ transform: `translateX(${slide(-120)}px)` }} />
       ) : (
         <>
           <Parallax depth={0.6} pan={f * 0.1} style={{ position: 'absolute', inset: 0 }}>
             <DitheredStill src="stills/grafana.png" box={{ x: 120, y: CARD_Y, ...CARD }} border cell={l.cell}
-              style={{ opacity: enter, transform: `translateX(${slide(-120)}px)` }} />
+              style={{ transform: `translateX(${slide(-120)}px)` }} />
           </Parallax>
           <Parallax depth={0.9} pan={f * 0.1} style={{ position: 'absolute', inset: 0 }}>
             <DitheredStill src="stills/jaeger.png" box={{ x: 1000, y: CARD_Y, ...CARD }} border cell={l.cell}
-              style={{ opacity: enter, transform: `translateX(${slide(120)}px)` }} />
+              style={{ transform: `translateX(${slide(120)}px)` }} />
           </Parallax>
         </>
       )}
