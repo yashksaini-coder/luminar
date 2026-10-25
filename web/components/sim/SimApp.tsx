@@ -12,6 +12,7 @@ import CommandStrip from './CommandStrip'
 import ModeSwitcher from './ModeSwitcher'
 import Provenance from './Provenance'
 import styles from './SimApp.module.css'
+import StatsRail from './StatsRail'
 import Toasts from './Toasts'
 import Toolbar from './Toolbar'
 
@@ -35,7 +36,9 @@ export default function SimApp() {
   return (
     <div className={styles.shell} data-reel={inReel ? '' : undefined}>
       <Toolbar onMenu={() => setOverlayOpen(true)} />
-      <aside data-rail="l" className={styles.railL} />
+      <aside data-rail="l" className={styles.railL}>
+        <StatsRail onBeat={() => {}} />
+      </aside>
       <main data-slot="canvas" className={styles.canvas}>
         <DeckCanvas />
         <ModeSwitcher />

@@ -1,0 +1,41 @@
+/* Hairline-separated sections, no boxes (spec §6.2). State-strip cells are solid: no dither (spec §7). */
+.rail {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hair-strong) transparent;
+}
+.rail::-webkit-scrollbar { width: 6px; }
+.rail::-webkit-scrollbar-thumb { background: var(--hair-strong); }
+
+.section { padding: var(--s-3); border-bottom: 1px solid var(--hair); }
+.section:empty { display: none; }
+
+.heading {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 var(--s-2);
+  font: 500 var(--t-label)/1.2 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.meta { color: var(--fg-2); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+.kpi { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
+.kpiLabel { font: 500 var(--t-label)/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.kpiValue { font: 400 var(--t-kpi)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; }
+.unit { margin-left: .25em; font-size: var(--t-label); color: var(--fg-2); }
+
+.strip { display: block; width: 100%; height: 6px; margin-bottom: var(--s-2); }
+
+.counts { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--s-3); row-gap: var(--s-1); margin: 0; }
+.countRow, .rows > div { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); }
+.countRow dt { display: flex; align-items: center; gap: var(--s-2); color: var(--fg-2); }
+.counts dt, .counts dd, .rows dt, .rows dd { margin: 0; font: 400 var(--t-label)/1.6 var(--font-mono); }
+.counts dd, .rows dd { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.rows { display: flex; flex-direction: column; gap: var(--s-1); margin: 0; }
+.rows dt { color: var(--fg-2); }
+.rows dd[data-alarm] { color: var(--flame-text); }
