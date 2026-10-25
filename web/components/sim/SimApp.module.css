@@ -13,14 +13,14 @@
 .shell > header { grid-area: toolbar; }
 .railL { grid-area: rail-l; min-height: 0; border-right: 1px solid var(--hair); }
 .railR { grid-area: rail-r; position: relative; overflow: hidden; min-height: 0; border-left: 1px solid var(--hair); }
-.canvas { grid-area: canvas; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.canvas { grid-area: canvas; position: relative; min-width: 0; min-height: 0; overflow: hidden; container-type: inline-size; }   /* D8: the strip wraps by canvas width */
 .scrim { display: none; }
 .contents { display: contents; }   /* hero-hide wrappers that stay out of layout */
 
 /* hero: rails are display:none (data-hero-hide), so the grid drops their columns too */
 :global(:root[data-hero="1"]) .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / 1fr; }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .shell { grid-template: "toolbar" var(--toolbar-h) "canvas" 1fr / 1fr; }
   .railL, .railR {
     position: fixed;

@@ -79,8 +79,9 @@
   white-space: nowrap;
 }
 
-/* ≤1023: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
-@media (max-width: 1023px) {
+/* Two-row strip: by canvas width (D8, rails open on a narrow desktop) and in the touch band. CSS has no `or`
+   across container and media queries, so the block is duplicated. */
+@container (max-width: 760px) {
   .strip {
     left: var(--s-3);
     translate: none;
@@ -93,11 +94,49 @@
     padding: var(--s-2);
   }
   .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+  .menus { flex-wrap: wrap; }
+  /* hero: the 56 px ticker owns the bottom edge; sit the strip on --strip-bottom (60 px) above it */
+  :global(:root[data-hero="1"]) .strip { bottom: var(--strip-bottom); }
+}
+
+/* ≤1024: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
+@media (max-width: 1024px) {
+  .strip {
+    left: var(--s-3);
+    translate: none;
+    width: calc(100% - 2 * var(--s-3));
+    bottom: var(--s-3);
+    height: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: var(--s-2);
+    padding: var(--s-2);
+    padding-bottom: max(var(--s-2), env(safe-area-inset-bottom));
+  }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
   .btn, .speed { min-width: 44px; min-height: 44px; }
   .drawerBtn { display: inline-block; }
   .menus { flex-wrap: wrap; }
+  .speeds { gap: var(--s-2); }
+  .speeds > .speed + .speed { border-left: 1px solid var(--hair); }   /* spaced targets keep their own hairline */
   .range { inset: -19px 0; height: 44px; }
   .kbd { display: none; }
-  /* hero: the 56 px ticker owns the bottom edge; sit the strip on --strip-bottom (60 px) above it */
   :global(:root[data-hero="1"]) .strip { bottom: var(--strip-bottom); }
+}
+
+/* Phone landscape: one scrolling row, 52 px tall, so the mesh keeps a band above it */
+@media (max-width: 1024px) and (max-height: 500px) {
+  .strip {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    bottom: var(--s-2);
+    padding: var(--s-1) var(--s-2);
+    padding-bottom: max(var(--s-1), env(safe-area-inset-bottom));
+  }
+  .strip::-webkit-scrollbar { display: none; }
+  .row { display: contents; }
+  .strip > * { flex: none; }
+  .track { flex: 1 0 80px; }
+  .menus { flex-wrap: nowrap; }
 }
