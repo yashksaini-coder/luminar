@@ -33,6 +33,12 @@ test('Same names: two dithered stills at depths .6/.9, the seven gossipsub_* ser
 test('Live mainnet: arrival sentence, reel link, provenance credit verbatim', () => {
   const m = r(h(LiveMainnet)); expect(m).toContain(ARRIVAL); expect(m).toContain('href="/reels/mainnet-block-wave/"'); expect(m).toContain(PROVENANCE)
 })
+test('every landing section is a reveal section; children carry up kinds in reading order; Jaeger still delayed 90 ms', () => {
+  for (const C of [WhatItDoes, SameNames, LiveMainnet]) { const m = r(h(C)); expect(m).toMatch(/^<section[^>]*data-reveal=""/); expect(m).toContain('data-k="up" style="--i:0"') }
+  const w = r(h(WhatItDoes)); for (const i of [1, 2, 3]) expect(w).toContain(`<p data-k="up" style="--i:${i}"`); expect(w).toMatch(/<div data-k="up" style="--i:4"><a class="chev"/)   // wrapper, never .chev
+  const s = r(h(SameNames)); expect(s).toMatch(/class="plate [^"]*" data-k="card" style="--i:1"/); expect(s).toContain('<p data-k="up" style="--i:2"'); expect(s).toMatch(/<ul class="mono [^"]*" data-k="up" style="--i:3"/)
+  const l = r(h(LiveMainnet)); expect(l).toContain('<p data-k="up" style="--i:1"'); expect(l).toMatch(/<p class="[^"]*credit[^"]*" data-k="up" style="--i:2"/)
+})
 test('Footer: three columns, event line, routes, source, licence and credit', () => {
   const m = r(h(Footer)); expect(m).toContain('LUMINAR'); expect(m).toContain(`<em>${EVENT_LINE}</em>`); for (const href of ['/', '/sim/', '/reels/sybil-eclipse/', '/figure/', `https://${REPO_URL}`]) expect(m).toContain(`href="${href}"`)
   expect(m).toContain('MIT'); expect(m).toContain('ethPandaOps (CC BY 4.0)')
