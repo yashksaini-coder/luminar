@@ -17,7 +17,7 @@ export default function ReelProgress({ title }: { title: string }) {
       <p id={labelId} className={styles.label}>{label}</p>
       <div className={styles.track} role="progressbar" aria-labelledby={labelId}
         aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
-        <div className={styles.fill} style={{ width: `${pct}%` }} />
+        <div className={styles.fill} style={{ '--p': pct / 100 } as React.CSSProperties} />
       </div>
     </div>
   )

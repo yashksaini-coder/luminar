@@ -4,6 +4,7 @@
   gap: var(--s-4);
   height: var(--toolbar-h);
   padding: 0 var(--s-4);
+  padding-inline: max(var(--s-4), env(safe-area-inset-left)) max(var(--s-4), env(safe-area-inset-right));
   border-bottom: 1px solid var(--hair);
 }
 
@@ -29,10 +30,16 @@
   letter-spacing: .12em;
   border-radius: var(--r-0);
   background: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* the flex item that actually truncates (REEL · long title) */
 
 /* R7: flame-dim text is 3.1:1 and fails AA; --flame-text is 6.3:1 */
 .pill[data-state="offline"] { color: var(--flame-text); padding: 3px var(--s-2); border: 1px solid var(--hair); }
+.pill[data-state="connecting"] { color: var(--fg-3); }
 .pill[data-state="live"] { color: var(--signal); }
 .pill[data-state="reel"] { color: var(--paper-0); }
 
@@ -73,8 +80,8 @@ button.badge, .preset, .menuBtn { cursor: pointer; }
 .preset:disabled { cursor: default; }
 
 .menuBtn { display: none; }
-/* ≤1023: brand, pill and Menu + only; the strip carries the time readout */
-@media (max-width: 1023px) {
-  .menuBtn { display: inline-block; min-height: 36px; }
+/* ≤1024: brand, pill and Menu + only; the strip carries the time readout */
+@media (max-width: 1024px) {
+  .menuBtn { display: inline-block; flex: none; white-space: nowrap; min-height: 44px; min-width: 44px; }
   .sub, .badge, .presets, .clock, .link { display: none; }
 }

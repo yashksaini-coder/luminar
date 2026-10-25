@@ -23,6 +23,11 @@
 .btn[aria-pressed="true"] { color: var(--paper-0); background: var(--pitch-3); }
 .btn:focus-visible, .switch:focus-visible, .input:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
 
+/* fold: the body stays in the DOM and the row track eases 0fr → 1fr (reduced motion zeroes --d-fast) */
+.fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--d-fast) var(--e); }
+.fold[data-open="true"] { grid-template-rows: 1fr; }
+.foldIn { min-height: 0; overflow: hidden; }
+
 .body {
   display: grid;
   grid-template-columns: 16px 1fr;
@@ -62,7 +67,7 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
   top: 2px; left: 2px;
   width: 12px; height: 12px;
   background: var(--paper-0);
-  transition: transform var(--d-fast);
+  transition: transform var(--d-fast) var(--e);
 }
 .switch:checked { background: var(--paper-1); }
 .switch:checked::after { transform: translateX(12px); }
@@ -86,7 +91,18 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
 :global(:root[data-stage="1"]) .body dt { min-height: var(--row-h); align-items: center; }
 :global(:root[data-stage="1"]) .body dt > svg { scale: calc(26 / 22); }
 
-/* ≤1023 the mode switcher owns the top row; the legend header drops under it. */
-@media (max-width: 1023px) {
-  .legend { top: calc(var(--s-3) + 32px); }
+/* ≤1024 (D1) the 44 px mode switcher owns the top row; the legend header drops under it. */
+@media (max-width: 1024px) {
+  .legend {
+    top: calc(var(--s-3) + 44px + var(--s-2));
+    max-height: calc(100dvh - 44px - 44px - 80px);   /* toolbar, mode switcher, the strip's band */
+    overflow-y: auto;
+  }
+  .head { gap: var(--s-2); padding: 0 0 0 var(--s-2); }
+  .btn { width: 44px; height: 44px; }
+  .row { min-height: 44px; grid-template-columns: 40px 1fr; }
+  .switch { width: 40px; height: 24px; }
+  .switch::after { width: 20px; height: 20px; }
+  .switch:checked::after { transform: translateX(16px); }
+  .input { min-height: 36px; }
 }

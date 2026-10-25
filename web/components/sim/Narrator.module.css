@@ -39,8 +39,11 @@
   .drain { animation: none; width: 100% }
 }
 
-/* ≤1023 the strip wraps to two or three rows of auto height, so no bottom offset is safe: the caption
-   sits under the mode switcher instead, inside the gutters. */
-@media (max-width: 1023px) {
-  .card { top: calc(var(--s-3) + 80px); bottom: auto; left: var(--s-3); right: var(--s-3); max-width: none; }
+/* ≤1024 the strip wraps to two or three rows of auto height, so no bottom offset is safe: the caption
+   sits under the 44 px mode switcher instead, on a panel so it reads over the mesh, clear of the legend. */
+@media (max-width: 1024px) {
+  .card {
+    top: calc(var(--s-3) + 44px + var(--s-2)); bottom: auto; left: var(--s-3); right: var(--s-3);
+    max-width: calc(100% - 200px); z-index: 3; background: var(--panel);
+  }
 }

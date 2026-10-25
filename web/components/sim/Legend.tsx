@@ -20,7 +20,7 @@ function readCollapsed(): boolean {
     // No stored choice on a phone: start collapsed, or the 176px panel covers the RADIAL/GEO tabs.
     try {
       const stored = localStorage.getItem(LEGEND_KEY)
-      collapsedNow = stored ? stored === 'collapsed' : matchMedia('(max-width: 1023px)').matches
+      collapsedNow = stored ? stored === 'collapsed' : matchMedia('(max-width: 1024px)').matches
     } catch { collapsedNow = false }
   }
   return collapsedNow
@@ -85,19 +85,24 @@ export default function Legend() {
     <aside aria-label="Legend" className={styles.legend}>
       <div className={styles.head}>
         <span className={styles.title}>LEGEND</span>
-        <button type="button" className={styles.btn} aria-expanded={!collapsed} aria-label="Collapse legend"
+        <button type="button" className={styles.btn} aria-expanded={!collapsed} aria-label={collapsed ? 'Expand legend' : 'Collapse legend'}
           onClick={toggle}>{collapsed ? '+' : '−'}</button>
         <button type="button" className={styles.btn} aria-label="Settings" aria-pressed={settings}
           onClick={() => { setSettings(!settings); if (collapsed) toggle() }}>{'\u2699\uFE0E'}</button>
       </div>
-      {!collapsed && (settings ? <Settings /> : (
-        <dl className={styles.body}>
-          <LegendTwins />
-          {FILLS.map(([role, text]) => <Row key={role} term={<Glyph role={role} />} text={text} />)}
-          {LINES.map(([kind, text]) => <Row key={kind} term={<span className={styles.line} data-line={kind} />} text={text} />)}
-          <dd className={styles.note}>{MESH_HIDDEN}</dd>
-        </dl>
-      ))}
+      {/* the body stays mounted: the fold animates grid-template-rows 0fr → 1fr; inert keeps a folded body out of the tab order */}
+      <div className={styles.fold} data-open={!collapsed} inert={collapsed}>
+        <div className={styles.foldIn}>
+          {settings ? <Settings /> : (
+            <dl className={styles.body}>
+              <LegendTwins />
+              {FILLS.map(([role, text]) => <Row key={role} term={<Glyph role={role} />} text={text} />)}
+              {LINES.map(([kind, text]) => <Row key={kind} term={<span className={styles.line} data-line={kind} />} text={text} />)}
+              <dd className={styles.note}>{MESH_HIDDEN}</dd>
+            </dl>
+          )}
+        </div>
+      </div>
     </aside>
   )
 }

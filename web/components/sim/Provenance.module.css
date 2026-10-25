@@ -24,3 +24,8 @@
 
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
 .body { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* Touch band: under the 44 px mode switcher, clear of the legend button column on the right */
+@media (max-width: 1024px) {
+  .card { top: calc(var(--s-3) + 44px + var(--s-2)); max-width: calc(100% - 176px - 3 * var(--s-3)); }
+}

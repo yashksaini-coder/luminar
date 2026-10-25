@@ -19,9 +19,9 @@ const pressed = () => buttons().filter(b => b.getAttribute('aria-pressed') === '
 test('three tabs, aria-pressed follows layoutMode, Geo disabled with reason until geoAvailable', () => {
   expect(buttons().map(b => b.textContent)).toEqual(['FORCE', 'RADIAL', 'GEO'])
   expect(pressed()).toEqual(['FORCE'])
-  const geo = buttons()[2]; expect(geo.disabled).toBe(true); expect(geo.title).toBe(GEO_DISABLED); expect(GEO_DISABLED).toBe('Geo needs real observers · turn MAINNET on')
+  const geo = buttons()[2]; expect(geo.getAttribute('aria-disabled')).toBe('true'); expect(geo.disabled).toBe(false); expect(geo.title).toBe(GEO_DISABLED); expect(GEO_DISABLED).toBe('Geo needs real observers · turn MAINNET on')
   act(() => useStore.setState({ geoAvailable: true, layoutMode: 'radial' }))
-  expect(buttons()[2].disabled).toBe(false); expect(buttons()[2].hasAttribute('title')).toBe(false); expect(pressed()).toEqual(['RADIAL'])
+  expect(buttons()[2].hasAttribute('aria-disabled')).toBe(false); expect(buttons()[2].hasAttribute('title')).toBe(false); expect(pressed()).toEqual(['RADIAL'])
   const group = host.querySelector('[role="group"]')!; expect(group.getAttribute('aria-label')).toBe('Layout')
 })
 test('a click writes layoutMode through setLayoutMode and clears the remembered layout (R9)', () => {
@@ -33,4 +33,10 @@ test('when real nodes vanish in Geo, the previous layout comes back', () => {
   act(() => useStore.setState({ geoAvailable: true, layoutMode: 'geo', layoutBeforeGeo: 'radial' }))
   act(() => useStore.setState({ geoAvailable: false }))
   expect(useStore.getState().layoutMode).toBe('radial'); expect(pressed()).toEqual(['RADIAL'])
+})
+// T8: with MAINNET off a GEO tap pushes the reason as an info toast and leaves the layout alone.
+test('GEO click while unavailable pushes a toast and does not change layoutMode', () => {
+  act(() => buttons()[2].click())
+  expect(useStore.getState().layoutMode).toBe('force'); expect(pressed()).toEqual(['FORCE'])
+  expect(useStore.getState().toasts.map(t => [t.text, t.kind])).toEqual([[GEO_DISABLED, 'info']])
 })

@@ -20,17 +20,22 @@ function useSeries(key: Exclude<keyof AnalyticsSample, 't'>) {
   return useStore(useShallow(s => s.analyticsHistory.map(x => x[key])))
 }
 
-function Kpi({ label, value, unit, series, aria }: { label: string; value: string | null; unit?: string; series: number[]; aria: string }) {
+function Kpi({ label, value, unit, series, aria, busy }: { label: string; value: string | null; unit?: string; series: number[]; aria: string; busy: boolean }) {
   return (
     <div className={styles.kpi}>
       <span className={styles.kpiLabel}>{label}</span>
-      <span className={styles.kpiValue}>
-        {value ?? '—'}{value !== null && unit && <span className={styles.unit}>{unit}</span>}
-      </span>
-      <Sparkline values={series} height={24} aria-label={aria} />
+      {busy ? <span className={`skeleton ${styles.skelValue}`} /> : (
+        <span className={styles.kpiValue}>
+          {value ?? '—'}{value !== null && unit && <span className={styles.unit}>{unit}</span>}
+        </span>
+      )}
+      {busy ? <span className={`skeleton ${styles.skelSpark}`} /> : <Sparkline values={series} height={24} aria-label={aria} />}
     </div>
   )
 }
+
+/** Booting: no socket open/close yet and no reel (a reel never opens one): rails show skeletons shaped like their rows (B9). */
+const selectBooting = (s: { connecting: boolean; reel: unknown }) => s.connecting && s.reel === null
 
 function StateStrip() {
   const ref = useRef<HTMLCanvasElement>(null)
@@ -142,26 +147,27 @@ export default function StatsRail({ onBeat }: { onBeat: (b: Beat) => void }) {
   const sm = useStore(s => s.streamManager)
   const dht = useStore(s => s.dhtCoordinator)
   const delivery = useSeries('delivery'), prop = useSeries('propagationMs'), hops = useSeries('hops'), degree = useSeries('degree')
+  const busy = useStore(selectBooting)
 
   return (
-    <div className={styles.rail}>
+    <div className={styles.rail} aria-busy={busy || undefined}>
       <section className={styles.section} data-section="kpi">
         <div className={styles.kpis}>
           <Kpi label="Delivery" value={k.delivery === null ? null : (k.delivery * 100).toFixed(1)} unit="%"
-            series={delivery} aria="delivery, last 60 analytics frames" />
+            series={delivery} aria="delivery, last 60 analytics frames" busy={busy} />
           <Kpi label="Propagation" value={k.propagationMs === null ? null : k.propagationMs.toFixed(0)} unit="ms"
-            series={prop} aria="propagation, last 60 analytics frames" />
+            series={prop} aria="propagation, last 60 analytics frames" busy={busy} />
           <Kpi label="Avg hops" value={k.hops === null ? null : k.hops.toFixed(1)}
-            series={hops} aria="average hops, last 60 analytics frames" />
+            series={hops} aria="average hops, last 60 analytics frames" busy={busy} />
           <Kpi label="Mesh degree" value={k.degAvg === null ? null : k.degAvg.toFixed(1)}
             unit={k.degMin !== null && k.degMax !== null ? `${k.degMin}–${k.degMax}` : undefined}
-            series={degree} aria="mesh degree, last 60 analytics frames" />
+            series={degree} aria="mesh degree, last 60 analytics frames" busy={busy} />
         </div>
       </section>
 
       <section className={styles.section} data-section="nodes">
         <h2 className={styles.heading}>Nodes<span className={styles.meta}>{nodeCount}{attackers ? ` +${attackers}` : ''}</span></h2>
-        <StateStrip />
+        {busy ? <span className={`skeleton ${styles.strip}`} /> : <StateStrip />}
         <dl className={styles.counts}>
           {ROWS.map(role => (
             <div key={role} className={styles.countRow}>

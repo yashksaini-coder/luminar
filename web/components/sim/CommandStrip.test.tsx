@@ -18,3 +18,9 @@ test('Stats and Log drawer buttons hide under hero, since hero hides the rails t
   expect(drawerBtns).toHaveLength(2)
   for (const b of drawerBtns) expect(b.hasAttribute('data-hero-hide')).toBe(true)
 })
+
+test('Stats and Log buttons name the asides they open, by id', () => {
+  const byText = (t: string) => [...host.querySelectorAll('button')].find(b => b.textContent === t)!
+  expect(byText('Stats').getAttribute('aria-controls')).toBe('rail-stats')
+  expect(byText('Log').getAttribute('aria-controls')).toBe('rail-log')
+})

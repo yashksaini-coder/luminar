@@ -34,3 +34,17 @@ test('legend rows use the shared glyph components: banded halo, grafted and prun
   expect(m).toContain('gossip mesh · hidden above 100 peers (backend sends none)')
   expect(m).toContain('<dd>selected peer</dd>')
 })
+
+// T8: the toggle's label names the action; the body stays mounted while folded (grid-row animation), inert and data-open=false.
+test('collapse toggle flips its label and keeps the body mounted, inert, while folded', () => {
+  const btn = () => host.querySelector<HTMLButtonElement>('button[aria-expanded]')!
+  const fold = () => host.querySelector<HTMLElement>('[data-open]')!
+  expect(btn().getAttribute('aria-label')).toBe('Collapse legend'); expect(btn().getAttribute('aria-expanded')).toBe('true')
+  expect(fold().dataset.open).toBe('true'); expect(fold().hasAttribute('inert')).toBe(false)
+  act(() => btn().click())
+  expect(btn().getAttribute('aria-label')).toBe('Expand legend'); expect(btn().getAttribute('aria-expanded')).toBe('false')
+  expect(fold().dataset.open).toBe('false'); expect(fold().hasAttribute('inert')).toBe(true)
+  expect(host.querySelector('dl')).not.toBeNull(); expect(host.innerHTML).toContain('<dd>selected peer</dd>')
+  act(() => btn().click())
+  expect(btn().getAttribute('aria-label')).toBe('Collapse legend'); expect(fold().hasAttribute('inert')).toBe(false)
+})

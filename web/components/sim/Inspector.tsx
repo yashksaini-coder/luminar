@@ -19,6 +19,7 @@ function jump(id: string) {
 }
 
 function Chips({ ids, struck }: { ids: string[]; struck?: boolean }) {
+  if (ids.length === 0) return <p className={styles.note}>none</p>
   return (
     <div className={styles.chips}>
       {ids.map(id => (
@@ -80,7 +81,7 @@ export default function Inspector() {
 
       <div className={styles.section}>
         <h3 className={styles.heading}>Score history<span className={styles.meta}>last 50 ticks</span></h3>
-        {values.length > 0 && (
+        {values.length > 1 ? (
           <>
             <Sparkline values={values} height={44} domain={scoreDomain(values)} zeroLine alarm={last !== undefined && last < 0}
               aria-label="gossip score, last 50 ticks" />
@@ -88,7 +89,7 @@ export default function Inspector() {
               <span>{`T+${history[0].t.toFixed(1)}`}</span><span>{`T+${history[history.length - 1].t.toFixed(1)}`}</span>
             </div>
           </>
-        )}
+        ) : <p className={styles.note}>collecting…</p>}
       </div>
 
       <div className={styles.section}>
@@ -114,6 +115,7 @@ export default function Inspector() {
         <h3 className={styles.heading}>Events</h3>
       </div>
       <div ref={listRef} className={styles.events}>
+        {rows.length === 0 && <p className={styles.note} data-empty="">no events for this peer yet</p>}
         {rows.map((evt, i) => {
           const { code, tone } = TYPE_CODES[evt.event_type] ?? DEFAULT_TYPE
           const other = evt.from_peer === id ? evt.to_peer : evt.from_peer

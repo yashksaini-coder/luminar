@@ -22,7 +22,15 @@
   background: var(--raised);
   border: 1px solid var(--hair-strong);
   color: var(--fg);
+  /* prod-11: the popover fades and settles 4 px; display/overlay stay discrete so the close can animate */
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--d-fast) var(--e2), transform var(--d-fast) var(--e),
+    display var(--d-fast) allow-discrete, overlay var(--d-fast) allow-discrete;
 }
+.menu:not(:popover-open) { opacity: 0; transform: translateY(-4px); }
+@starting-style { .menu:popover-open { opacity: 0; transform: translateY(-4px); } }
 
 .row { position: relative; }
 
@@ -79,14 +87,15 @@
 
 .sep { margin: var(--s-1) 0; border: 0; border-top: 1px solid var(--hair); }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .trigger { min-width: 44px; min-height: 44px; }
   .item { min-height: 44px; }
+  .stepper { gap: var(--s-2); }
   .stepper button { width: 44px; height: 44px; }
   .row:has(.stepper) .aside { margin-right: 124px; }
 }
 
-/* Menu + overlay (≤1023): serif section heads, 56 px rows, mono asides */
+/* Menu + overlay (≤1024): serif section heads, 56 px rows, mono asides */
 .oSection { max-width: 640px; margin: 0 auto var(--s-6); }
 .oHeading { margin: 0 0 var(--s-2); font: 400 var(--t-narr)/1.1 var(--font-display); color: var(--fg); }
 .oRow {
