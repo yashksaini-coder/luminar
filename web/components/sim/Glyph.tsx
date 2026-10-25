@@ -25,7 +25,7 @@ function shape(role: GlyphRole) {
     case 'failed':
       return <><circle r={R} fill="var(--paper-3)" /><path d="M-3,-3L3,3M3,-3L-3,3" stroke="var(--pitch-0)" {...RIM} strokeWidth={1.5} /></>
     case 'error':
-      return <path d="M-4,-4L4,4M4,-4L-4,4" stroke="var(--flame-dim)" {...RIM} strokeWidth={1.5} />
+      return <><circle r={R} fill="var(--flame-dim)" /><path d="M-3,-3L3,3M3,-3L-3,3" stroke="var(--pitch-0)" {...RIM} strokeWidth={1.5} /></>
     default:   // honest, receiving
       return <circle r={R} fill="var(--paper-0)" />
   }

@@ -374,14 +374,15 @@ export const selectHoveredNode = (s: AppState) => s.hoveredPeer ? s.nodeById.get
 export const selectAttackers = (s: AppState) => s.nodes.filter(n => n.state === 'attacker')   // use with useShallow
 export const selectPrunedCount = (s: AppState) => s.nodes.reduce((k, n) => k + (isPruned(n) ? 1 : 0), 0)
 
-/** stateDistribution with pruned attackers split out; fresh object, read with useShallow (R2). */
+/** stateDistribution (node-pool peers only) plus attacker/pruned taken from the snapshot nodes, the same
+ *  source as selectAttackers, since synthetic attackers never reach the backend count; fresh object, read with useShallow (R2). */
 export const selectStateCounts = (s: AppState): Record<string, number> => {
   const counts = { ...s.stateDistribution }
-  const pruned = selectPrunedCount(s)
-  if (pruned > 0) {
-    counts.attacker = Math.max(0, (counts.attacker ?? 0) - pruned)
-    counts.pruned = pruned
-  }
+  delete counts.attacker
+  let attacker = 0, pruned = 0
+  for (const n of s.nodes) if (n.state === 'attacker') { if (isPruned(n)) pruned++; else attacker++ }
+  if (attacker) counts.attacker = attacker
+  if (pruned) counts.pruned = pruned
   return counts
 }
 

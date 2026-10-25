@@ -1,5 +1,5 @@
 import { test, expect, beforeEach } from 'vitest'
-import { useStore, MAX_EVENTS, selectPill, selectTimelineTotal, selectStateCounts, selectKpis, selectPrunedCount } from '@/lib/store'
+import { useStore, MAX_EVENTS, selectPill, selectTimelineTotal, selectStateCounts, selectKpis, selectPrunedCount, selectAttackers } from '@/lib/store'
 import { snapWith, peerNode } from '@/lib/fixtures'
 import type { AppEvent } from '@/lib/types'
 beforeEach(() => useStore.setState(useStore.getInitialState(), true))
@@ -111,6 +111,10 @@ test('setPref flips scale; toasts queue; resetRun clears the run; selectors', ()
   S().applySnapshot({ ...snapWith([]), nodes: [peerNode('peer-0', 0), peerNode('sybil-0', 1, { state: 'attacker' }), peerNode('sybil-1', 2, { state: 'attacker', connected_peers: ['peer-0'] })] })
   S().applyMetrics({ type: 'metrics', node_count: 1, state_distribution: { idle: 1, attacker: 2 }, total_messages_sent: 0, total_messages_received: 0, event_counts: {}, total_events: 0, stream_manager: { open: 0, max: 64, available: 64 }, dht_coordinator: { active: 0, available: 8 } })
   expect(selectPrunedCount(S())).toBe(1); expect(selectStateCounts(S())).toEqual({ idle: 1, attacker: 1, pruned: 1 })
+  // backend state_distribution never counts synthetic attackers: the snapshot nodes are the source for both
+  S().applyMetrics({ type: 'metrics', node_count: 1, state_distribution: { idle: 1 }, total_messages_sent: 0, total_messages_received: 0, event_counts: {}, total_events: 0, stream_manager: { open: 0, max: 64, available: 64 }, dht_coordinator: { active: 0, available: 8 } })
+  expect(selectStateCounts(S())).toEqual({ idle: 1, attacker: 1, pruned: 1 })
+  expect(selectAttackers(S()).length).toBe((selectStateCounts(S()).attacker ?? 0) + (selectStateCounts(S()).pruned ?? 0))
   // R2: flat primitives so useShallow can compare them
   expect(selectKpis(S())).toEqual({ delivery: null, propagationMs: null, hops: null, degAvg: null, degMin: null, degMax: null })
 })
