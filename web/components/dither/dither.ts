@@ -68,6 +68,7 @@ export function coverRect(iw: number, ih: number, w: number, h: number, fx: numb
 }
 
 const css = (c: RGBA) => `rgb(${c[0]} ${c[1]} ${c[2]})`
+const canvasDpr = () => Math.min(devicePixelRatio || 1, 2)
 
 function smallContext(w: number, h: number): OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null {
   if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })
@@ -84,10 +85,10 @@ export function drawDither(
   opts: DitherOpts & { focus?: [number, number]; palette?: DitherPalette } = {},
 ): ImageData | null {
   const { focus = [0.5, 0.5], palette = { paper: PAPER, pitch: PITCH }, ...dither } = opts
-  const dpr = Math.min(devicePixelRatio || 1, 2)
+  const dpr = canvasDpr()
   const w = Math.round(canvas.clientWidth), h = Math.round(canvas.clientHeight)
   if (!w || !h) return null
-  canvas.width = w * dpr; canvas.height = h * dpr
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr)
 
   const cw = Math.ceil(w / cell), ch = Math.ceil(h / cell)
   const octx = smallContext(cw, ch)
@@ -96,14 +97,16 @@ export function drawDither(
   octx.drawImage(source, ...coverRect(source.width, source.height, cw, ch, focus[0], focus[1]), 0, 0, cw, ch)
   const small = ditherImageData(octx.getImageData(0, 0, cw, ch), 1, palette, dither)
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-  ctx.fillStyle = css(palette.pitch); ctx.fillRect(0, 0, w, h)
+  // Cells are filled in device px with rounded edges so the output stays 1-bit at fractional DPR (1.5): no anti-aliased seams.
+  const edge = (i: number) => Math.round(i * cell * dpr)
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.fillStyle = css(palette.pitch); ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.fillStyle = css(palette.paper)
   const [pr, pg, pb] = palette.paper
   for (let y = 0; y < ch; y++) {
     for (let x = 0; x < cw; x++) {
       const i = (y * cw + x) * 4
-      if (small.data[i] === pr && small.data[i + 1] === pg && small.data[i + 2] === pb) ctx.fillRect(x * cell, y * cell, cell, cell)
+      if (small.data[i] === pr && small.data[i + 1] === pg && small.data[i + 2] === pb) ctx.fillRect(edge(x), edge(y), edge(x + 1) - edge(x), edge(y + 1) - edge(y))
     }
   }
   return ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -120,9 +123,10 @@ export function drawLoupe(
   size = LOUPE_PX,
 ): void {
   ctx.putImageData(final, 0, 0)
-  const t = ctx.getTransform()
-  const w = ctx.canvas.width / t.a, h = ctx.canvas.height / t.d
+  const dpr = canvasDpr()
+  const w = Math.round(ctx.canvas.clientWidth), h = Math.round(ctx.canvas.clientHeight)
   const lx = x - size / 2, ly = y - size / 2
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)   // own transform: never trust state left on the context (a resize resets it)
   ctx.save()
   ctx.beginPath(); ctx.rect(lx, ly, size, size); ctx.clip()
   ctx.filter = `grayscale(1) contrast(${DITHER_CONTRAST})`
