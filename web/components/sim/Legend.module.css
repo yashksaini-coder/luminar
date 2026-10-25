@@ -23,6 +23,11 @@
 .btn[aria-pressed="true"] { color: var(--paper-0); background: var(--pitch-3); }
 .btn:focus-visible, .switch:focus-visible, .input:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
 
+/* fold: the body stays in the DOM and the row track eases 0fr → 1fr (reduced motion zeroes --d-fast) */
+.fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--d-fast) var(--e); }
+.fold[data-open="true"] { grid-template-rows: 1fr; }
+.foldIn { min-height: 0; overflow: hidden; }
+
 .body {
   display: grid;
   grid-template-columns: 16px 1fr;
@@ -62,7 +67,7 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
   top: 2px; left: 2px;
   width: 12px; height: 12px;
   background: var(--paper-0);
-  transition: transform var(--d-fast);
+  transition: transform var(--d-fast) var(--e);
 }
 .switch:checked { background: var(--paper-1); }
 .switch:checked::after { transform: translateX(12px); }
