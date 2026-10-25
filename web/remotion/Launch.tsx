@@ -5,6 +5,8 @@ import type { LaunchProps } from './props'
 import { useReel } from './reel/useReel'
 import ColdOpen from './scenes/01-ColdOpen'
 import Title from './scenes/02-Title'
+import Healthy from './scenes/03-Healthy'
+import Sybils from './scenes/04-Sybils'
 import type { SceneProps } from './scenes/types'
 import { timeline, type SceneId } from './timeline'
 
@@ -17,8 +19,8 @@ const Placeholder: FC<SceneProps> = ({ span }) => (
 const SCENES: Record<SceneId, FC<SceneProps>> = {
   'cold-open': ColdOpen,
   title: Title,
-  healthy: Placeholder,
-  sybils: Placeholder,
+  healthy: Healthy,
+  sybils: Sybils,
   pruned: Placeholder,
   eclipse: Placeholder,
   heal: Placeholder,
