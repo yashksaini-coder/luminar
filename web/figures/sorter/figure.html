@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sorting office: GossipSub as a pneumatic-tube desk</title></head><body>
+<script src="core.js"></script>
+<script>
+/* Sorter No. 6: GossipSub v1.1 as a 1930s pneumatic-tube sorting desk (docs/design/figure-concept.md, Candidate A).
+   Same mechanism, toy constants: the numbers are the simulator's toy constants, never a mainnet node's.
+
+   How it works (each button is one real step; things only move along their real path):
+   - Post: a capsule (a message) drops into the splitter cone on the port drum; the cone shoots a copy down every glass
+     tube at once (flood publish): six mesh tubes plus two stub tubes to non-mesh neighbours that flare for this hop.
+     Each neighbour station lights and the capsule's band goes grey (seen). Every attached port's P2 tray gets a token.
+   - Heartbeat: one turn of the cam shaft under the desk (1 s in the engine). Its lobes act in the engine's order:
+     sieve shake (decay: P2 x0.9, P4 x0.5, P1 +0.5 up to 5) -> spam valve (the Sybil hopper spits a red capsule into
+     port 3: P4 -10) -> trip levers (a port scoring under -10 springs its collar and the tube end drops) -> lock arm
+     (a loose tube re-locks only above -5) -> ticket punch (IHAVE: a ticket of recent capsule numbers goes down the
+     vacuum line to the two stub neighbours) -> pull valve (IWANT: a ticket comes back torn, the vacuum line sucks the
+     capsule across).
+   - Bolt on a Sybil: a red hopper clamps onto neighbour station 3, feeding port 3.
+   Stats: mesh 6/6 (toy) . score port-3 . delivered . IWANT pulls . beat. Buttons 4-5 (hood, bulkhead) are deferred.
+
+   Coordinates: x = depth (front at x = 78), y = width, z = up; 1 unit ~ 1 cm. Board 78 x 124, wall 95 high.
+
+   Parts list (42), grouped as in the concept; [-] = belongs to deferred buttons 4-5, listed but not drawn.
+   CASE (8):        desk body (rounded sweep) . desk top (dark wood) . modesty panel . brass kick-plate .
+                    pigeon-hole wall (back) . serial plate SORTER No. 6 . two rubber feet rails . board
+   STRUCTURE (9):   port drum (6 brass ports + 2 overflow/stub ports) . manifold casting . six glass tubes (three
+                    pieces each, split at the drum rim and above the station) . six neighbour stations (small boxes on
+                    the board rim, one port each) . tube hangers (two brackets on the wall ends holding the stub tubes) .
+                    [-] bulkhead rail . [-] hood rail . [-] hood . [-] bulkhead
+   MECHANISM (14):  splitter cone . capsule gate . six bayonet collars . six balance beams with sliding weights . six
+                    clockwork P1 winders . P2 token trays . P3 counterweights . P4 lead sieve cups . trip levers .
+                    lock arm . ticket punch and ticket roll . ticket slot . pull valve . vacuum line (thin pipe, port to
+                    port along the back: pull valve -> stub stations) . reject bin
+   POWER (6):       vacuum pump (cylinder + flywheel) under the desk . pump belt . cam shaft with six lobes . cam motor .
+                    pressure gauge . pressure line pump -> manifold
+   CONTROLS (5):    POST bell-push . lock arm (the GRAFT lever, worked by the cam) . sybil hopper latch (clamp bracket) .
+                    [-] hood crank . [-] bulkhead handle
+   Held by: stations, wall and desk stand on the board; drum on the manifold on the desk top; tubes from drum ports to
+   station ports; cam motor, bearing bracket, beam rail, pump and trip-lever posts on the desk floor / walls; the cam
+   shaft runs from the motor face to the bearing bracket; the belt joins the shaft pulley to the pump flywheel; the
+   pressure line runs from the pump head up through the desk top into the manifold; the vacuum line runs from the pull
+   valve on the desk back along the board to each stub station's side port. */
+
+{ const q = new URLSearchParams(location.search); if (q.has('press')) { q.set('press', q.get('press').replace(/(^|,)Sybil@/g, '$1Bolt on a Sybil@')); history.replaceState(null, '', '?' + q); } }
+
+PALS.paper = { l:'#f2f2ef', m:'#d4d3cd', d:'#a7a69f' };          // desk body swatch
+const FW = 78, FD = 124, FH = 95;                                  // board depth (x), width (y), wall height
+const D = 6;                                                       // mesh degree (toy constant, the engine's D)
+const BRASS = matOf('#cbb98a'), GLASS = matOf('#cfe9f0'), WOODT = { l:'#8a6a4a', m:'#6e5238', d:'#4a3624' };
+const FLAME = '#ff5a2c', SYBIL = '#e2483d', LAMP_ON = '#43c25c', LAMP_OFF = '#9c9a92';
+const FLAMEM = matOf(FLAME), REDM = matOf(SYBIL), LEADM = matOf('#666a70'), RUBBER = matOf('#3d3935');
+const CAPM = matOf('#f3ead2'), GREYM = matOf('#9c9a92'), STATM = matOf('#ebe8df'), STUBM = matOf('#d2cfc6');
+const WALLM = matOf('#ddd4c3'), PAPERM = matOf('#fbf8ee');
+const DK = { x0:24, x1:58, y0:34, y1:90, z0:4, z1:40 };            // desk body; the top slab overhangs it by 2
+const OUT = rrUV(DK.y0, DK.z0, DK.y1, DK.z1, 5);                    // desk profile in (y, z), swept along x
+const DC = [41, 62];                                               // port drum centre on the desk top
+const MESH = [[70, 12], [70, 44], [70, 80], [70, 112], [38, 6], [38, 118]];   // neighbour stations; port 3 = index 2
+const STUBS = [[14, 8], [14, 116]];                                 // non-mesh neighbours (stub tubes, vacuum line)
+const ALL = [...MESH, ...STUBS];
+const BIN = [51, 85, 58, 91], BELL = [57, 37], LOCKP = [29, 36], VALVE = [22.2, 59, 11, 24, 65, 17];
+const BEAM_Y = [0, 1, 2, 3, 4, 5].map(i => 39 + 8.6*i);
+const HB_S = 1.6, POST_S = 2.0;                                     // heartbeat turn and post animation (seconds)
+
+/* ---------- small helpers ---------- */
+const lerp3 = (a, b, t) => [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t];
+const boxOf = (pts, pad = 0) => [[0,1,2].map(i => Math.min(...pts.map(p => p[i])) - pad), [0,1,2].map(i => Math.max(...pts.map(p => p[i])) + pad)];
+const len3 = (a, b) => Math.hypot(b[0]-a[0], b[1]-a[1], b[2]-a[2]);
+function pathAt(pts, t){                                            // point, direction and segment at fraction t of a polyline
+  const ls = pts.slice(1).map((p, i) => len3(pts[i], p)), tot = ls.reduce((a, b) => a + b, 0);
+  let d = Math.max(0, Math.min(1, t))*tot;
+  for (let i = 0; i < ls.length; i++){ if (d <= ls[i] || i === ls.length - 1){ const k = ls[i] ? Math.min(1, d/ls[i]) : 0;
+    return { p: lerp3(pts[i], pts[i+1], k), d: norm(sub(pts[i+1], pts[i])), seg: i }; } d -= ls[i]; }
+}
+const score = (st, i) => { const p = st.ports[i]; return p.p1 + p.p2 + p.p3 + p.p4; };
+const attachedCount = st => st.ports.filter(p => p.attached).length;
+const glass = (a, b, r, op) => `<g opacity="${f(op)}">${rod(a, b, r, GLASS, toneI, .8)}</g>`;
+function capsule(p, d, band, body = CAPM){                           // a cream cylinder with a coloured band
+  return rod(sub(p, d.map(v => 2*v)), [p[0] + 2*d[0], p[1] + 2*d[1], p[2] + 2*d[2]], 1.15, body, toneI, .7)
+    + rod(sub(p, d.map(v => .6*v)), [p[0] + .6*d[0], p[1] + .6*d[1], p[2] + .6*d[2]], 1.28, band, toneI, .5);
+}
+const tiny = (p, r = 2.2) => [[p[0]-r, p[1]-r, p[2]-r], [p[0]+r, p[1]+r, p[2]+r]];
+
+/* ---------- tube geometry: drum port -> apex -> above the station -> station port ---------- */
+function tube(i, st){
+  const s = ALL[i], dv = norm([s[0] - DC[0], s[1] - DC[1], 0]);
+  const port = [DC[0] + 9.5*dv[0], DC[1] + 9.5*dv[1], 48], apex = [DC[0] + 22*dv[0], DC[1] + 22*dv[1], 66];
+  const hang = [apex[0] + .5*dv[0], apex[1] + .5*dv[1], 48.5];
+  const start = lerp3(port, hang, i < 6 ? st.drop[i] : 0);
+  const hanger = i >= 6 ? [[12, s[1] < DC[1] ? 30 : 94, 75.5]] : [];          // stub tubes ride a hanger on the wall end
+  return { dv, port, apex, start, pts: [start, apex, ...hanger, [s[0], s[1], 34], [s[0], s[1], 19.5]] };
+}
+
+/* ---------- the drum assembly: manifold, drum, ports, collars, first tube pieces, splitter cone ---------- */
+function drum(st){
+  const far = [], near = [], all = [];
+  const fresh = st.post && st.post.s < .35 ? st.post.s/.35 : -1;
+  for (let i = 0; i < 8; i++){
+    const tb = tube(i, st), stub = i >= 6, dv = tb.dv;
+    const portIn = [DC[0] + 6.5*dv[0], DC[1] + 6.5*dv[1], 48];
+    let g = rod(portIn, tb.port, stub ? 1.3 : 1.8, BRASS, toneI, .8);
+    const caps = capsOn(i, st, 0);
+    const op = stub ? .3 + .4*st.flare : .55;
+    g += caps + glass(tb.start, tb.apex, stub ? 1.2 : 1.7, op);
+    if (!stub){ const tripping = st.hb && lobeOf(st) === 2 && st.drop[i] > 0;
+      g += rod(sub(tb.start, dv.map(v => .2*v)), [tb.start[0] + 1.6*dv[0], tb.start[1] + 1.6*dv[1], tb.start[2]], 2.3, tripping ? FLAMEM : BRASS, toneI, .8); }
+    const it = { at: lerp3(tb.port, tb.apex, .3), svg: g };
+    (depthOf([dv[0], dv[1], 0]) >= 0 ? near : far).push(it);
+    all.push(tb.start, tb.apex);
+  }
+  const depthSort = a => a.sort((p, q) => depthOf(p.at) - depthOf(q.at)).map(p => p.svg).join('');
+  let s = cyl(DC[0], DC[1], 43, 45, 9.5, matOf('#b3a374'), toneI, 1.1, 28);   // manifold casting
+  s += depthSort(far);
+  s += cyl(DC[0], DC[1], 45, 52, 7, BRASS, toneI, 1.2, 28);
+  // splitter cone with its capsule gate (toward the reject bin)
+  const A = on(PZ(52), ellUV(DC[0], DC[1], 2.5, 2.5, 20)), B = on(PZ(59), ellUV(DC[0], DC[1], 6, 6, 20));
+  const gd = norm([(BIN[0] + BIN[2])/2 - DC[0], (BIN[1] + BIN[3])/2 - DC[1], 0]), gp = [DC[0] + 4.6*gd[0], DC[1] + 4.6*gd[1], 56];
+  const gate = box(gp[0] - 1.1, gp[1] - 1.1, 54.5, gp[0] + 1.1, gp[1] + 1.1, 57.5, st.post ? FLAMEM : BRASS, toneI, .7);
+  let drop = '', dropAbove = '';
+  if (fresh >= 0){ const z = 72 - 16*fresh, c = capsule([DC[0], DC[1], z], [0, 0, 1], FLAMEM); if (z > 59) dropAbove = c; else drop = c; }
+  const gateBack = depthOf([gd[0], gd[1], 0]) < 0;
+  s += (gateBack ? gate : '') + openShell(A, B, n => toneI(n, BRASS), drop) + ink(pd(B), .9) + (gateBack ? '' : gate) + dropAbove;
+  s += depthSort(near);
+  return { box: boxOf([...all, [DC[0] - 9.5, DC[1] - 9.5, 43], [DC[0] + 9.5, DC[1] + 9.5, 59]]), svg: s };
+}
+
+/* ---------- capsules in flight on tube i, segment seg ---------- */
+function capsOn(i, st, seg){
+  let s = '';
+  const tb = tube(i, st);
+  if (st.post && st.post.s >= .35 && st.post.copies.includes(i)){
+    const t = Math.min(1, (st.post.s - .35)/1.0), at = pathAt(tb.pts, t);
+    if (at.seg === seg) s += capsule(at.p, at.d, t >= 1 ? GREYM : FLAMEM);
+  }
+  if (i === 2 && st.spam > 0 && st.spam < 1){                       // a red capsule up the port-3 tube, station to drum
+    const at = pathAt(tb.pts, 1 - st.spam); if (at.seg === seg) s += capsule(at.p, at.d, REDM, REDM);
+  }
+  return s;
+}
+
+/* ---------- the desk: body, top slab, decals, and in see-through the mechanism ---------- */
+function deskBody(st, m){
+  const FRONT = facing([1,0,0]), BACK = facing([-1,0,0]);
+  let s = box(25, 36, 3, 57, 38, 4, RUBBER, toneI, .6) + box(25, 86, 3, 57, 88, 4, RUBBER, toneI, .6);   // feet rails
+  if (FRONT){ const fr = tone([1,0,0], m), F = PX(DK.x1 + .25);
+    s += fill(pd(on(PX(DK.x1), OUT)), fr);
+    s += shape(on(F, rrUV(42, 10, 82, 26, 2)), mix(fr, '#000000', .06), 1.1);                // modesty panel
+    s += shape(on(PX(DK.x1 + .3), rrUV(47, 28.5, 77, 34.5, 1)), '#f6f1e2', .9);              // serial plate
+    s += tx(DK.x1 + .4, 62, 30.4, 'SORTER No. 6', 2.9, INK, 800);
+    const gc = [80, 31], ga = -2.2 + 1.6*Math.min(1, st.pump);                                // pressure gauge
+    s += shape(on(PX(DK.x1 + .3), ellUV(gc[0], gc[1], 3.2, 3.2, 20)), '#f6f1e2', 1);
+    s += ink(pd([[DK.x1 + .4, gc[0], gc[1]], [DK.x1 + .4, gc[0] - 2.4*Math.sin(ga), gc[1] + 2.4*Math.cos(ga)]], false), .9);
+    s += shape(on(PX(DK.x1 + .35), rrUV(36, 4.2, 88, 8, 1)), BRASS.m, .8);                    // brass kick-plate
+  }
+  if (BACK){ const bk = tone([-1,0,0], m), Bp = PX(DK.x0 - .25);
+    s += fill(pd(on(PX(DK.x0), OUT)), bk);
+    s += shape(on(Bp, rrUV(40, 22, 80, 34, 2)), mix(bk, '#000000', .06), 1);                  // service panel
+    s += shape(on(PX(DK.x0 - .3), rectUV(85, 35, 91, 36.6)), '#2b2523', .7);                  // ticket slot
+  }
+  s += extrude(OUT, DK.x0, DK.x1, m);
+  if (FRONT) s += ink(pd(on(PX(DK.x1), OUT)), 2);
+  if (BACK) s += ink(pd(on(PX(DK.x0), OUT)), 2);
+  s += hullInk([...on(PX(DK.x0), OUT), ...on(PX(DK.x1), OUT)], 2.6);
+  s += box(22, 32, 40, 60, 92, 43, WOODT, tone, 1.4);                                          // desk top
+  return s;
+}
+function lobeOf(st){ return st.hb ? Math.min(5, Math.floor(st.hb.t*6)) : -1; }
+function beamParts(st, i){
+  const p = st.ports[i], y = BEAM_Y[i], sc = score(st, i), tilt = Math.max(-1, Math.min(1, sc/15))*.35;
+  const u = [Math.cos(tilt), 0, -Math.sin(tilt)], O = [43, y, 28], at = a => [O[0] + a*u[0], y, O[2] + a*u[2]];
+  const shake = lobeOf(st) === 0 && p.attached ? .35*Math.sin(st.hb.t*240) : 0, hot = lobeOf(st) === 0 && p.attached;
+  const top = [];
+  const w1 = at(6); top.push({ box: [[w1[0]-1.1, y-1.1, w1[2]+.5], [w1[0]+1.1, y+1.1, w1[2]+3.4]],
+    svg: cyl(w1[0], y, w1[2] + .5, w1[2] + 2.5, 1.1, BRASS, toneI, .7, 14) + rod([w1[0], y, w1[2] + 2.5], [w1[0], y, w1[2] + 3.4], .25, METAL, toneI, .5) });
+  const w2 = at(3), n = Math.min(6, Math.round(p.p2*2));
+  top.push({ box: [[w2[0]-1.3, y-1.3, w2[2]+.5], [w2[0]+1.3, y+1.3, w2[2]+1 + .35*n]],
+    svg: box(w2[0]-1.3, y-1.3, w2[2]+.5, w2[0]+1.3, y+1.3, w2[2]+.9, METAL, toneI, .6) + (n ? cyl(w2[0], y, w2[2]+.9, w2[2]+.9 + .35*n, .9, BRASS, toneI, .6, 14) : '') });
+  const w4 = at(-3), sl = .5 + Math.min(20, Math.abs(p.p4))/20*1.1, cy = y + shake;
+  top.push({ box: [[w4[0]-1.4, cy-1.4, w4[2]+.5], [w4[0]+1.4, cy+1.4, w4[2]+1.7 + sl]],
+    svg: box(w4[0]-1.4, cy-1.4, w4[2]+.5, w4[0]+1.4, cy+1.4, w4[2]+1.7, hot ? FLAMEM : METAL, toneI, .6)
+      + box(w4[0]-sl/2, cy-sl/2, w4[2]+1.7, w4[0]+sl/2, cy+sl/2, w4[2]+1.7+sl, LEADM, toneI, .6) });
+  const w3 = at(-6);
+  let s = rod([43, y, 22], [43, y, 28], .5, METAL, toneI, .6);                                  // pivot post on the rail
+  s += rod(w3, [w3[0], y, w3[2] - 2.2], .18, METAL, toneI, .4) + box(w3[0]-.45, y-.45, w3[2]-3, w3[0]+.45, y+.45, w3[2]-2.2, LEADM, toneI, .5);
+  s += rod(at(-7), at(7), .6, BRASS, toneI, .7) + byDepth(top);
+  return { s, anchors: { p1: [w1[0], y, w1[2] + 2.5], p2: [w2[0], y, w2[2] + 1], p3: [w3[0], y, w3[2] - 2.6], p4: [w4[0], cy, w4[2] + 1.7 + sl] } };
+}
+let ANCH = {};
+function mech(st){
+  const parts = [], put = (b, svg) => parts.push({ box: b, svg });
+  const lobe = lobeOf(st);
+  put([[26, 35, 8], [34, 40, 16]], box(26, 35, 8, 34, 40, 16, DARK, toneI, .8));                // cam motor on the desk wall
+  put([[28.5, 88, 4], [31.5, 90, 14]], box(28.5, 88, 4, 31.5, 90, 14, METAL, toneI, .6));       // bearing bracket
+  // cam shaft in pieces between the pulley and the six lobes
+  const LY = [0, 1, 2, 3, 4, 5].map(i => 45.5 + 7.2*i), stops = [[40, 41], [43, 45.5]];
+  LY.forEach((y, i) => stops.push([y + 2.4, i < 5 ? LY[i+1] : 88]));
+  for (const [a, b] of stops) put([[29, a, 11], [31, b, 13]], rod([30, a, 12], [30, b, 12], 1, METAL, toneI, .6));
+  put([[27.8, 41, 9.8], [32.2, 43, 14.2]], rod([30, 41, 12], [30, 43, 12], 2.2, METAL, toneI, .7));   // belt pulley
+  LY.forEach((y, i) => { const a = st.cam + i*Math.PI/3, c = [30 + 1.6*Math.cos(a), y, 12 + 1.6*Math.sin(a)];
+    put([[25.4, y, 7.4], [34.6, y + 2.4, 16.6]], rod(c, [c[0], y + 2.4, c[2]], 3, i === lobe ? FLAMEM : matOf('#b9b3a6'), toneI, .8)); });
+  // belt, flywheel, pump, pressure line up into the manifold
+  put([[30, 41.6, 6.6], [54, 42.4, 17.4]], rod([30, 42, 14.2], [54, 42, 17], .35, RUBBER, toneI, .4) + rod([30, 42, 9.8], [54, 42, 7], .35, RUBBER, toneI, .4));
+  put([[49, 41, 7], [59, 43, 17]], rod([54, 41, 12], [54, 43, 12], 5, METAL, toneI, .8));
+  put([[50.5, 43, 4], [57.5, 50, 20]], cyl(54, 46.5, 4, 20, 3.5, BRASS, toneI, 1, 20));
+  put([[53.2, 45.7, 20], [54.8, 47.3, 36]], rod([54, 46.5, 20], [54, 46.5, 36], .8, METAL, toneI, .6));
+  put([[41, 46.5, 35.2], [54, 62, 36.8]], rod([54, 46.5, 36], [41, 62, 36], .8, METAL, toneI, .6));
+  put([[40.2, 61.2, 36], [41.8, 62.8, 40]], rod([41, 62, 36], [41, 62, 40], .8, METAL, toneI, .6));
+  // beam rail, six balance beams with their four weights, six trip levers
+  put([[41.5, 34, 20], [44.5, 90, 22]], box(41.5, 34, 20, 44.5, 90, 22, METAL, toneI, .7));
+  ANCH = {};
+  BEAM_Y.forEach((y, i) => { const b = beamParts(st, i); put([[35, y - 1.8, 22], [51, y + 1.8, 35]], b.s); if (i === 0) ANCH.p1 = b.anchors.p1;
+    if (i === 1) ANCH.p2 = b.anchors.p2; if (i === 4) ANCH.p3 = b.anchors.p3; if (i === 2) ANCH.p4 = b.anchors.p4;
+    const hot = lobe === 2 && (st.drop[i] > 0 || score(st, i) < -10), ly = y + 1.5;
+    put([[35.4, ly - .6, 4], [36.6, ly + .6, 25.4]], rod([36, ly, 4], [36, ly, 18], .5, METAL, toneI, .6) + rod([36, ly, 18], [36, y + .4, 25.2], .4, hot ? FLAMEM : BRASS, toneI, .6));
+    if (i === 2) ANCH.trip = [36, y + .4, 25.2]; });
+  return byDepth(parts);
+}
+function desk(st, m, k){
+  let s = deskBody(st, m);
+  if (k > 0) s = xrGhost(s, '', k, OUT, DK.x0, DK.x1, m) + `<g opacity="${f(k)}">${mech(st)}</g>`;
+  return { box: [[DK.x0, 32, 3], [60, 92, 43]], svg: s };
+}
+
+/* ---------- everything outside the desk ---------- */
+function wall(){
+  const FR = facing([1,0,0]);
+  let s = box(3, 30, 3, 9, 94, FH, WALLM, tone, 1.2);
+  if (FR){ let h = '', c = '';
+    for (let col = 0; col < 6; col++) for (let row = 0; row < 8; row++){ const y0 = 32.5 + col*10, z0 = 9 + row*10.5;
+      h += pd(on(PX(9.05), rectUV(y0, z0, y0 + 8.5, z0 + 8)));
+      if ((col*3 + row*5) % 4 === 0) c += pd(on(PX(9.1), ellUV(y0 + 4.25, z0 + 3, 2.2, 2.2, 12))); }
+    s += fill(h, '#3a342c') + ink(h, .6) + fill(c, CAPM.l) + ink(c, .5); }
+  // tube hangers: brackets on the wall ends that carry the stub tubes
+  for (const y of [30, 94]) s += box(8.5, y - .8, 72, 13, y + .8, 74, BRASS, toneI, .7);
+  return s;
+}
+function station(i, st){
+  const [sx, sy] = ALL[i], stub = i >= 6, lit = st.lit[i] > 0;
+  let s = box(sx - 4, sy - 4, 3, sx + 4, sy + 4, 15, stub ? STUBM : STATM, toneI, 1);
+  s += cyl(sx, sy, 15, 19.5, 2, BRASS, toneI, .9, 18);
+  s += cyl(sx + 2.6, sy + 2.6, 15, 16.4, .9, matOf(lit ? LAMP_ON : LAMP_OFF), toneI, .6, 12);
+  if (stub) s += cylX(sx + 4, sx + 5.5, sy, 6, .9, BRASS, toneI, .6, 12);                     // vacuum-line side port
+  return { box: [[sx - 4, sy - 4, 3], [sx + 5.5, sy + 4, 19.5]], svg: s };
+}
+function hopper(st){
+  const [sx, sy] = MESH[st.sybil.port], lift = 12*(1 - ease(st.sybil.clamp)), x = sx + 5.6, hot = lobeOf(st) === 1 && st.sybil.attached && !st.sybil.hanging;
+  let s = box(sx + 4, sy - 1.5, 9, sx + 5.2, sy + 1.5, 15, METAL, toneI, .7);                    // clamp bracket on the station
+  s += rod([x - .4, sy, 16 + lift], [sx + 1.6, sy, 18.6 + lift*.3], .6, REDM, toneI, .6);       // spout into the port
+  s += rod([x, sy, 15 + lift], [x, sy, 24 + lift], 1, hot ? FLAMEM : REDM, toneI, 1, 2.6, 18);
+  return { box: [[sx + 4, sy - 2.6, 9], [x + 2.6, sy + 2.6, 24 + lift]], svg: s };
+}
+function vacuumPaths(){ return STUBS.map(([sx, sy]) => [[VALVE[0], 62, 14], [19.5, 62, 14], [19.5, 62, 4.6], [19.5, sy, 4.6], [19.5, sy, 6]]); }
+function scene(st, m){
+  const k = ease(st.xr || 0), BT = boardTop(0, 0, FW, FD, 3, 6), lobe = lobeOf(st);
+  let s = board(0, 0, FW, FD, 3, 6);
+  const dk = [...on(PX(DK.x0), OUT), ...on(PX(DK.x1), OUT), [22, 32, 43], [60, 92, 43], [22, 92, 43], [60, 32, 43], [DC[0], DC[1], 60]];
+  const wl = []; for (const x of [3, 9]) for (const y of [30, 94]) for (const z of [3, FH]) wl.push([x, y, z]);
+  s += castShadow(dk, 3, BT) + castShadow(wl, 3, BT);
+  for (const [sx, sy] of ALL) s += castShadow([[sx - 4, sy - 4, 3], [sx + 4, sy + 4, 3], [sx - 4, sy + 4, 19], [sx + 4, sy - 4, 19]], 3, BT);
+  const items = [];
+  items.push({ box: [[3, 30, 3], [13, 94, FH]], svg: wall() });
+  items.push(desk(st, m, k));
+  items.push(drum(st));
+  for (let i = 0; i < 8; i++){
+    const tb = tube(i, st), stub = i >= 6, r = stub ? 1.2 : 1.7, op = stub ? .3 + .4*st.flare : .55;
+    for (let seg = 1; seg < tb.pts.length - 1; seg++){ const a = tb.pts[seg], b = tb.pts[seg + 1];
+      items.push({ box: boxOf([a, b], r), svg: capsOn(i, st, seg) + glass(a, b, r, op) }); }
+    items.push(station(i, st));
+  }
+  if (st.sybil.attached) items.push(hopper(st));
+  // desk-top controls: POST bell-push, lock arm, ticket punch and roll, reject bin with its red capsules
+  items.push({ box: [[BELL[0] - 2.2, BELL[1] - 2.2, 43], [BELL[0] + 2.2, BELL[1] + 2.2, 47.4]],
+    svg: act('post', cyl(BELL[0], BELL[1], 43, 45, 2.2, DARK, toneI, .9, 18) + cyl(BELL[0], BELL[1], 45, 47.4, 1.2, st.post ? FLAMEM : BRASS, toneI, .8, 14)) });
+  const la = (lobe === 3 ? Math.sin(Math.min(1, st.hb.t*6 - 3)*Math.PI) : 0)*.55, tip = [LOCKP[0] + 5*Math.cos(la), LOCKP[1] + 2.4*Math.sin(la), 50];
+  ANCH.lock = tip;
+  items.push({ box: [[LOCKP[0] - 1, LOCKP[1] - 1, 43], [LOCKP[0] + 5.6, LOCKP[1] + 3, 51]],
+    svg: cyl(LOCKP[0], LOCKP[1], 43, 50.5, 1, METAL, toneI, .8, 12) + rod([LOCKP[0], LOCKP[1], 50], tip, .6, lobe === 3 ? FLAMEM : BRASS, toneI, .7) });
+  const pH = lobe === 4 && st.hb.ihave;
+  items.push({ box: [[24, 86, 43], [31, 91, 53.5]],
+    svg: box(24, 86, 43, 31, 91, 48, pH ? FLAMEM : DARK, toneI, .9) + box(27, 86, 48, 28, 86.6, 51, METAL, toneI, .5)
+      + rod([27.5, 86.6, 51], [27.5, 90.4, 51], 2.5, PAPERM, toneI, .8) + box(27, 90.4, 48, 28, 91, 51, METAL, toneI, .5) });
+  let binS = box(BIN[0], BIN[1], 43, BIN[2], BIN[3], 48, METAL, toneI, .9) + shape(on(PZ(48.05), rectUV(BIN[0] + .7, BIN[1] + .7, BIN[2] - .7, BIN[3] - .7)), '#2b2523', .6);
+  for (let j = 0; j < Math.min(4, st.binned); j++) binS += capsule([BIN[0] + 2 + 1.1*j, BIN[1] + 1.8 + (j % 2)*2.2, 48.2], norm([1, .3, 0]), REDM, REDM);
+  items.push({ box: [[BIN[0], BIN[1], 43], [BIN[2], BIN[3], 49.5]], svg: binS });
+  if (st.post && st.post.red && st.post.s < 1.4){                    // the Sybil's red capsules spill from the gate into the bin
+    const gd = norm([(BIN[0] + BIN[2])/2 - DC[0], (BIN[1] + BIN[3])/2 - DC[1], 0]), g0 = [DC[0] + 5.8*gd[0], DC[1] + 5.8*gd[1], 56], g1 = [(BIN[0] + BIN[2])/2, (BIN[1] + BIN[3])/2, 49];
+    for (const off of [0, .3]){ const t = Math.max(0, Math.min(1, (st.post.s - .4 - off)/.7)); if (t <= 0 || t >= 1) continue;
+      const p = lerp3(g0, g1, t); p[2] += 7*Math.sin(t*Math.PI); items.push({ box: tiny(p), svg: capsule(p, gd, REDM, REDM) }); }
+  }
+  // pull valve on the desk back and the vacuum line along the board to the stub stations
+  items.push({ box: [[VALVE[0], VALVE[1], VALVE[2]], [VALVE[3], VALVE[4], VALVE[5]]], svg: box(...VALVE, lobe === 5 && st.hb.pull ? FLAMEM : BRASS, toneI, .8) });
+  const vp = vacuumPaths(), done = new Set();
+  for (const pts of vp) for (let j = 0; j < pts.length - 1; j++){ const key = pts[j] + '|' + pts[j+1]; if (done.has(key)) continue; done.add(key);
+    items.push({ box: boxOf([pts[j], pts[j+1]], .7), svg: rod(pts[j], pts[j+1], .7, GREYM, toneI, .6) }); }
+  if (lobe === 4 && st.hb.ihave) for (const pts of vp){ const at = pathAt(pts, st.hb.t*6 - 4);
+    items.push({ box: tiny(at.p, 1.2), svg: box(at.p[0] - .9, at.p[1] - .9, at.p[2] + .6, at.p[0] + .9, at.p[1] + .9, at.p[2] + 1.1, PAPERM, toneI, .5) }); }
+  if (lobe === 5 && st.hb.pull){ const at = pathAt(vp[0], 1 - (st.hb.t*6 - 5)); items.push({ box: tiny(at.p), svg: capsule([at.p[0], at.p[1], at.p[2] + 1.2], at.d, GREYM) }); }
+  s += byDepth(items);
+  if (k > .6) s += xrCallouts([
+    { at: [30, 64, 12], text: 'CAM SHAFT (1 s)', on: !!st.hb },
+    { at: ANCH.p1, text: 'P1 WINDER', on: lobe === 0 },
+    { at: ANCH.p2, text: 'P2 TOKENS', on: !!st.post || lobe === 0 },
+    { at: ANCH.p3, text: 'P3 COUNTERWEIGHT', on: false },
+    { at: ANCH.p4, text: 'P4 SLUG', on: lobe === 0 || lobe === 1 },
+    { at: ANCH.trip, text: 'TRIP LEVER -10', on: lobe === 2 },
+    { at: ANCH.lock, text: 'LOCK ARM -5', on: lobe === 3 },
+    { at: [27.5, 88.5, 53.5], text: 'TICKET PUNCH (IHAVE)', on: lobe === 4 },
+    { at: [22.2, 62, 17], text: 'PULL VALVE (IWANT)', on: lobe === 5 },
+    { at: [DC[0], DC[1] + 6, 59], text: 'SPLITTER (FLOOD)', on: !!st.post } ], [0, FW, 0, FD, 0, FH]);
+  return s;
+}
+
+/* ---------- behaviour: one state object, the engine's order of lobes ---------- */
+let ui;
+const LOBES = [
+  st => { for (const p of st.ports) if (p.attached){ p.p2 *= .9; p.p4 *= .5; p.p1 = Math.min(5, p.p1 + .5); } },     // sieve shake (decay)
+  st => { const sy = st.sybil; if (sy.attached && !sy.hanging && st.ports[sy.port].attached){ st.ports[sy.port].p4 -= 10; st.spam = .001; } },   // spam valve
+  st => { st.ports.forEach((p, i) => { if (p.attached && score(st, i) < -10){ p.attached = false;                // trip levers
+    if (i === st.sybil.port && st.sybil.attached) st.sybil.hanging = true; } }); },
+  st => { st.ports.forEach((p, i) => { if (!p.attached && score(st, i) > -5 && !(i === st.sybil.port && st.sybil.attached)) p.attached = true; }); },   // lock arm
+  st => { if (st.hb) st.hb.ihave = st.history.length > 0; },                                                      // ticket punch (IHAVE)
+  st => { if (st.posted){ st.pulls += 1; st.posted = false; if (st.hb) st.hb.pull = true; } },                  // pull valve (IWANT)
+];
+function finishBeat(st){ while (st.hb.done < 6) LOBES[st.hb.done++](st); st.beat += 1; st.cam = st.beat*2*Math.PI; st.hb = null; st.spam = 0; }
+function finishPost(st){ if (!st.post.arrived) arrive(st); st.lit.fill(0); st.flare = 0; st.post = null; }
+function arrive(st){
+  st.post.arrived = true;
+  st.ports.forEach(p => { if (p.attached) p.p2 += 1.0; });
+  st.delivered = attachedCount(st);
+  for (const i of st.post.copies) st.lit[i] = 1;
+  if (st.post.red) st.binned += 2;
+}
+let loopOn = false;
+function runLoop(){
+  if (loopOn) return; loopOn = true;
+  ui.animate(dt => { const st = ui.st;
+    if (st.hb){ st.hb.t = Math.min(1, st.hb.t + dt/HB_S); st.cam = (st.beat + ease(st.hb.t))*2*Math.PI;
+      while (st.hb.done < Math.min(6, Math.floor(st.hb.t*6) + 1)) LOBES[st.hb.done++](st);
+      if (st.spam > 0) st.spam = Math.min(1, st.spam + dt/(HB_S/6));
+      if (st.hb.t >= 1) finishBeat(st); }
+    if (st.post){ st.post.s += dt; st.flare = Math.min(1, st.flare + dt*4); st.pump = Math.min(1, st.pump + dt*3);
+      if (!st.post.arrived && st.post.s >= 1.35) arrive(st);
+      if (st.post.s >= POST_S) finishPost(st); }
+    else st.pump = Math.max(0, st.pump - dt);
+    for (let i = 0; i < 6; i++){ const want = st.ports[i].attached ? 0 : 1; st.drop[i] += Math.sign(want - st.drop[i])*Math.min(Math.abs(want - st.drop[i]), dt/.25); }
+    if (st.sybil.attached) st.sybil.clamp = Math.min(1, st.sybil.clamp + dt/.5);
+    const busy = !!(st.hb || st.post || st.pump > 0 || st.drop.some((d, i) => d !== (st.ports[i].attached ? 0 : 1)) || (st.sybil.attached && st.sybil.clamp < 1));
+    if (!busy) loopOn = false;
+    return busy; });
+}
+function doPost(st){
+  if (st.post) finishPost(st);
+  const id = ++st.nextId; st.history.push(id); if (st.history.length > 10) st.history.shift();
+  st.posted = true;
+  const copies = [...st.ports.map((p, i) => p.attached ? i : -1).filter(i => i >= 0), 6, 7];
+  st.post = { s: 0, arrived: false, copies, red: st.sybil.attached && !st.sybil.hanging };
+  runLoop();
+}
+function startBeat(st, instant = false){
+  if (st.hb) finishBeat(st);
+  if (!st.history.length && ui && !instant) ui.flash('nothing in the history yet');
+  st.hb = { t: 0, done: 0, ihave: false, pull: false };
+  if (instant){ finishBeat(st); return; }
+  runLoop();
+}
+function boltSybil(st){
+  if (st.sybil.attached) return ui && ui.flash('the hopper is already bolted on');
+  st.sybil.attached = true; st.sybil.clamp = 0;
+  if (ui) runLoop();
+}
+
+ui = mountFigure({
+  fig: '2', title: 'Sorter No. 6', size: [FW, FD, FH], palette: 'paper', turn:'full', credit: false,
+  state: { beat: 0, posted: false, history: [], nextId: 0,
+    sybil: { attached: false, port: 2 /* port 3 */, hanging: false, clamp: 1 },
+    ports: Array.from({ length: D }, () => ({ p1: 0, p2: 0, p3: 0, p4: 0, attached: true })),
+    delivered: 0, pulls: 0,
+    // animation only
+    hb: null, post: null, cam: 0, spam: 0, flare: 0, pump: 0, binned: 0, drop: Array(D).fill(0), lit: Array(8).fill(0) },
+  scene,
+  buttons: [
+    { label: 'Post', onClick: st => doPost(st) },
+    { label: 'Heartbeat', onClick: st => startBeat(st) },
+    { label: 'Bolt on a Sybil', onClick: st => boltSybil(st) },
+  ],
+  acts: { post: st => doPost(st) },
+  stats: st => [
+    { label: 'mesh', value: `${attachedCount(st)}/6 (toy)` },
+    { label: 'score port-3', value: score(st, 2).toFixed(1) },
+    { label: 'delivered', value: `${st.delivered}/6` },
+    { label: 'IWANT pulls', value: st.pulls },
+    { label: 'beat', value: st.beat },
+  ],
+  params: (st, q) => {
+    if (q.get('sybil') === '1'){ st.sybil.attached = true; st.sybil.clamp = 1; }
+    const n = Math.max(0, Math.min(50, +q.get('beat') || 0));
+    for (let i = 0; i < n; i++) startBeat(st, true);
+    st.ports.forEach((p, i) => { st.drop[i] = p.attached ? 0 : 1; });
+  },
+});
+xrMount(() => ui, () => '');
+</script></body></html>
