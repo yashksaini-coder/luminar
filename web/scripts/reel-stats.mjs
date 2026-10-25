@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const STAMP_MAX = 24
 export const PLATE_MAX_BYTES = 80_000
+export const CARDS_MAX_BYTES = 40_000
 const PLATE_FROM = 8
 const PLATE_TO = 24
 const PLATE_STEP = 0.5
@@ -31,6 +32,17 @@ function parse(lines) {
     else if (f?.event_type) events.push({ ...f, simT: f.at ?? simTime })
   }
   return { snapshots, analytics, events, edges: edges ?? [] }
+}
+
+/** State chars, score bands, attackers and readout of one snapshot against a fixed honest-node index. */
+function frameFields(snap, honest, indexOf) {
+  const byId = new Map(snap.nodes.map(n => [n.peer_id, n]))
+  const s = honest.map(h => STATE_CHAR[byId.get(h.peer_id)?.state] ?? 'i').join('')
+  const b = honest.map(h => band(byId.get(h.peer_id)?.gossip_score ?? 0)).join('')
+  const attackers = snap.nodes.filter(n => n.state === 'attacker')
+  const a = attackers.map(n => ({ id: n.peer_id, x: round1(n.x), y: round1(n.y), p: isPrunedSybil(n), v: n.connected_peers.map(id => indexOf.get(id)).filter(i => i !== undefined) }))
+  const sybilNodes = snap.nodes.filter(n => n.peer_id.startsWith('sybil-'))
+  return { s, b, a, attackers, r: { peers: honest.length, sybil: sybilNodes.length, pruned: sybilNodes.filter(isPrunedSybil).length } }
 }
 
 export function computeStats(lines, reel = 'sybil-eclipse') {
@@ -83,14 +95,8 @@ export function computeStats(lines, reel = 'sybil-eclipse') {
   for (let k = 0; PLATE_FROM + k * PLATE_STEP <= PLATE_TO; k++) {
     const t = PLATE_FROM + k * PLATE_STEP
     const snap = snapshots.findLast(s => s.time <= t + 1e-6) ?? snapshots[0]
-    const byId = new Map(snap.nodes.map(n => [n.peer_id, n]))
-    const s = honest.map(h => STATE_CHAR[byId.get(h.peer_id)?.state] ?? 'i').join('')
-    const b = honest.map(h => band(byId.get(h.peer_id)?.gossip_score ?? 0)).join('')
-    const attackers = snap.nodes.filter(n => n.state === 'attacker')
-    const a = attackers.map(n => {
-      grow(round1(n.x), round1(n.y))
-      return { id: n.peer_id, x: round1(n.x), y: round1(n.y), p: isPrunedSybil(n), v: n.connected_peers.map(id => indexOf.get(id)).filter(i => i !== undefined) }
-    })
+    const { s, b, a, r, attackers } = frameFields(snap, honest, indexOf)
+    for (const at of a) grow(at.x, at.y)
     const attackerIdx = new Map(attackers.map((n, i) => [n.peer_id, -1 - i]))
     const windowHops = hops.filter(e => e.simT > prevT && e.simT <= t + 1e-6)
       .map(e => [indexOf.get(e.from_peer) ?? attackerIdx.get(e.from_peer), indexOf.get(e.to_peer)])
@@ -98,14 +104,39 @@ export function computeStats(lines, reel = 'sybil-eclipse') {
     const stride = Math.max(1, windowHops.length / MAX_HOPS_PER_FRAME)
     const m = []
     for (let i = 0; i < windowHops.length && m.length < MAX_HOPS_PER_FRAME; i += stride) m.push(windowHops[Math.floor(i)])
-    const sybilNodes = snap.nodes.filter(n => n.peer_id.startsWith('sybil-'))
     // A beat lands on its nearest frame (CLEARED at 24.1 s belongs to the T+24 frame).
     const stamp = beats.filter(bt => bt.at <= t + PLATE_STEP / 2).at(-1)?.stamp ?? ''
-    frames.push({ t, s, b, a, m, r: { peers: honest.length, sybil: sybilNodes.length, pruned: sybilNodes.filter(isPrunedSybil).length }, stamp })
+    frames.push({ t, s, b, a, m, r, stamp })
     prevT = t
   }
   const plate = { reel, from: PLATE_FROM, to: PLATE_TO, step: PLATE_STEP, nodes, edges: edgePairs, bounds, frames }
   return { stats, plate }
+}
+
+/** One-frame PlateFrames for a reel card: the busiest real snapshot (geo) or the first at 30 % of the run. */
+export function computeCard(lines, meta) {
+  const snapshots = []; const edgesAt = []   // edgesAt[k] = latest edges frame before snapshot k (line order)
+  let edges = []
+  for (const line of lines) {
+    const f = JSON.parse(line).frame
+    if (Array.isArray(f?.nodes) && typeof f.time === 'number') { snapshots.push(f); edgesAt.push(edges) }
+    else if (f?.type === 'edges') edges = f.edges
+  }
+  if (!snapshots.length) throw new Error(`${meta.name}: no snapshots`)
+  const active = s => s.nodes.filter(n => n.state !== 'idle').length
+  const at = meta.real
+    ? snapshots.reduce((best, s, k) => (active(s) > active(snapshots[best]) ? k : best), 0)
+    : Math.max(0, snapshots.findIndex(s => s.time >= 0.3 * snapshots.at(-1).time))
+  const snap = snapshots[at]
+  const honest = snap.nodes.filter(n => n.state !== 'attacker')
+  const indexOf = new Map(honest.map((n, i) => [n.peer_id, i]))
+  const nodes = honest.map(n => ({ id: n.peer_id, x: round1(n.x), y: round1(n.y) }))
+  const edgePairs = edgesAt[at].map(([a, b]) => [indexOf.get(a), indexOf.get(b)]).filter(([a, b]) => a !== undefined && b !== undefined)
+  const { s, b, a, r } = frameFields(snap, honest, indexOf)
+  const bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+  for (const p of [...nodes, ...a]) { bounds.minX = Math.min(bounds.minX, p.x); bounds.minY = Math.min(bounds.minY, p.y); bounds.maxX = Math.max(bounds.maxX, p.x); bounds.maxY = Math.max(bounds.maxY, p.y) }
+  const t = round1(snap.time)
+  return { reel: meta.name, from: t, to: t, step: 0, ...(meta.real ? { geo: true } : {}), nodes, edges: edgePairs, bounds, frames: [{ t, s, b, a, m: [], r, stamp: '' }] }
 }
 
 function main() {
@@ -123,6 +154,13 @@ function main() {
     writeFileSync(out, body)
     console.log(`${out} ${Buffer.byteLength(body)} B`)
   }
+  const manifest = JSON.parse(readFileSync(join(here, '../public/reels/manifest.json'), 'utf8'))
+  const cards = Object.fromEntries(manifest.map(m => [m.name, computeCard(readFileSync(join(here, '../public', m.file), 'utf8').split('\n').filter(Boolean), m)]))
+  const cardsJson = JSON.stringify(cards) + '\n'
+  if (cardsJson.length >= CARDS_MAX_BYTES) { console.error(`reel-cards.json is ${cardsJson.length} B, limit ${CARDS_MAX_BYTES}`); process.exit(1) }
+  const cardsOut = join(here, '../lib/reel-cards.json')
+  writeFileSync(cardsOut, cardsJson)
+  console.log(`${cardsOut} ${Buffer.byteLength(cardsJson)} B`)
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main()
