@@ -32,7 +32,7 @@ export function Attackers({ data, p, simTime, box }: { data: ReelData; p: Projec
         const len = since < 0 ? 1 : Math.max(0, 1 - since / EDGE_LINGER_S)  // wipe toward the honest end
         const strong = since >= 0 && since < FLASH_S
         return <line key={`e-${e.from}-${e.to}-${e.since}`} x1={x0} y1={y0} x2={x0 + (x1 - x0) * len} y2={y0 + (y1 - y0) * len}
-          stroke="var(--flame)" strokeWidth={1} strokeDasharray="4 3" strokeOpacity={(strong ? 1 : 0.55) * opacity.get(e.to)!} />
+          stroke="var(--flame)" strokeWidth={strong ? 2 : 1} strokeDasharray={strong ? undefined : '4 3'} strokeOpacity={(strong ? 1 : 0.55) * opacity.get(e.to)!} />
       })}
       {activeParticles(data, simTime).filter(q => q.kind === 'spam').map((q, i) => {
         const [x0, y0] = at(q.from), [x1, y1] = at(q.to)

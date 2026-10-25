@@ -2,7 +2,7 @@
 import { DITHER_CONTRAST } from '../../components/dither/dither'
 import { BAND_DENSITY, scoreBand } from '../../components/map/palette'
 import { snapshotAt, type ReelData } from '../reel/parse'
-import { activeParticles, flightS } from './particles'
+import { activeParticles, flightWindow } from './particles'
 import type { Projector } from './view'
 
 export interface MeshStyle { nodeR: number; edgeAlpha: number; meshAlpha: number; intensity: number; field?: number }
@@ -42,7 +42,7 @@ export function drawMesh(
   const flashed = new Set<string>()
   for (const m of d.messages) {
     if (m.at > simTime) break
-    const arrive = m.at + flightS(m.latencyMs)
+    const arrive = flightWindow(m)[1]
     if (arrive <= simTime && arrive > simTime - FLASH_S) flashed.add(m.to)
   }
   for (const [id, until] of Object.entries(opts.flashUntil ?? {})) if (until > simTime) flashed.add(id)
@@ -62,13 +62,14 @@ export function drawMesh(
     else { ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = paper(1); ctx.fill() }
   }
 
-  ctx.fillStyle = paper(1); ctx.strokeStyle = paper(1); ctx.lineWidth = 1; ctx.setLineDash([2, 2])
+  ctx.fillStyle = paper(1); ctx.strokeStyle = paper(1)
   for (const q of activeParticles(d, simTime, { attackers: opts.attackers })) {
     if (q.kind === 'spam') continue
     const [x0, y0] = at(q.from), [x1, y1] = at(q.to)
     const x = x0 + (x1 - x0) * q.progress, y = y0 + (y1 - y0) * q.progress
-    if (q.kind === 'iwant') { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x, y); ctx.stroke() }
-    ctx.fillRect(x - 2, y - 2, 4, 4)
+    // the IWANT pull: a 2 px dashed trail and a 6 px square, heavy enough to survive the 2 px dither cell
+    if (q.kind === 'iwant') { ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x, y); ctx.stroke(); ctx.fillRect(x - 3, y - 3, 6, 6) }
+    else ctx.fillRect(x - 2, y - 2, 4, 4)
   }
   ctx.restore()
 }
