@@ -15,7 +15,7 @@ export const QA: [string, string][] = [
   ['Can I run it offline?', 'Yes. A recording page needs no backend and no network once it has loaded: one .jsonl file, no socket.'],
   ['How big can the mesh go?', 'The presets stop at 200 peers for the talk build and the backend accepts 500. Above 100 peers the backend sends no mesh, so mesh links and the mesh peers row are hidden and the legend says so.'],
   ['Where does the mainnet data come from?', `ethPandaOps' block arrival API, polled once per slot (CC BY 4.0). It shows ${ARRIVAL}, never the route a block took through the mesh.`],
-  ['Does it emit OpenTelemetry?', 'Every simulated message is a trace over OTLP and /metrics uses the gossipsub_* names Lighthouse emits. No consensus client exposes OTLP itself, so the live feed is ingested from the arrival API, not traced.'],
+  ['Does it emit OpenTelemetry?', 'Every simulated message is a trace over OTLP and /metrics uses the gossipsub_* names Lighthouse emits. We found no consensus client that exposes OTLP itself, so the live feed is ingested from the arrival API, not traced.'],
 ]
 
 export default function Faq() {
