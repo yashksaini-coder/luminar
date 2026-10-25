@@ -1,7 +1,11 @@
-.figure { margin: 0; }
-.plate { position: relative; overflow: hidden; background: var(--pitch-0); width: 100%; max-width: var(--col-wide); margin-inline: auto; }
+.figure { margin: 0; container-type: inline-size; }
+.plate { position: relative; overflow: hidden; background: var(--pitch-0); width: 100%; max-width: var(--col-wide); margin-inline: auto; aspect-ratio: var(--aspect); }
 @media (hover: hover) and (pointer: fine) { .plate { cursor: var(--cursor-reticle); } }
 .figure figcaption { margin-top: .6rem; text-align: right; font: italic var(--t-fig)/1.4 var(--font-display); color: var(--fg-3); }
-.figure .capLeft { text-align: left; }
+/* narrow plate (< 450 px): the 4 / 3 aspect and a left-aligned caption, resolved by CSS before hydration (no layout shift) */
+@container (max-width: 449px) {
+  .plate { aspect-ratio: var(--narrow-aspect); }
+  .figure figcaption { text-align: left; }
+}
 .fig { font: 600 12px var(--font-ui); font-style: normal; letter-spacing: .04em; color: var(--fg); margin-right: .5em; }
 .stamp { position: absolute; left: 56%; top: 24%; }

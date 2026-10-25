@@ -1,7 +1,7 @@
 .replay { position: absolute; inset: 0; }
 .replay > * { position: absolute; pointer-events: none; }
 .halo { right: 6%; top: 8%; z-index: 1; }   /* above the opaque base canvas */
-:global([data-narrow]) .halo { width: 72px; height: 72px; }
+@container (max-width: 449px) { .halo { width: 72px; height: 72px; } }   /* narrow plate (Figure.module.css) */
 .canvasWrap { inset: -14% 0; }   /* overscan: parallax never exposes the pitch edge */
 .overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .diamond { left: 4%; top: 58%; }
