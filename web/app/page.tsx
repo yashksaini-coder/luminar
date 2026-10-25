@@ -11,6 +11,7 @@ import { REEL_MANIFEST } from '@/lib/reels'
 export default function Home() {
   return (
     <>
+    {/* ReelRedirect slot (phase 4, spec §4.8): `<ReelRedirect />` goes here, first, before <Nav/> */}
     <Nav reels={REEL_MANIFEST} cards={cards as unknown as Record<string, PlateFrames>} />
     <main>
       <Hero />
