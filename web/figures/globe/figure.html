@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relay globe: GossipSub attacks on a world mesh</title></head><body>
+<script src="core.js"></script>
+<script>
+/* Relay globe No. 1: GossipSub v1.1 attacks on a hand-inked desk globe (task G.1, supersedes spec §8 and the sorter).
+   Same mechanism, toy constants: the numbers are the simulator's toy constants, never a mainnet node's.
+
+   How it works (each button is one real step; things only move along their real path):
+   - Post: Mumbai publishes. Eight capsules leave at once (flood publish): three down its mesh arcs, five down thin
+     flood arcs to its nearest non-mesh stations. Every station that receives lights its hut and forwards along its
+     own mesh arcs (one hop per 0.55 s); a copy arriving at a station that has already seen it just vanishes (seen).
+     `delivered` counts stations reached, the publisher included.
+   - Heartbeat: one tick of the engine's heartbeat, in the engine's order: decay (P4 x0.5, P1 +0.5 up to 5) ->
+     spam pre-pass (every bolted-on Sybil spits a grey junk capsule down each of its arcs: invalid, P4 -10) ->
+     prune (a station scoring under -10 loses its arcs; a Sybil is ejected and drops off the globe) ->
+     graft (dropped arcs re-attach, a few per beat, while both ends score above -5).
+     A spamming Sybil reads -10 on its first beat and -15 on the second, so it is pruned on the second heartbeat.
+   - Sybil: five red stations bolt on beside honest ones and graft arcs into three honest meshes each.
+   - Eclipse: four silent dark stations ring Tokyo and a glass hood lowers over it; Tokyo's honest arcs go dark,
+     capsules bounce off the hood, its dial sits at the P3 floor (-0.25) and moves no further.
+   - Partition: an ink bulkhead rises along the Atlantic (a tilted great circle from the Skagerrak through the Strait
+     of Dover and Biscay to the South Atlantic); capsules bounce off it, so Mumbai's next Post reaches the eastern seven only; dials on both sides
+     drift (P3 -0.25 a beat).
+   - Heal: the hood lifts, the dark stations leave, the wall drops; the dropped arcs re-graft over two heartbeats.
+   Stats: mesh 12 · D 3 (toy) . delivered n/12 . score <station> . beat N . status pill while attacked:
+   tokyo eclipsed · scoring blind, or partition (toy).
+
+   Coordinates: x = depth, y = width, z = up; 1 unit ~ 1 cm of a desk globe. Globe radius 28, centre (40, 40, 40);
+   lon/lat go to the unit sphere (y mirrored because the engine's frame is left-handed) and then to the model.
+   There is no depth buffer: every land segment, arc segment, station, wall and hood piece is drawn only when the
+   surface normal under it faces the camera (dot with CAM_V > 0), recomputed every frame; the meridian ring is split
+   into segments sorted against the sphere by depth.
+
+   Parts list (34), grouped:
+   CASE (3):       sphere shell (loft, 16 bands x 32) . land (110m coastlines, 1.5 deg, ink hatch on paper) .
+                   silhouette ink
+   STRUCTURE (8):  turned brass foot (two tiers) . maker's plate RELAY GLOBE No. 1 . stem . stem collar .
+                   meridian half-ring (20 segments) . south axle pin . north axle pin . finial
+   MECHANISM (12): 12 relay huts on map pins (Reykjavik, London, Frankfurt, Helsinki, New York, Toronto, Sao Paulo,
+                   Mumbai, Singapore, Tokyo, Sydney, Nairobi), each with a score dial (-20..+5, GRAFT bar at -5,
+                   PRUNE and a flame tick at -10) . 18 mesh arcs (great circles lifted 6% of the radius, D = 3) .
+                   arc collars at both ends . capsules (cream, ink band; grey junk) . 5 flood arcs during a Post
+   ATTACKS (8):    5 Sybil huts (flame) . their 15 arcs . 4 dark eclipse huts . their 4 arcs . glass hood (flame rim) .
+                   Atlantic bulkhead (flame top edge) . ejected Sybils falling into the shadow . seen capsules
+   CONTROLS (3):   Post (also: press the Mumbai hut) . Heartbeat . Sybil / Eclipse / Partition / Heal
+   Held by: the foot stands on the paper; the stem on the foot; the ring on the stem; the sphere on the two axle pins
+   in the ring; huts on their pins in the surface; arcs from collar to collar on the huts; the hood and the wall stand
+   on the surface. */
+
+PALS.paper = { l:'#f4f1e8', m:'#e4dfd2', d:'#cdc6b6' };           // the ocean is the paper itself, band-shaded
+const GX = 40, GY = 40, ZC = 40, R = 28, RR = 30.5, GC = [GX, GY, ZC];
+const D = 3, N_HONEST = 12;
+const BRASS = matOf('#cbb98a'), BRASSD = matOf('#a89468'), FLAME = '#ff5a2c', FLAMEM = matOf(FLAME), GLASS = '#cfe9f0';
+const HUTM = matOf('#e6dfcd'), LITM = matOf('#fff1bf'), JUNKM = matOf('#9c9a92'), CAPM = matOf('#f6efdc'), INKM = matOf('#3d3935');
+const ARC_C = '#8a7a52', DARK_C = '#3d3935', DIAL_C = '#fbf8ee';
+const HB_S = .75, HOP = .55, PRUNE_AT = .25, GRAFT_AT = .6;        // heartbeat seconds and its phases
+const rad = Math.PI/180;
+
+/* ---------- geography ---------- */
+const unit = (lat, lon) => [Math.cos(lat*rad)*Math.cos(lon*rad), -Math.cos(lat*rad)*Math.sin(lon*rad), Math.sin(lat*rad)];
+const atR = (u, r = R) => [GX + u[0]*r, GY + u[1]*r, ZC + u[2]*r];
+const vdot = u => dot(u, CAM_V);                                   // > 0: this bit of the surface faces the viewer
+const ang = (a, b) => Math.acos(Math.max(-1, Math.min(1, dot(a, b))));
+function slerp(a, b, t){ const w = ang(a, b), s = Math.sin(w); if (s < 1e-6) return a.slice();
+  const ka = Math.sin((1 - t)*w)/s, kb = Math.sin(t*w)/s; return [a[0]*ka + b[0]*kb, a[1]*ka + b[1]*kb, a[2]*ka + b[2]*kb]; }
+const frameAt = u => { const e = norm(cross([0, 0, 1], u)), m = cross(u, e); return { e, m, n: u }; };   // east, north, up
+const LAND = '173.0,-40.9 173.2,-43.0 171.4,-44.2 170.6,-45.9 168.4,-46.6 166.5,-45.9 168.3,-44.1 170.5,-43.0 171.9,-41.5;174.6,-36.2 176.0,-37.6 178.0,-37.6 178.0,-39.2 176.5,-40.6 174.7,-41.3 173.8,-39.5 174.7,-38.0 174.3,-36.5 173.1,-35.2;50.1,-13.6 50.5,-15.2 49.8,-16.9 49.0,-19.1 47.9,-22.4 47.1,-24.9 45.4,-25.6 43.8,-24.5 43.4,-22.8 43.9,-21.2 44.5,-19.4 44.0,-17.4 44.9,-16.2 46.9,-15.2 48.0,-14.1 48.9,-12.5;143.6,-13.8 144.9,-14.6 145.5,-16.3 146.2,-17.8 147.5,-19.5 148.8,-20.4 149.7,-22.3 150.9,-23.5 152.9,-25.3 153.1,-27.3 153.5,-29.0 153.1,-30.9 152.4,-32.5 151.3,-33.8 150.3,-35.7 150.0,-37.4 147.4,-38.2 145.5,-38.6 142.8,-38.5 140.6,-38.0 139.8,-36.6 138.1,-35.6 137.5,-34.1 135.2,-34.5 134.1,-32.9 132.3,-32.0 129.5,-31.6 127.1,-32.3 125.1,-32.7 123.7,-33.9 121.3,-33.8 119.3,-34.5 117.3,-35.0 115.6,-34.4 115.8,-32.2 115.2,-30.6 114.6,-28.8 114.0,-27.3 113.4,-25.6 113.5,-23.8 114.2,-21.8 116.0,-21.1 118.2,-20.4 119.8,-20.0 121.4,-19.2 122.3,-17.8 123.0,-16.4 124.4,-15.6 125.7,-14.5 127.1,-13.8 128.4,-14.9 129.9,-13.6 131.2,-12.2 132.4,-11.1 134.4,-12.0 136.3,-12.1 136.1,-13.7 136.3,-15.6 138.3,-16.8 140.2,-17.7 141.3,-16.4 141.6,-14.6 141.7,-12.9 142.1,-11.3 143.5,-12.8;108.6,-6.8 110.5,-6.9 112.6,-7.0 114.5,-7.8 112.6,-8.4 110.6,-8.1 108.7,-7.6 106.5,-7.3 106.0,-5.9;134.1,-1.1 134.4,-2.8 136.3,-2.3 138.3,-1.7 139.9,-2.4 142.7,-3.3 144.6,-3.9 145.8,-4.9 147.7,-6.1 148.1,-8.0 149.3,-9.1 150.8,-10.3 148.9,-10.3 147.1,-9.5 146.1,-8.1 143.9,-7.9 142.6,-9.3 141.0,-9.1 139.1,-8.1 137.6,-8.4 138.7,-7.3 137.9,-5.4 136.0,-4.5 133.7,-3.5 132.0,-2.8 133.8,-2.5 132.2,-2.2 130.9,-1.4 132.4,-0.4;125.2,1.4 123.7,0.2 121.1,0.4 120.9,-1.4 123.3,-0.6 121.5,-1.9 122.5,-3.2 123.2,-4.7 121.5,-4.6 121.0,-2.6 120.4,-4.1 119.8,-5.7 119.5,-3.5 119.3,-1.4 119.8,0.1 120.9,1.3 122.9,0.9;105.8,-5.8 103.9,-5.0 102.6,-4.2 101.4,-2.8 100.1,-0.7 99.0,1.0 97.7,2.5 96.4,3.9 95.4,5.0 97.5,5.2 99.1,3.6 100.6,2.1 102.5,1.4 103.8,0.1 104.5,-1.8 106.1,-3.1;117.9,1.8 117.5,0.1 116.6,-1.5 116.2,-4.0 114.5,-3.5 112.1,-3.5 110.2,-2.9 109.6,-1.3 109.0,0.4 109.7,2.0 111.2,1.9 113.0,3.1 114.2,4.5 115.5,5.5 116.7,6.9 118.3,5.7 117.9,4.1;126.4,8.4 126.2,6.3 124.2,6.2 123.6,7.8 122.1,6.9 122.9,8.3 124.6,8.5 126.2,9.3;-79.7,22.8 -78.0,22.3 -76.5,21.2 -74.9,20.7 -77.8,19.9 -78.7,21.6 -80.5,22.0 -82.2,22.4 -83.9,22.1 -82.5,23.1 -80.6,23.1;141.0,37.1 140.2,35.1 137.2,34.6 135.8,33.5 133.3,34.4 131.0,33.9 131.3,31.4 129.8,32.6 130.9,34.2 132.6,35.4 134.6,35.7 136.7,37.3 138.9,37.8 140.1,39.4 140.3,41.2 141.9,40.0 141.0,38.2;-56.1,50.7 -54.9,49.3 -53.0,48.2 -53.1,46.7 -55.4,46.9 -59.3,47.6 -58.4,49.1 -57.4,50.7 -55.4,51.6;143.7,50.8 144.7,49.0 142.6,47.9 143.5,46.1 142.0,47.8 142.1,49.6 141.6,51.9 142.6,53.8 143.2,51.8;-3.0,58.6 -2.2,56.9 -1.1,54.6 0.5,52.9 1.4,51.3 -0.8,50.8 -3.6,50.2 -5.0,51.6 -4.6,53.5 -5.1,55.1 -6.2,56.8 -5.0,58.6;-90.5,69.5 -88.3,67.9 -85.5,69.9 -81.3,69.2 -81.3,67.6 -84.7,66.3 -87.3,64.8 -90.7,63.6 -93.2,62.0 -94.6,60.1 -93.2,58.8 -92.3,57.1 -89.0,56.9 -86.1,55.7 -83.4,55.2 -82.1,53.3 -79.9,51.2 -78.6,52.6 -79.1,54.1 -77.1,55.8 -77.3,58.0 -77.3,59.9 -78.1,62.3 -74.7,62.2 -71.7,61.5 -69.6,60.2 -68.4,58.8 -65.2,59.9 -62.5,58.2 -61.8,56.3 -59.6,55.2 -56.9,53.8 -55.7,52.1 -58.8,51.1 -61.7,50.1 -65.4,50.3 -68.5,49.1 -70.0,47.7 -66.5,49.1 -64.2,48.7 -64.8,47.0 -63.2,45.7 -60.5,47.0 -61.0,45.3 -63.2,44.7 -65.4,43.5 -64.4,45.3 -67.1,45.1 -69.1,44.0 -70.7,43.0 -70.6,41.5 -72.9,41.2 -74.2,39.7 -75.4,38.0 -75.9,36.5 -76.4,34.8 -78.0,33.9 -80.3,32.5 -81.5,30.7 -81.0,29.2 -80.1,26.9 -80.4,25.2 -82.2,26.7 -82.7,28.6 -83.7,29.9 -85.8,30.1 -87.5,30.3 -89.6,30.2 -90.9,29.1 -93.2,29.8 -95.6,28.7 -97.1,27.8 -97.3,26.2 -97.7,24.3 -97.9,22.4 -97.2,20.6 -96.3,19.3 -94.8,18.6 -92.8,18.5 -90.8,19.3 -90.3,21.0 -88.5,21.5 -86.8,21.3 -87.6,19.6 -88.1,18.1 -88.4,16.5 -86.9,15.8 -85.2,15.9 -83.4,15.3 -83.5,13.6 -83.7,11.9 -83.4,10.4 -82.2,9.2 -80.5,9.1 -79.0,9.6 -77.3,8.7 -75.7,9.4 -74.9,11.1 -72.6,11.7 -71.1,12.1 -71.6,10.4 -70.2,11.4 -68.2,10.9 -66.2,10.7 -64.3,10.4 -61.9,10.7 -60.8,9.4 -59.1,8.0 -58.1,6.8 -56.0,5.8 -54.0,5.8 -51.8,4.6 -50.5,1.9 -50.7,0.2 -48.6,-0.2 -46.6,-0.9 -44.9,-1.6 -43.4,-2.4 -41.5,-2.9 -38.5,-3.7 -37.2,-4.8 -35.6,-5.2 -34.9,-6.7 -35.1,-9.0 -37.0,-11.0 -38.4,-13.0 -38.9,-15.7 -39.2,-17.2 -39.8,-19.6 -40.8,-20.9 -41.8,-22.4 -44.6,-23.4 -46.5,-24.1 -48.5,-25.9 -48.7,-28.2 -50.7,-31.0 -52.3,-32.2 -53.4,-33.8 -54.9,-35.0 -57.1,-34.4 -57.4,-36.0 -57.8,-38.2 -61.2,-38.9 -62.1,-40.7 -64.7,-40.8 -64.3,-42.4 -65.3,-44.5 -67.3,-45.5 -66.6,-47.0 -67.2,-48.7 -68.7,-50.3 -68.8,-51.8 -70.8,-52.9 -73.7,-52.8 -75.3,-51.6 -75.6,-48.7 -74.1,-46.9 -74.3,-44.1 -72.7,-42.4 -73.7,-39.9 -73.5,-38.3 -72.5,-35.5 -71.9,-33.9 -71.4,-32.4 -71.7,-30.9 -71.5,-28.9 -70.7,-25.7 -70.4,-23.6 -70.1,-21.4 -70.2,-19.8 -71.4,-17.8 -73.4,-16.4 -75.2,-15.3 -76.4,-13.8 -77.1,-12.2 -78.1,-10.4 -79.0,-8.4 -80.5,-6.5 -81.4,-4.7 -80.3,-3.4 -80.8,-2.0 -80.4,-0.3 -79.5,1.0 -78.7,2.3 -77.5,3.3 -77.5,5.6 -77.9,7.2 -78.6,8.7 -80.2,8.3 -81.7,8.1 -83.5,8.4 -84.7,9.6 -85.7,10.8 -86.8,12.1 -87.8,13.4 -89.8,13.5 -91.7,14.1 -93.4,15.6 -95.2,16.1 -97.3,15.9 -99.0,16.6 -100.8,17.2 -102.5,18.0 -103.9,18.8 -105.5,19.9 -105.6,21.9 -106.9,23.8 -108.4,25.2 -109.3,26.4 -110.6,27.9 -112.2,28.9 -113.2,30.8 -114.8,31.8 -114.7,30.2 -113.4,28.8 -112.5,27.5 -111.3,25.7 -110.7,24.3 -109.4,23.2 -111.0,24.0 -112.2,25.5 -113.5,26.8 -115.1,27.7 -114.9,29.3 -116.3,30.8 -117.1,32.5 -118.4,33.7 -120.4,34.5 -121.7,36.2 -122.5,37.5 -123.7,39.0 -124.2,41.1 -124.5,42.8 -123.9,45.5 -124.4,47.7 -122.8,49.0 -124.9,50.0 -127.4,50.8 -127.8,52.3 -129.3,53.6 -131.1,55.2 -133.5,57.2 -136.6,58.2 -139.9,59.5 -144.0,60.0 -147.1,60.9 -149.7,59.7 -150.6,61.3 -152.6,60.1 -154.2,58.1 -156.6,57.0 -159.6,55.6 -162.2,55.0 -164.8,54.4 -161.8,55.9 -158.7,57.0 -157.0,58.9 -160.0,58.6 -162.5,60.0 -165.3,61.1 -164.9,62.6 -162.3,63.5 -166.4,64.7 -164.5,66.6 -165.4,68.0 -163.2,69.4 -159.0,70.9 -154.3,70.7 -149.7,70.5 -144.9,70.0 -139.1,69.5 -134.4,69.6 -129.8,70.2 -125.8,69.5 -121.5,69.8 -117.6,69.0 -113.5,67.7 -108.9,67.4 -107.0,68.7 -101.5,67.7 -97.7,68.6 -96.5,70.1 -95.2,71.9 -91.5,70.2;-114.2,73.1 -109.0,72.6 -104.8,71.7 -101.0,70.0 -104.2,68.9 -109.0,68.8 -113.3,68.5 -117.3,70.0 -112.4,70.4 -117.9,70.5 -118.6,72.3;-86.6,73.2 -80.6,72.7 -75.6,72.2 -71.2,70.9 -67.0,69.2 -64.9,67.8 -61.9,66.9 -63.9,65.0 -66.7,66.4 -65.7,64.7 -65.0,62.7 -68.8,63.8 -66.3,62.3 -71.0,62.9 -73.4,64.2 -77.7,64.2 -74.0,65.5 -72.7,67.3 -74.8,68.5 -78.2,69.8 -84.9,70.0 -89.5,70.8 -89.4,73.1;107.0,77.0 113.3,76.2 110.2,74.5 115.6,73.8 123.2,73.0 128.6,73.0 129.7,71.2 135.6,71.7 140.5,72.8 149.5,72.2 153.0,70.8 159.0,70.9 160.9,69.4 165.9,69.5 169.6,68.7 173.6,69.8 178.6,69.4 180.0,65.0 178.9,63.2 174.6,61.8 170.7,60.3 166.3,59.8 163.2,59.2 163.2,57.6 162.1,56.1 160.4,54.3 158.5,53.0 156.8,51.0 156.0,53.2 155.4,55.4 156.8,57.4 160.2,59.3 163.7,61.1 160.1,60.5 156.7,61.4 154.2,59.8 151.3,58.8 145.5,59.3 142.2,59.0 139.0,57.1 135.1,54.7 138.2,53.8 141.3,53.1 140.6,51.2 140.1,48.5 138.6,47.0 136.9,45.1 134.9,43.4 132.9,42.8 130.8,42.2 129.7,40.9 128.0,40.0 129.2,37.4 129.5,35.6 127.4,34.5 126.1,36.7 125.0,38.0 125.3,39.5 122.9,39.6 121.0,38.9 122.2,40.4 119.6,39.9 117.5,38.7 118.9,37.5 120.8,37.9 122.5,36.9 120.6,36.1 119.2,34.9 120.6,33.4 121.9,31.7 121.5,30.1 121.7,28.2 120.4,27.1 118.7,24.6 117.3,23.6 115.9,22.8 114.2,22.2 111.8,21.6 110.4,20.3 108.5,21.7 106.7,20.7 105.7,19.1 107.4,16.7 108.9,15.3 109.3,13.4 109.2,11.7 107.2,10.4 105.2,8.6 104.3,10.5 102.6,12.2 100.8,12.6 99.5,10.8 99.2,9.2 100.5,7.4 102.1,6.2 103.4,4.9 103.5,2.8 104.2,1.3 102.6,2.0 101.3,3.3 100.6,4.8 100.1,6.5 99.0,7.9 98.5,9.9 98.8,11.4 98.5,13.1 97.8,14.8 97.2,16.9 95.4,15.7 94.5,17.3 93.5,19.4 92.4,20.7 91.8,22.2 89.8,22.0 88.2,21.7 86.5,20.1 85.1,19.5 83.9,18.3 82.2,17.0 80.8,15.9 80.2,13.8 79.9,12.1 79.9,10.4 78.3,8.9 76.6,8.9 75.8,11.3 74.9,12.7 74.4,14.6 73.5,16.0 73.1,17.9 72.8,20.4 71.2,20.8 69.2,22.1 68.2,23.7 66.4,25.4 64.5,25.2 61.5,25.1 59.6,25.4 57.4,25.7 56.5,27.1 54.7,26.5 52.5,27.6 50.9,28.8 49.6,30.0 48.4,28.6 49.5,27.1 50.2,25.6 51.6,24.2 53.4,24.1 55.4,25.4 56.9,24.2 58.7,23.6 59.8,22.3 58.5,20.4 57.8,19.1 56.5,18.1 54.8,16.9 53.1,16.6 51.2,15.2 49.6,14.7 47.9,14.0 45.9,13.3 44.2,12.6 43.1,14.1 42.7,15.7 42.3,17.5 41.2,18.7 40.2,20.2 39.1,21.3 38.5,23.7 37.1,24.9 36.2,26.6 35.1,28.1 33.1,28.4 32.4,29.9 33.4,27.7 34.1,26.1 35.7,23.9 36.7,22.2 37.1,19.8 37.9,18.4 39.0,16.8 39.8,15.4 41.2,14.5 42.3,13.3 43.3,12.0 44.1,10.4 46.6,10.8 48.4,11.4 50.3,11.7 50.8,10.3 50.1,8.1 48.6,5.3 46.6,2.9 44.1,1.1 42.0,-0.9 40.9,-2.1 39.8,-3.7 38.7,-5.9 39.2,-7.7 40.0,-10.1 40.4,-11.8 40.6,-14.2 40.1,-16.1 38.5,-17.1 36.3,-18.7 34.8,-19.8 35.2,-21.2 35.5,-23.1 34.2,-24.8 32.6,-25.7 32.6,-27.5 31.5,-29.3 30.1,-31.1 28.2,-32.8 26.4,-33.6 23.6,-33.8 21.5,-34.3 19.6,-34.8 18.2,-33.3 18.2,-31.7 17.1,-29.9 15.6,-27.8 15.0,-26.1 14.4,-23.9 14.3,-22.1 13.3,-20.9 12.6,-19.1 11.7,-17.3 11.8,-15.8 12.5,-13.6 13.6,-12.0 13.4,-10.4 13.2,-8.6 12.7,-6.9 11.9,-5.0 10.1,-3.0 8.8,-1.1 9.5,1.0 9.8,3.1 8.7,4.3 7.1,4.5 5.4,4.9 4.3,6.3 2.7,6.3 1.1,5.9 -0.5,5.3 -2.0,4.7 -4.0,5.2 -5.8,5.0 -7.5,4.3 -9.0,4.8 -10.8,6.1 -12.4,7.3 -13.2,8.9 -14.3,10.0 -15.7,11.5 -16.8,13.2 -17.6,14.7 -16.5,16.1 -16.1,18.1 -16.3,20.1 -17.0,21.9 -16.0,23.7 -14.8,25.1 -13.8,26.6 -12.6,28.0 -10.9,28.8 -9.6,29.9 -9.4,32.0 -7.7,33.7 -6.2,35.1 -3.6,35.4 -1.2,35.7 0.5,36.3 3.2,36.8 5.3,36.7 7.3,37.1 9.5,37.4 10.6,36.0 10.2,34.3 11.5,33.1 13.9,32.7 15.7,31.4 18.0,30.8 20.1,31.0 20.9,32.7 22.9,32.6 24.9,31.9 27.5,31.3 29.7,31.2 31.7,31.4 33.8,31.0 35.0,32.8 36.0,34.6 35.8,36.3 32.5,36.1 30.6,36.7 28.7,36.7 27.1,37.6 26.2,39.5 28.8,40.5 31.1,41.1 33.5,42.0 36.9,41.3 39.5,41.1 41.5,41.5 40.9,43.0 38.7,44.3 36.7,45.2 37.7,46.6 35.0,46.3 36.3,45.1 33.9,44.4 33.6,45.9 31.7,46.7 29.6,45.3 28.6,43.7 28.0,42.0 26.4,40.1 23.7,40.7 23.4,39.2 24.0,37.7 22.5,36.4 21.3,37.6 20.2,39.3 19.3,40.7 18.9,42.3 16.9,43.2 15.2,44.2 13.7,45.5 12.6,44.1 14.0,42.8 15.9,42.0 17.5,40.9 17.1,38.9 15.4,40.0 13.6,41.2 11.2,42.4 10.2,43.9 7.8,43.8 4.6,43.4 3.0,41.9 0.8,41.0 -0.3,39.3 -0.7,37.6 -2.1,36.7 -4.4,36.7 -6.2,36.4 -8.4,37.0 -9.3,38.4 -9.0,40.2 -9.0,41.9 -8.0,43.8 -5.4,43.6 -1.9,43.4 -1.2,46.0 -3.0,47.6 -4.6,48.7 -1.6,48.6 1.3,50.1 3.3,51.4 4.7,53.1 7.1,53.7 8.5,55.0 8.1,56.5 10.6,57.7 10.7,56.1 9.9,54.6 12.5,54.5 16.4,54.5 19.7,54.4 21.1,56.0 22.5,57.8 23.3,59.2 26.9,59.5 22.9,59.9 21.5,61.7 22.4,63.8 25.4,65.1 21.2,65.0 19.8,63.6 17.1,61.3 18.8,60.1 16.8,58.7 16.4,57.0 14.1,55.4 11.8,57.4 10.4,59.5 8.4,58.3 5.3,59.7 5.0,62.0 8.6,63.5 12.4,65.9 14.8,67.8 19.2,69.8 24.6,71.0 31.3,70.5 36.5,69.1 40.3,67.9 40.0,66.3 33.9,66.8 34.9,64.4 39.6,64.5 42.1,66.5 44.2,68.0 46.4,66.7 50.2,68.0 53.7,68.9 58.8,68.9 63.5,69.5 68.5,68.1 67.3,69.9 68.5,71.9 72.5,71.1 72.6,69.0 71.3,66.3 75.0,67.8 73.6,69.6 73.1,71.5 75.2,72.9 75.3,71.3 79.7,72.3 82.2,73.8 87.2,75.1 92.9,75.8 98.9,76.5 104.3,77.7;-68.5,83.1 -67.7,81.5 -71.2,79.8 -76.3,78.2 -80.6,76.2 -87.6,76.4 -87.7,78.0 -86.5,79.7 -90.2,81.3 -85.5,82.7;-27.1,83.5 -31.4,82.0 -20.6,81.5 -18.9,79.4 -19.7,77.6 -19.8,76.1 -19.4,74.3 -23.6,73.3 -22.1,71.5 -26.4,70.2 -27.8,68.5 -31.8,68.1 -34.2,66.7 -38.4,65.7 -40.7,64.1 -42.8,62.7 -42.9,61.1 -46.3,60.9 -49.2,61.4 -51.6,63.6 -52.3,65.2 -53.3,66.8 -53.0,68.4 -50.9,69.9 -54.0,71.5 -56.1,73.7 -58.6,75.1 -63.4,76.2 -71.4,77.0 -69.4,78.9 -67.2,80.5 -60.3,82.0 -48.0,82.1 -39.9,83.2'.split(';').map(r => r.split(' ').map(p => { const [lo, la] = p.split(',').map(Number); return unit(la, lo); }));
+const CITIES = [['Reykjavik', 64.15, -21.94], ['London', 51.51, -0.13], ['Frankfurt', 50.11, 8.68], ['Helsinki', 60.17, 24.94],
+  ['New York', 40.71, -74.01], ['Toronto', 43.65, -79.38], ['Sao Paulo', -23.55, -46.63], ['Mumbai', 19.08, 72.88],
+  ['Singapore', 1.35, 103.82], ['Tokyo', 35.68, 139.69], ['Sydney', -33.87, 151.21], ['Nairobi', -1.29, 36.82]];
+const MUMBAI = 7, TOKYO = 9;
+const MESH = [[0,1],[0,5],[0,3],[1,2],[1,4],[4,5],[4,6],[5,6],[6,11],[2,3],[2,11],[3,7],[7,8],[7,9],[8,9],[8,10],[9,10],[11,10]];   // 3-regular
+const SYBIL_HOSTS = [1, 4, 8, 11, 6];                                  // London, New York, Singapore, Nairobi, Sao Paulo
+// the Atlantic bulkhead: a great circle through the Skagerrak (57N 7E), the Strait of Dover, Biscay and the South
+// Atlantic (30S 20W): Reykjavik, London and the Americas on its west, the other seven on its east
+const WA = unit(57, 7), WB0 = unit(-30, -20), WN = norm(cross(WA, WB0)), WB = norm(cross(WN, WA));
+const WPSI0 = -22*rad, WPSI1 = ang(WA, WB0) + 28*rad;                  // drawn from ~80N down to ~60S
+const wallPt = psi => [WA[0]*Math.cos(psi) + WB[0]*Math.sin(psi), WA[1]*Math.cos(psi) + WB[1]*Math.sin(psi), WA[2]*Math.cos(psi) + WB[2]*Math.sin(psi)];
+function wallCross(a, b){                                              // fraction along slerp(a,b) where the wall is hit, or 1
+  let da = dot(a, WN), db = dot(b, WN); if (da*db >= 0) return 1;
+  let lo = 0, hi = 1; for (let i = 0; i < 10; i++){ const mid = (lo + hi)/2, dm = dot(slerp(a, b, mid), WN); if (dm*da > 0) lo = mid; else hi = mid; }
+  const q = slerp(a, b, (lo + hi)/2), psi = Math.atan2(dot(q, WB), dot(q, WA));
+  return psi >= WPSI0 && psi <= WPSI1 ? (lo + hi)/2 : 1; }
+
+/* ---------- small helpers ---------- */
+const lerp3 = (a, b, t) => [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t, a[2] + (b[2]-a[2])*t];
+const sc3 = (a, k) => [a[0]*k, a[1]*k, a[2]*k];
+const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const stroke = (d, c, w, extra = '') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round" ${extra}/>`;
+const score = n => n.p1 + n.p3 + n.p4;
+const alive = st => st.nodes.filter(n => !n.gone);
+const honest = st => st.nodes.filter(n => n.kind === 'honest');
+const arcsOf = (st, i) => st.arcs.filter(a => (a.a === i || a.b === i) && a.state !== 'cut');
+const other = (a, i) => a.a === i ? a.b : a.a;
+const arcPt = (ua, ub, t) => atR(slerp(ua, ub, t), R*(1 + .06*Math.sin(Math.PI*t)));
+const eclipsed = st => !!(st.eclipse && st.eclipse.dir !== -1), wallUp = st => !!(st.wall && st.wall.dir !== -1);
+
+/* ---------- the shell: sphere, land with horizon clipping, silhouette ---------- */
+const NB = 16, NS = 32, RINGS = [];
+for (let j = 0; j <= NB; j++){ const lat = Math.max(-86, Math.min(86, -90 + 180*j/NB))*rad; RINGS.push(ellUV(GX, GY, R*Math.cos(lat), R*Math.cos(lat), NS).map(([x, y]) => [x, y, ZC + R*Math.sin(lat)])); }
+function shell(m){
+  let s = '';
+  for (let j = 0; j < NB; j++) s += loft(RINGS[j], RINGS[j+1], n => tone(n, m));
+  if (vis([0,0,1])) s += fill(pd(RINGS[NB]), tone([0,0,1], m)); if (vis([0,0,-1])) s += fill(pd(RINGS[0]), tone([0,0,-1], m));
+  return s;
+}
+// one ring of land -> visible runs, closed along the limb (a run enters and leaves the visible hemisphere at the limb,
+// so its hidden part is replaced by the short arc of the limb circle between the two crossings)
+function landRuns(ring){
+  const d = ring.map(vdot), n = ring.length; let any = false, all = true;
+  for (const v of d){ if (v > 0) any = true; else all = false; }
+  if (!any) return []; if (all) return [ring.map(u => atR(u))];
+  let s0 = 0; while (!(d[(s0 + n - 1) % n] <= 0 && d[s0] > 0)) s0++;
+  const cross3 = (i, j) => { const t = d[i]/(d[i] - d[j]); return norm(lerp3(ring[i], ring[j], t)); };
+  const runs = []; let i = s0, seen = 0;
+  while (seen < n){
+    const entry = cross3((i + n - 1) % n, i), pts = [entry];
+    while (d[i] > 0 && seen < n){ pts.push(ring[i]); i = (i + 1) % n; seen++; }
+    const exit = cross3((i + n - 1) % n, i); pts.push(exit);
+    const a = exit, b = norm(cross(CAM_V, a)), phi = Math.atan2(dot(entry, b), dot(entry, a)), k = Math.max(1, Math.round(Math.abs(phi)/(8*rad)));
+    for (let q = 1; q < k; q++){ const th = phi*q/k; pts.push([a[0]*Math.cos(th) + b[0]*Math.sin(th), a[1]*Math.cos(th) + b[1]*Math.sin(th), a[2]*Math.cos(th) + b[2]*Math.sin(th)]); }
+    runs.push(pts.map(u => atR(u)));
+    while (d[i] <= 0 && seen < n){ i = (i + 1) % n; seen++; }
+  }
+  return runs;
+}
+function land(){
+  const w = (1.15*INK_K).toFixed(3);
+  let d = ''; for (const ring of LAND) for (const run of landRuns(ring)) d += pd(run);
+  return `<defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="${w}" height="${w}" patternTransform="rotate(38)"><rect width="${w}" height="${w}" fill="#ebe4d2"/><path d="M0 0V${w}" stroke="${INK}" stroke-width=".75" opacity=".75"/></pattern></defs>`
+    + fill(d, 'url(#hatch)') + ink(d, .9);
+}
+
+/* ---------- huts, dials, arcs, capsules ---------- */
+function hut(st, n, k){                                             // k: 1 near side, -1 far side (see-through)
+  const u = n.u, { e, m } = frameAt(u);
+  const drop = n.fall ? ease(n.fall) : 0, lift = n.rise ? 6*(1 - ease(n.rise)) : 0;
+  const base = add3(atR(u, R + .6 + lift), [0, 0, -14*drop*drop]), out = sc3(u, 3*drop);
+  const c = add3(base, out), hw = n.kind === 'honest' ? 1.3 : 1.1, hd = n.kind === 'honest' ? 1.15 : 1.0, hh = n.kind === 'dark' ? 1.4 : 1.7;
+  const mat = n.kind === 'sybil' ? FLAMEM : n.kind === 'dark' ? DARK : n.lit > 0 ? LITM : HUTM;
+  const P8 = (a, b, h) => add3(c, add3(add3(sc3(e, a*hw), sc3(m, b*hd)), sc3(u, h)));
+  let s = '';
+  if (!drop) s += rod(atR(u, R - .2), atR(u, R + .7 + lift), .28, BRASSD, toneI, .4, .28, 8);           // the map pin
+  const faces = [[e, [P8(1,-1,0), P8(1,1,0), P8(1,1,hh), P8(1,-1,hh)]], [sc3(e,-1), [P8(-1,-1,0), P8(-1,1,0), P8(-1,1,hh), P8(-1,-1,hh)]],
+    [m, [P8(-1,1,0), P8(1,1,0), P8(1,1,hh), P8(-1,1,hh)]], [sc3(m,-1), [P8(-1,-1,0), P8(1,-1,0), P8(1,-1,hh), P8(-1,-1,hh)]], [u, [P8(-1,-1,hh), P8(1,-1,hh), P8(1,1,hh), P8(-1,1,hh)]]];
+  for (const [nr, q] of faces) if (vis(nr)) s += shape(q, toneI(nr, mat), .7);
+  if (n.kind === 'honest' && vis(m)){ const dz = P8(0, 1.01, .45), dw = .32*hw; s += shape([add3(dz, sc3(e, -dw)), add3(dz, sc3(e, dw)), add3(add3(dz, sc3(e, dw)), sc3(u, .7)), add3(add3(dz, sc3(e, -dw)), sc3(u, .7))], n.lit > 0 ? '#fff6d2' : '#3d3935', .4); }   // door
+  s += hullInk(faces.flatMap(f => f[1]), 1.2);
+  if (n.kind !== 'dark' && !drop){                                   // the score dial on the roof
+    const cd = P8(0, 0, hh), ct = add3(cd, sc3(u, .4)), rd = 1.5;
+    const ring = (cc, r) => Array.from({ length: 14 }, (_, i) => { const t = i/14*2*Math.PI; return add3(cc, add3(sc3(e, r*Math.cos(t)), sc3(m, r*Math.sin(t)))); });
+    s += loft(ring(cd, rd), ring(ct, rd), nr => toneI(nr, BRASS));
+    if (vis(u)){
+      s += fill(pd(ring(ct, rd)), DIAL_C) + ink(pd(ring(ct, rd)), .5);
+      const th = v => (225 - (Math.max(-20, Math.min(5, v)) + 20)/25*270)*rad, at = (a, r) => add3(ct, add3(sc3(e, r*Math.cos(a)), sc3(m, r*Math.sin(a))));
+      s += stroke(pd([at(th(-5), .85), at(th(-5), 1.25)], false), INK, .55) + stroke(pd([at(th(-10), .8), at(th(-10), 1.3)], false), FLAME, .7);
+      const v = n.disp, hot = v <= -10;
+      s += stroke(pd([at(th(v) + Math.PI, .3), at(th(v), 1.15)], false), hot ? FLAME : INK, hot ? .8 : .6) + fill(pd(ring(ct, .22)), INK);
+    }
+    s += hullInk([...ring(cd, rd), ...ring(ct, rd)], .8);
+  }
+  const op = n.fall ? 1 - ease(n.fall) : 1;
+  if (op < 1) s = `<g opacity="${f(op)}">${s}</g>`;
+  if (n.id === MUMBAI) s = act('post', s);
+  return s;
+}
+function arcPath(ua, ub, k, t0 = 0, t1 = 1){                         // visible pieces of an arc between fractions t0..t1
+  const parts = []; let cur = null;
+  const N = 18;
+  for (let i = 0; i < N; i++){ const a = t0 + (t1 - t0)*i/N, b = t0 + (t1 - t0)*(i + 1)/N;
+    if (k*vdot(slerp(ua, ub, (a + b)/2)) > 0){ if (!cur){ cur = [arcPt(ua, ub, a)]; parts.push(cur); } cur.push(arcPt(ua, ub, b)); } else cur = null; }
+  return parts.map(p => pd(p, false)).join('');
+}
+function arc(st, a, k){
+  const na = st.nodes[a.a], nb = st.nodes[a.b];
+  const snapping = a.snap > 0 && a.snap < 1;
+  if (a.state === 'dropped' || (a.state === 'cut' && !snapping) || ((na.gone || nb.gone) && !snapping)) return '';
+  if (a.state === 'flood') return stroke(arcPath(na.u, nb.u, k), INK, .5, 'stroke-dasharray="1.2 1.2" opacity=".7"');
+  const hot = a.flash > 0 && a.flashKind === 'prune', graft = a.flash > 0 && a.flashKind === 'graft';
+  let t1 = 1; if (a.snap > 0) t1 = Math.max(0, 1 - ease(a.snap));
+  if (!t1) return '';
+  let s = stroke(arcPath(na.u, nb.u, k, 0, t1), hot ? FLAME : graft ? INK : a.state === 'dark' ? DARK_C : ARC_C, hot ? 1.8 : graft ? 1.6 : 1.2, a.state === 'dark' ? 'stroke-dasharray="1.6 1.1"' : '');
+  for (const [u, p] of [[na.u, 0], [nb.u, 1]]) if (k*vdot(u) > 0){ const { e, m } = frameAt(u), c = arcPt(na.u, nb.u, p + (p ? -1 : 1)*.02);   // collar
+    const ring = Array.from({ length: 8 }, (_, i) => { const t = i/8*2*Math.PI; return add3(c, add3(sc3(e, .55*Math.cos(t)), sc3(m, .55*Math.sin(t)))); });
+    s += shape(ring, hot || a.snap > 0 ? FLAME : BRASS.m, .45); }
+  return s;
+}
+function capsule(st, cp, k){
+  const { t, d } = capsuleAt(cp);
+  if (k*vdot(slerp(cp.a, cp.b, t)) <= 0) return '';
+  const p = arcPt(cp.a, cp.b, t), u1 = arcPt(cp.a, cp.b, Math.min(1, t + .02)), dir = norm(sub(u1, p));
+  const body = cp.junk ? JUNKM : CAPM, band = cp.junk ? FLAMEM : INKM;
+  return rod(sub(p, sc3(dir, 1.3)), add3(p, sc3(dir, 1.3)), .85, body, toneI, .5, .85, 8) + rod(sub(p, sc3(dir, .35)), add3(p, sc3(dir, .35)), .95, band, toneI, .35, .95, 8);
+}
+function capsuleAt(cp){ const st = ui.st, fr = Math.max(0, (st.clock - cp.t0)/cp.dur); let t = fr <= cp.tc ? fr : 2*cp.tc - fr; return { t: Math.max(0, Math.min(1, t)), fr }; }
+
+/* ---------- the stand and the ring ---------- */
+function standParts(){
+  const parts = [];
+  let foot = cyl(GX, GY, 0, 1.4, 14, BRASSD, toneI, 1.4, 32) + cyl(GX, GY, 1.4, 2.8, 10, BRASS, toneI, 1.1, 28);
+  foot += box(GX + 10.4, GY - 6.2, 1.4, GX + 13, GY + 6.2, 2.7, BRASS, toneI, .6) + tx(GX + 13.05, GY, 2.45, 'RELAY GLOBE No. 1', 1.25, INK, 800) + tx(GX + 13.05, GY, 1.75, '(toy)', .9, INK, 700);
+  parts.push({ box: [[GX - 14, GY - 14, 0], [GX + 14, GY + 14, 2.8]], svg: foot });
+  parts.push({ box: [[GX - 2.4, GY - 2.4, 2.8], [GX + 2.4, GY + 2.4, ZC - RR - 1.2]], svg: cyl(GX, GY, 2.8, ZC - RR - 1.2, 2.4, BRASS, toneI, .9, 18) });
+  parts.push({ box: [[GX - 3.2, GY - 3.2, ZC - RR - 1.2], [GX + 3.2, GY + 3.2, ZC - RR + .4]], svg: cyl(GX, GY, ZC - RR - 1.2, ZC - RR + .4, 3.2, BRASSD, toneI, .8, 18) });
+  const SEG = 20, pts = [];
+  for (let i = 0; i <= SEG; i++){ const a = (-90 + 180*i/SEG)*rad; pts.push([GX - RR*Math.cos(a), GY, ZC + RR*Math.sin(a)]); }
+  for (let i = 0; i < SEG; i++){ const a = pts[i], b = pts[i+1], mid = lerp3(a, b, .5);
+    parts.push({ at: mid, box: [[Math.min(a[0], b[0]) - 1, GY - 1, Math.min(a[2], b[2]) - 1], [Math.max(a[0], b[0]) + 1, GY + 1, Math.max(a[2], b[2]) + 1]], svg: rod(a, b, 1, BRASS, toneI, .5, 1, 8) }); }
+  parts.push({ box: [[GX - .8, GY - .8, ZC + R - .5], [GX + .8, GY + .8, ZC + RR]], svg: rod([GX, GY, ZC + R - .5], [GX, GY, ZC + RR], .7, BRASSD, toneI, .4, .7, 8) });
+  parts.push({ box: [[GX - .8, GY - .8, ZC - RR], [GX + .8, GY + .8, ZC - R + .5]], svg: rod([GX, GY, ZC - RR], [GX, GY, ZC - R + .5], .7, BRASSD, toneI, .4, .7, 8) });
+  parts.push({ box: [[GX - 1.5, GY - 1.5, ZC + RR], [GX + 1.5, GY + 1.5, ZC + RR + 2.2]], svg: cyl(GX, GY, ZC + RR, ZC + RR + 1.4, 1.5, BRASS, toneI, .6, 12) + rod([GX, GY, ZC + RR + 1.4], [GX, GY, ZC + RR + 2.4], .9, BRASS, toneI, .5, .2, 8) });
+  return parts;
+}
+
+/* ---------- hood and wall ---------- */
+function hood(st, k){
+  if (!st.eclipse) return '';
+  const u = st.nodes[TOKYO].u; if (k*vdot(u) <= 0) return '';
+  const { e, m } = frameAt(u), lift = 10*(1 - ease(st.eclipse.h)), rh = 3.4;
+  const ring = (ph) => Array.from({ length: 18 }, (_, i) => { const t = i/18*2*Math.PI, r = rh*Math.cos(ph); return add3(atR(u, R + .3 + lift + rh*Math.sin(ph)), add3(sc3(e, r*Math.cos(t)), sc3(m, r*Math.sin(t)))); });
+  const rings = [0, 28, 55, 78, 89].map(a => ring(a*rad));
+  let s = ''; for (let i = 0; i < rings.length - 1; i++) s += loft(rings[i], rings[i+1], nr => mix(GLASS, '#ffffff', .2));
+  s = `<g opacity=".42">${s}</g>` + `<g opacity=".38">${stroke(pd([rings[1][3], rings[2][3], rings[3][3]], false), '#ffffff', 1.1)}</g>`;
+  return s + stroke(pd(rings[0]), FLAME, 1.1) + hullInk(rings.flat(), 1.0);
+}
+function wall(st, k){
+  if (!st.wall) return '';
+  const h = 3.4*ease(Math.max(0, st.wall.h)); if (h <= 0) return '';
+  const STEPS = 36; let faces = '', top = [], cur = null;
+  for (let i = 0; i < STEPS; i++){ const p0 = WPSI0 + (WPSI1 - WPSI0)*i/STEPS, p1 = WPSI0 + (WPSI1 - WPSI0)*(i + 1)/STEPS, q0 = wallPt(p0), q1 = wallPt(p1), qm = wallPt((p0 + p1)/2);
+    if (k*vdot(qm) <= 0){ cur = null; continue; }
+    const quad = [atR(q0, R + .2), atR(q1, R + .2), atR(q1, R + .2 + h), atR(q0, R + .2 + h)];
+    const nr = vis(WN) ? WN : sc3(WN, -1);
+    faces += shape(quad, toneI(nr, INKM), .5);
+    if (!cur){ cur = [atR(q0, R + .2 + h)]; top.push(cur); } cur.push(atR(q1, R + .2 + h)); }
+  return faces + top.map(t => stroke(pd(t, false), FLAME, 1.2)).join('');
+}
+
+/* ---------- the scene ---------- */
+let ui;
+function scene(st, m){
+  const k = ease(st.xr || 0);
+  const sh = [...RINGS[0], ...RINGS[4], ...RINGS[8], ...RINGS[11], ...ellUV(GX, GY, 14, 14, 16).map(([x, y]) => [x, y, 0])];
+  let s = castShadow(sh, 0);
+  const near = side => {
+    let g = '';
+    const arcs = st.arcs.map(a => ({ a, d: vdot(slerp(st.nodes[a.a].u, st.nodes[a.b].u, .5)) }));
+    arcs.sort((p, q) => side*(p.d - q.d));
+    for (const { a } of arcs) g += arc(st, a, side);
+    const nodes = st.nodes.filter(n => (!n.gone || n.fall < 1) && side*vdot(n.u) > 0).sort((p, q) => side*(vdot(p.u) - vdot(q.u)));
+    for (const n of nodes) g += hut(st, n, side);
+    for (const cp of st.caps) g += capsule(st, cp, side);
+    g += wall(st, side) + hood(st, side);
+    return g;
+  };
+  let body = shell(m) + (k < 1 ? `<g opacity="${f(1 - k)}">${land()}</g>` : '') + hullInk(RINGS.flat(), 2.8);
+  let globe = '';
+  if (k > 0) globe += `<g opacity="${f(.45*k)}">${near(-1)}</g><g opacity="${f(1 - .82*k)}">${body}</g>`; else globe += body;
+  globe += near(1);
+  const parts = standParts();
+  parts.push({ at: GC, box: [[GX - R, GY - R, ZC - R], [GX + R, GY + R, ZC + R]], svg: globe });
+  s += byDepth(parts);
+  // surface labels (Labels switch): the publisher, the eclipse victim, the tracked Sybil
+  const lbl = (i, text, on) => { const n = st.nodes[i]; if (!n || n.gone || vdot(n.u) <= 0) return ''; return tag(atR(n.u, R + 3), 34, -26, text, on); };
+  s += lbl(MUMBAI, 'MUMBAI (PUBLISHER)', !!st.post) + lbl(TOKYO, eclipsed(st) ? 'TOKYO (ECLIPSED)' : 'TOKYO', eclipsed(st));
+  if (st.track != null) s += lbl(st.track, 'SYBIL-0', true);
+  if (k > .6){
+    const visH = honest(st).filter(n => vdot(n.u) > 0).sort((p, q) => vdot(q.u) - vdot(p.u));
+    const visA = st.arcs.filter(a => a.state === 'mesh' && !st.nodes[a.a].gone).map(a => ({ a, d: vdot(slerp(st.nodes[a.a].u, st.nodes[a.b].u, .5)) })).sort((p, q) => q.d - p.d);
+    const dialAt = n => atR(n.u, R + 2.6);
+    const items = [];
+    if (visA[0]) items.push({ at: arcPt(st.nodes[visA[0].a.a].u, st.nodes[visA[0].a.b].u, .5), text: 'MESH ARC (D 3)', on: !!st.post });
+    if (visH[0]) items.push({ at: dialAt(visH[0]), text: 'SCORE DIAL -20..+5', on: !!st.hb });
+    if (visH[1]) items.push({ at: dialAt(visH[1]), text: 'PRUNE -10', on: !!st.hb && st.hb.t >= PRUNE_AT && st.hb.t < GRAFT_AT });
+    if (visH[2]) items.push({ at: dialAt(visH[2]), text: 'GRAFT BAR -5', on: !!st.hb && st.hb.t >= GRAFT_AT });
+    if (vdot(st.nodes[MUMBAI].u) > 0) items.push({ at: atR(st.nodes[MUMBAI].u, R + 1.5), text: 'FLOOD (8 HOPS)', on: !!st.post });
+    const sy = st.nodes.find(n => n.kind === 'sybil' && !n.gone && vdot(n.u) > 0); if (sy) items.push({ at: atR(sy.u, R + 2), text: 'SYBIL (SPAM)', on: !!st.hb });
+    if (eclipsed(st) && vdot(st.nodes[TOKYO].u) > 0) items.push({ at: atR(st.nodes[TOKYO].u, R + 4), text: 'ECLIPSE (SILENT)', on: true });
+    if (wallUp(st)){ const q = wallPt((WPSI0 + WPSI1)/2); if (vdot(q) > 0) items.push({ at: atR(q, R + 3.6), text: 'PARTITION', on: true }); }
+    s += xrCallouts(items, [GX - R, GX + R, GY - R, GY + R, 0, ZC + RR + 2]);
+  }
+  return s;
+}
+
+/* ---------- behaviour: one state object ---------- */
+function mkNode(id, name, lat, lon, kind){ return { id, name, lat, lon, u: unit(lat, lon), kind, p1: 0, p3: 0, p4: 0, disp: 0, lit: 0, gone: false, fall: 0, rise: 1 }; }
+function spawn(st, from, to, opts = {}){
+  const a = st.nodes[from], b = st.nodes[to]; let tc = 1;
+  if (wallUp(st)) tc = wallCross(a.u, b.u);
+  if (tc >= 1 && eclipsed(st) && to === TOKYO) tc = .84;
+  st.caps.push({ a: a.u, b: b.u, from, to, t0: st.clock, dur: HOP, tc, junk: !!opts.junk, post: !!opts.post });
+  runLoop();
+}
+function doPost(st){
+  if (st.post) finishPost(st);
+  const me = st.nodes[MUMBAI];
+  st.post = { reached: new Set([MUMBAI]) }; st.delivered = 1; me.lit = 1;
+  st.arcs = st.arcs.filter(a => a.state !== 'flood');
+  const meshTo = new Set(arcsOf(st, MUMBAI).map(a => other(a, MUMBAI)));
+  const flood = honest(st).filter(n => n.id !== MUMBAI && !meshTo.has(n.id)).sort((p, q) => ang(me.u, p.u) - ang(me.u, q.u)).slice(0, 8 - meshTo.size);
+  for (const n of flood) st.arcs.push({ a: MUMBAI, b: n.id, state: 'flood', flash: 0 });
+  for (const a of arcsOf(st, MUMBAI)) if (a.state === 'mesh' || a.state === 'dark' || a.state === 'flood') spawn(st, MUMBAI, other(a, MUMBAI), { post: true });
+}
+function arrive(st, cp){
+  const n = st.nodes[cp.to];
+  if (!cp.post || !st.post || n.gone) return;
+  if (st.post.reached.has(cp.to)) return;
+  st.post.reached.add(cp.to); n.lit = 1;
+  if (n.kind === 'honest') st.delivered = Math.min(N_HONEST, st.delivered + 1);
+  if (n.kind !== 'honest') return;                                   // Sybils and dark stations never forward
+  for (const a of arcsOf(st, cp.to)) if ((a.state === 'mesh' || a.state === 'dark') && !st.post.reached.has(other(a, cp.to))) spawn(st, cp.to, other(a, cp.to), { post: true });
+}
+function finishPost(st){
+  while (st.caps.some(c => c.post)){ const cs = st.caps.filter(c => c.post); st.caps = st.caps.filter(c => !c.post); for (const cp of cs) if (cp.tc >= 1) arrive(st, cp); }
+  st.post = null; st.arcs = st.arcs.filter(a => a.state !== 'flood');
+  for (const n of st.nodes) n.lit = 0;
+}
+const PHASES = [
+  st => {                                                            // decay, time in mesh, drift, spam
+    for (const n of st.nodes){ if (n.gone) continue; n.p4 *= .5;
+      if (n.kind === 'honest' && !(eclipsed(st) && n.id === TOKYO)) n.p1 = Math.min(5, n.p1 + .5);
+      if (wallUp(st) && n.kind === 'honest') n.p3 = Math.max(-2, n.p3 - .25); }
+    if (eclipsed(st)) st.nodes[TOKYO].p3 = -.25;
+    for (const n of st.nodes) if (n.kind === 'sybil' && !n.gone){ n.p4 -= 10; for (const a of arcsOf(st, n.id)) spawn(st, n.id, other(a, n.id), { junk: true }); } },
+  st => {                                                            // prune
+    for (const n of st.nodes) if (!n.gone && score(n) < -10){
+      for (const a of arcsOf(st, n.id)) if (a.state === 'mesh'){ a.flash = 1; a.flashKind = 'prune'; a.state = n.kind === 'sybil' ? 'cut' : 'dropped'; a.snap = n.kind === 'sybil' ? .001 : 0; }
+      if (n.kind === 'sybil'){ n.gone = true; n.fall = .001; } } },
+  st => {                                                            // graft
+    let cap = st.regraft || 3;
+    for (const a of st.arcs) if (a.state === 'dropped' && cap > 0){ const na = st.nodes[a.a], nb = st.nodes[a.b];
+      if (!na.gone && !nb.gone && score(na) > -5 && score(nb) > -5){ a.state = 'mesh'; a.flash = 1; a.flashKind = 'graft'; cap--; } } },
+];
+function finishBeat(st){ while (st.hb.done < 3) PHASES[st.hb.done++](st); st.hb = null; for (const n of st.nodes) n.disp = score(n); }
+function startBeat(st, instant = false){
+  if (st.hb) finishBeat(st);
+  st.hb = { t: 0, done: 0 }; st.beat += 1;
+  if (instant){ finishBeat(st); st.caps = []; return; }
+  PHASES[0](st); st.hb.done = 1; runLoop();
+}
+let loopOn = false;
+function runLoop(){
+  if (loopOn || !ui) return; loopOn = true;
+  ui.animate(dt => { const st = ui.st; st.clock += dt;
+    if (st.hb){ st.hb.t = Math.min(1, st.hb.t + dt/HB_S);
+      if (st.hb.t >= PRUNE_AT && st.hb.done < 2) PHASES[st.hb.done++](st);
+      if (st.hb.t >= GRAFT_AT && st.hb.done < 3) PHASES[st.hb.done++](st);
+      if (st.hb.t >= 1) st.hb = null; }
+    for (const cp of st.caps){ const { t, fr } = capsuleAt(cp);
+      if (cp.tc >= 1 && fr >= 1 && !cp.done){ cp.done = true; arrive(st, cp); }
+      if (cp.tc < 1 && fr >= 2*cp.tc) cp.done = true; }
+    st.caps = st.caps.filter(c => !c.done);
+    if (st.post && !st.caps.some(c => c.post)){ st.post.idle = (st.post.idle || 0) + dt; if (st.post.idle > .8) finishPost(st); }
+    for (const n of st.nodes){ const want = score(n); n.disp += Math.sign(want - n.disp)*Math.min(Math.abs(want - n.disp), dt*40);
+      if (n.fall > 0 && n.fall < 1) n.fall = Math.min(1, n.fall + dt/.25); if (n.rise < 1) n.rise = Math.min(1, n.rise + dt/.5);
+      if (n.lit > 0 && !st.post) n.lit = Math.max(0, n.lit - dt/.4); }
+    for (const a of st.arcs){ if (a.flash > 0) a.flash = Math.max(0, a.flash - dt/.45); if (a.snap > 0 && a.snap < 1) a.snap = Math.min(1, a.snap + dt/.3); }
+    for (const key of ['eclipse', 'wall']){ const o = st[key]; if (!o) continue; o.h = Math.max(0, Math.min(1, o.h + (o.dir || 1)*dt/.6)); if (o.h <= 0 && o.dir === -1) st[key] = null; }
+    const busy = !!(st.hb || st.post || st.caps.length || st.nodes.some(n => (n.fall > 0 && n.fall < 1) || n.rise < 1 || Math.abs(n.disp - score(n)) > .01 || n.lit > 0)
+      || st.arcs.some(a => a.flash > 0 || (a.snap > 0 && a.snap < 1)) || (st.eclipse && (st.eclipse.h < 1 || st.eclipse.dir === -1)) || (st.wall && (st.wall.h < 1 || st.wall.dir === -1)));
+    if (!busy) loopOn = false;
+    return busy; });
+}
+function boltSybils(st, instant = false){
+  if (st.nodes.some(n => n.kind === 'sybil' && !n.gone)) return ui && ui.flash('the sybils are already bolted on');
+  SYBIL_HOSTS.forEach((h, i) => { const host = st.nodes[h], n = mkNode(st.nodes.length, `sybil-${i}`, host.lat + 5, host.lon + 6, 'sybil'); n.rise = instant ? 1 : 0; st.nodes.push(n); if (i === 0) st.track = n.id;
+    for (const t of honest(st).sort((p, q) => ang(n.u, p.u) - ang(n.u, q.u)).slice(0, D)) st.arcs.push({ a: n.id, b: t.id, state: 'mesh', flash: 0 }); });
+  if (!instant) runLoop();
+}
+function doEclipse(st, instant = false){
+  if (eclipsed(st)) return ui && ui.flash('tokyo is already eclipsed');
+  if (st.eclipse) st.eclipse = null;
+  st.eclipse = { h: instant ? 1 : 0 }; const tk = st.nodes[TOKYO];
+  for (const a of arcsOf(st, TOKYO)) if (a.state === 'mesh') a.state = 'dark';
+  [[7, 0], [0, 8], [-7, 0], [0, -8]].forEach(([dl, dn], i) => { const n = mkNode(st.nodes.length, `dark-${i}`, tk.lat + dl, tk.lon + dn, 'dark'); n.rise = instant ? 1 : 0; st.nodes.push(n); st.arcs.push({ a: n.id, b: TOKYO, state: 'mesh', flash: 0 }); });
+  tk.p3 = -.25;
+  if (!instant) runLoop();
+}
+function doPartition(st, instant = false){
+  if (wallUp(st)) return ui && ui.flash('the wall is already up');
+  st.wall = { h: instant ? 1 : 0 }; if (!instant) runLoop();
+}
+function doHeal(st){
+  if (!eclipsed(st) && !wallUp(st)) return ui && ui.flash('nothing to heal: no eclipse, no partition');
+  let dropped = 0;
+  if (eclipsed(st)){ st.eclipse.dir = -1; st.nodes[TOKYO].p3 = 0;
+    for (const n of st.nodes) if (n.kind === 'dark'){ n.gone = true; n.fall = .001; }
+    for (const a of st.arcs){ if (a.state === 'dark'){ a.state = 'dropped'; dropped++; } if (st.nodes[a.a].kind === 'dark' || st.nodes[a.b].kind === 'dark') a.state = 'cut'; } }
+  if (wallUp(st)) st.wall.dir = -1;
+  st.regraft = Math.max(1, Math.ceil(dropped/2)); runLoop();
+}
+
+const nodes0 = CITIES.map(([name, lat, lon], i) => mkNode(i, name, lat, lon, 'honest'));
+ui = mountFigure({
+  fig: '2', title: 'Relay globe No. 1', size: [62, 62, 75], center: [GX, GY], palette: 'paper', turn:'full', credit: false,
+  state: { nodes: nodes0, arcs: MESH.map(([a, b]) => ({ a, b, state: 'mesh', flash: 0 })), caps: [], clock: 0, beat: 0, delivered: 0,
+    post: null, hb: null, eclipse: null, wall: null, regraft: 0, track: null },
+  scene,
+  buttons: [
+    { label: 'Post', onClick: st => doPost(st) },
+    { label: 'Heartbeat', onClick: st => startBeat(st) },
+    { label: 'Sybil', onClick: st => boltSybils(st) },
+    { label: 'Eclipse', onClick: st => doEclipse(st) },
+    { label: 'Partition', onClick: st => doPartition(st) },
+    { label: 'Heal', onClick: st => doHeal(st) },
+  ],
+  acts: { post: st => doPost(st) },
+  stats: st => {
+    const tr = st.track != null ? st.nodes[st.track] : eclipsed(st) ? st.nodes[TOKYO] : st.nodes[MUMBAI];
+    return [
+      { label: 'mesh', value: `${honest(st).length} · D ${D} (toy)`, small: true },
+      { label: 'delivered', value: `${st.delivered}/${N_HONEST}` },
+      { label: `score ${tr.name.toLowerCase()}`, value: tr.gone ? 'ejected' : score(tr).toFixed(2) },
+      { label: 'beat', value: st.beat },
+      eclipsed(st) ? { label: 'tokyo eclipsed', value: 'scoring blind', small: true } : wallUp(st) ? { label: 'status', value: 'partition (toy)', small: true } : null,
+    ]; },
+  params: (st, q) => {
+    if (q.get('sybil') === '1') boltSybils(st, true);
+    if (q.get('eclipse') === '1') doEclipse(st, true);
+    if (q.get('wall') === '1') doPartition(st, true);
+    const n = Math.max(0, Math.min(50, +q.get('beat') || 0));
+    for (let i = 0; i < n; i++) startBeat(st, true);
+    for (const nd of st.nodes) nd.disp = score(nd);
+  },
+});
+xrMount(() => ui, () => '');
+</script></body></html>
