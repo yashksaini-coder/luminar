@@ -29,5 +29,6 @@
 
 /* ≤1024 (D1): 44 px targets */
 @media (max-width: 1024px) {
+  .switch { gap: var(--s-2); }   /* spaced targets keep their own hairline */
   .tab { min-height: 44px; padding-inline: var(--s-4); }
 }

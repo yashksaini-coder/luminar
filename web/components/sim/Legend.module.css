@@ -100,7 +100,7 @@ form.body { grid-template-columns: 1fr; gap: var(--s-2); }
   }
   .head { gap: var(--s-2); padding: 0 0 0 var(--s-2); }
   .btn { width: 44px; height: 44px; }
-  .row { min-height: 44px; }
+  .row { min-height: 44px; grid-template-columns: 40px 1fr; }
   .switch { width: 40px; height: 24px; }
   .switch::after { width: 20px; height: 20px; }
   .switch:checked::after { transform: translateX(16px); }
