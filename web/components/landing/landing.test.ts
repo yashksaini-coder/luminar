@@ -6,7 +6,7 @@ import stats from '@/lib/reel-stats.json'
 import Hero from './Hero'
 import Readouts from './Readouts'
 import Footer from './Footer'
-import { LiveMainnet, SameNames, WhatItDoes } from './Sections'
+import { LiveMainnet, SameNames, SLOT_SENTENCE, WhatItDoes } from './Sections'
 import VideoPlate from './VideoPlate'
 
 test('hero: two-line poster with italic second line, lead ends with the mechanism sentence, two CTAs, Fig. 1', () => {
@@ -32,6 +32,11 @@ test('Same names: two dithered stills at depths .6/.9, the seven gossipsub_* ser
 })
 test('Live mainnet: arrival sentence, reel link, provenance credit verbatim', () => {
   const m = r(h(LiveMainnet)); expect(m).toContain(ARRIVAL); expect(m).toContain('href="/reels/mainnet-block-wave/"'); expect(m).toContain(PROVENANCE)
+})
+test('Live mainnet (D6): aria-hidden observer glyph, the slot sentence from the manifest, no LIVE pill', () => {
+  const m = r(h(LiveMainnet))
+  expect(m).toMatch(/<span[^>]*aria-hidden="true"[^>]*><svg[^>]*aria-hidden="true"/); expect(m).toContain('The recording covers slots 15466393–15466400 with 138 observer nodes.'); expect(m).toContain(SLOT_SENTENCE)
+  expect(m).not.toMatch(/>\s*LIVE\s*</)
 })
 test('every landing section is a reveal section; children carry up kinds in reading order; Jaeger still delayed 90 ms', () => {
   for (const C of [WhatItDoes, SameNames, LiveMainnet]) { const m = r(h(C)); expect(m).toMatch(/^<section[^>]*data-reveal=""/); expect(m).toContain('data-k="up" style="--i:0"') }

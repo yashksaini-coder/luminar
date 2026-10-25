@@ -3,8 +3,9 @@
 // Each is a reveal section (plan D2): children carry data-k and --i in reading order; wrappers, never .chev.
 import type { CSSProperties } from 'react'
 import DitherImage from '@/components/dither/DitherImage'
+import Glyph from '@/components/sim/Glyph'
 import { ARRIVAL, ECLIPSE_WHY, PROVENANCE, SAME_NAMES } from '@/lib/copy'
-import { reelHref } from '@/lib/reels'
+import { REEL_MANIFEST, reelHref } from '@/lib/reels'
 import styles from './Sections.module.css'
 
 const up = (i: number) => ({ 'data-k': 'up', style: { '--i': i } as CSSProperties })
@@ -37,11 +38,14 @@ export function SameNames() {
   )
 }
 
+const MAINNET = REEL_MANIFEST.find((r) => r.name === 'mainnet-block-wave')
+export const SLOT_SENTENCE = `The recording covers slots 15466393–15466400 with ${MAINNET?.nodes ?? 0} observer nodes.`
+
 export function LiveMainnet() {
   return (
     <section className={styles.section} data-reveal="">
       <h2 className={styles.h2} {...up(0)}>Live mainnet</h2>
-      <p {...up(1)}>{`The MAINNET badge polls ethPandaOps once per slot and lights observer nodes as each block reaches them: ${ARRIVAL}. `}<a className="chev" href={reelHref('mainnet-block-wave')}>Watch the recorded block wave <span aria-hidden="true">›</span></a></p>
+      <p {...up(1)}><span className={styles.observer} aria-hidden="true"><Glyph role="observer" size={14} /></span>{`The MAINNET badge polls ethPandaOps once per slot and lights observer nodes as each block reaches them: ${ARRIVAL}. ${SLOT_SENTENCE} `}<a className="chev" href={reelHref('mainnet-block-wave')}>Watch the recorded block wave <span aria-hidden="true">›</span></a></p>
       <p className={styles.credit} {...up(2)}>{PROVENANCE}</p>
     </section>
   )

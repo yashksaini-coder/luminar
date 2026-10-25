@@ -13,3 +13,12 @@
 .series { margin: 0; padding: 0; list-style: none; font: 400 var(--t-ui)/var(--lh-body) var(--font-mono); color: var(--paper-1); }
 @media (min-width: 640px) { .series { columns: 2; } }
 .section p.credit { font: 500 var(--t-body)/1.4 var(--font-mono); color: var(--paper-2); }
+/* observer glyph (D6): the legend's ◎◎ inline before the sentence; its pulse ring is the only motion,
+   2 s scale 1→2.6 on --io while the opacity falls linearly .55→0. Round: the glyph is rings, not a chip. */
+.observer { position: relative; display: inline-grid; place-items: center; width: 14px; height: 14px; margin-right: .45em; vertical-align: -1px; }
+.observer::after { content: ''; position: absolute; inset: 0; border: 1px solid var(--signal); border-radius: 50%; opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  :global([data-in]) .observer::after { animation: obsScale 2s var(--io) infinite, obsFade 2s linear infinite; }
+}
+@keyframes obsScale { from { transform: scale(1); } to { transform: scale(2.6); } }
+@keyframes obsFade { from { opacity: .55; } to { opacity: 0; } }
