@@ -22,9 +22,9 @@
 }
 
 .tab + .tab { border-left: var(--hair-w) solid var(--hair); }
-.tab:hover:not(:disabled) { color: var(--paper-0); }
+.tab:hover:not([aria-disabled]) { color: var(--paper-0); }
 .tab[aria-pressed="true"] { color: var(--paper-0); text-decoration: underline 1px; text-underline-offset: 4px; }
-.tab:disabled { color: var(--paper-2); cursor: not-allowed; }   /* greyed; --paper-2 is the dimmest text allowed */
+.tab[aria-disabled] { color: var(--paper-2); cursor: not-allowed; }   /* greyed; --paper-2 is the dimmest text allowed */
 .tab:focus-visible { outline: var(--hair-w2) solid var(--focus); outline-offset: 2px; }
 
 /* ≤1024 (D1): 44 px targets */

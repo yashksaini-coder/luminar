@@ -22,8 +22,9 @@ export default function ModeSwitcher() {
       {MODES.map(m => {
         const off = m === 'geo' && !canGeo
         return (
-          <button key={m} type="button" className={styles.tab} aria-pressed={mode === m} disabled={off} title={off ? GEO_DISABLED : undefined}
-            onClick={() => { if (m !== mode) useStore.getState().setLayoutMode(m) }}>
+          // aria-disabled, not disabled: a tap on GEO explains itself in a toast instead of doing nothing
+          <button key={m} type="button" className={styles.tab} aria-pressed={mode === m} aria-disabled={off || undefined} title={off ? GEO_DISABLED : undefined}
+            onClick={() => { if (off) useStore.getState().pushToast(GEO_DISABLED, 'info'); else if (m !== mode) useStore.getState().setLayoutMode(m) }}>
             {m.toUpperCase()}
           </button>
         )
