@@ -86,7 +86,7 @@ export default function PlateReplay({ plate, className }: PlateReplayProps) {
         <dt>PRUNED</dt><dd>{f.r.pruned}</dd>
         <dt>T+</dt><dd>{f.t.toFixed(1)}s</dd>
       </dl>
-      <Stamp depth={1.2} className={f.stamp ? styles.stamp : `${styles.stamp} ${styles.blank}`}>{f.stamp}</Stamp>   {/* always mounted: parallax binds its layers once */}
+      <Stamp depth={1.2} className={f.stamp ? styles.stamp : `${styles.stamp} ${styles.blank}`}>{f.stamp}</Stamp>
       <Loupe plateRef={root} final={final} source={final && loupeCanvas} cover={[0, 0, final?.width ?? 1, final?.height ?? 1]} size={LOUPE_PX} />
     </div>
   )

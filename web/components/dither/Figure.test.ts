@@ -21,3 +21,12 @@ test('useParallax is inert without a window or under reduced motion', () => {
   const add = vi.spyOn(window, 'addEventListener'); const off = attachParallax(document.createElement('div')); off()
   expect(add.mock.calls.some(c => c[0] === 'scroll')).toBe(false); vi.unstubAllGlobals()
 })
+test('parallax moves a data-depth layer mounted after attach (DitherImage swaps its skeleton for a canvas on decode)', () => {
+  vi.stubGlobal('matchMedia', () => ({ matches: false })); document.documentElement.style.setProperty('--parallax-travel', '24px')
+  const root = document.body.appendChild(document.createElement('div')); const skeleton = document.createElement('div'); skeleton.dataset.depth = '0.6'; root.append(skeleton)
+  const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => { cb(0); return 0 })
+  const off = attachParallax(root); expect(skeleton.style.transform).not.toBe('')
+  const canvas = document.createElement('canvas'); canvas.dataset.depth = '0.6'; skeleton.replaceWith(canvas)
+  dispatchEvent(new Event('scroll')); expect(canvas.style.transform).toBe(skeleton.style.transform)
+  off(); raf.mockRestore(); root.remove(); document.documentElement.style.removeProperty('--parallax-travel'); vi.unstubAllGlobals()
+})

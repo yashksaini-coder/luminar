@@ -4,8 +4,7 @@ import { type RefObject, useEffect } from 'react'
 import { reducedMotion } from '@/lib/prefs'
 
 export function attachParallax(root: HTMLElement): () => void {
-  const layers = Array.from(root.querySelectorAll<HTMLElement>('[data-depth]'))
-  if (!layers.length || reducedMotion()) return () => {}
+  if (reducedMotion()) return () => {}
   const travel = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--parallax-travel')) || 0
   if (travel === 0) return () => {}
   let queued = false
@@ -14,7 +13,8 @@ export function attachParallax(root: HTMLElement): () => void {
     const vh = innerHeight, r = root.getBoundingClientRect()
     if (r.bottom < -100 || r.top > vh + 100) return
     const p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)))
-    for (const el of layers) el.style.transform = `translate3d(0, ${((p - 0.5) * travel * Number(el.dataset.depth)).toFixed(1)}px, 0)`
+    // Queried per frame: DitherImage swaps its skeleton for a canvas after decode, and a layer bound once would stay on the detached div.
+    for (const el of root.querySelectorAll<HTMLElement>('[data-depth]')) el.style.transform = `translate3d(0, ${((p - 0.5) * travel * Number(el.dataset.depth)).toFixed(1)}px, 0)`
   }
   const on = () => { if (!queued) { queued = true; requestAnimationFrame(frame) } }
   addEventListener('scroll', on, { passive: true }); addEventListener('resize', on); frame()
