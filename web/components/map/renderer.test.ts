@@ -38,7 +38,8 @@ import { RETICLE_CURSOR } from '@/components/dither/Reticle'
 import { resetLayoutMemory, WORLD_BOUNDS } from '@/components/map/layout'
 import { nodeRadiusPx } from '@/components/map/geometry'
 import { PAL } from '@/components/map/palette'
-import { destroyRenderer, fitView, fontsReadyForTest, initRenderer, layerIds, resizeRenderer, visiblePositions } from '@/components/map/renderer'
+import { destroyRenderer, fitView, fontsReadyForTest, initRenderer, layerIds, resizeRenderer, spawnParticle, visiblePositions } from '@/components/map/renderer'
+import { dispatchFrame, flushEvents } from '@/lib/api/dispatch'
 import { peers, ring, snapWith } from '@/lib/fixtures'
 import { monoFamily } from '@/lib/fonts'
 import { useStore } from '@/lib/store'
@@ -198,4 +199,32 @@ test('labels start past what surrounds the glyph: the reticle (2 r + 4 px ticks)
   useStore.getState().selectPeer('peer-0'); useStore.getState().setDisplay({ allLabels: true }); flush()
   const L = FakeDeck.instances[0].lastLayer('labels'); const r = nodeRadiusPx(5, 'force', 1); const by = (id: string) => L.props.data.find((d: PeerNode) => d.peer_id === id)
   expect(L.props.getPixelOffset(by('peer-0'))).toEqual([2 * r + 4 + 3, 0]); expect(L.props.getPixelOffset(by('peer-1'))).toEqual([HALO_OUTER * r + 3, 0]); expect(L.props.getPixelOffset(by('peer-2'))).toEqual([r + 3, 0])
+})
+
+test('spawnParticle: cap 600, unknown/hidden peers no-op, disabled no-op; particles layer uses the square glyph and spam gets the trail', () => {
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(10) }); useStore.getState().applySnapshot(snapWith(peers(10).map(p => p.peer_id))); flush()
+  spawnParticle('peer-0', 'nope'); flush(); expect(layerIds()).not.toContain('particles')
+  for (let i = 0; i < 700; i++) spawnParticle('peer-0', 'peer-1'); spawnParticle('sybil-x', 'peer-1'); flush()
+  const P = FakeDeck.instances[0].lastLayer('particles'); expect(P.props.data.length).toBeLessThanOrEqual(600); expect(P.props.getIcon(P.props.data[0])).toBe('square'); expect(P.props.sizeUnits).toBe('pixels'); expect(P.props.pickable).toBe(false)
+  vi.advanceTimersByTime(1300); flush()   // the capped 600 expire, so the spam particle below is not refused by the cap
+  useStore.getState().applySnapshot({ ...snapWith([...peers(10).map(p => p.peer_id), 'sybil-0']), nodes: [...peers(10), grafted] }); flush(); spawnParticle('sybil-0', 'peer-1', 'spam'); flush()
+  const P2 = FakeDeck.instances[0].lastLayer('particles'); const spam = P2.props.data.at(-1); expect(P2.props.getIcon(spam)).toBe('squareTrail'); expect(P2.props.getColor(spam).slice(0, 3)).toEqual(PAL.particleSpam.slice(0, 3))
+  useStore.getState().setDisplay({ particlesEnabled: false }); spawnParticle('peer-0', 'peer-1'); // no throw, no push
+  vi.advanceTimersByTime(1300); flush(); expect(layerIds()).not.toContain('particles')   // all expired
+})
+test('a particle whose endpoint leaves the visible set is dropped, not drawn at [0,0]', () => {
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(10) }); useStore.getState().applySnapshot(snapWith(peers(10).map(p => p.peer_id))); flush()
+  spawnParticle('peer-0', 'peer-9'); useStore.getState().applySnapshot(snapWith(peers(5).map(p => p.peer_id))); flush()
+  const P = FakeDeck.instances[0].lastLayer('particles'); expect(P?.props.data.length ?? 0).toBe(0)
+})
+test('event subscription spawns from the batch; pulses on state change to non-idle incl. graft↔prune flip; both off under reduced motion', () => {
+  mount(); useStore.getState().applyEdges({ type: 'edges', edges: ring(4) }); useStore.getState().applySnapshot(snapWith(peers(4).map(p => p.peer_id))); flush()
+  dispatchFrame({ at: 1, event_type: 'GossipMessage', category: 'gossip', from_peer: 'peer-0', to_peer: 'peer-1', msg_id: 'm' }); flushEvents(); flush(); expect(FakeDeck.instances[0].lastLayer('particles').props.data).toHaveLength(1)
+  useStore.getState().applySnapshot({ ...snapWith(peers(4).map(p => p.peer_id)), nodes: peers(4).map((p, i) => ({ ...p, state: i === 0 ? 'decoded' : 'idle' })) }); flush()
+  const pulses = FakeDeck.instances[0].lastLayer('pulses'); expect(pulses.props.data).toHaveLength(1); expect(pulses.props.getRadius).toBeCloseTo(nodeRadiusPx(4, 'force', 1) * 2.5); expect(pulses.props.data[0].color[3]).toBeLessThanOrEqual(56)
+  useStore.getState().applySnapshot({ ...snapWith([...peers(4).map(p => p.peer_id), 'sybil-0']), nodes: [...peers(4), grafted] }); flush(); useStore.getState().applySnapshot({ ...snapWith([...peers(4).map(p => p.peer_id), 'sybil-0']), nodes: [...peers(4), { ...grafted, connected_peers: [] }] }); flush()
+  expect(FakeDeck.instances[0].lastLayer('pulses').props.data.some((d: any) => d.id === 'sybil-0')).toBe(true)   // eslint-disable-line @typescript-eslint/no-explicit-any
+  vi.advanceTimersByTime(900); flush(); expect(layerIds()).not.toContain('pulses')
+  reducedMotionMock.mockReturnValue(true); destroyRenderer(); mount(); useStore.getState().applySnapshot(snapWith(peers(4).map(p => p.peer_id))); flush()
+  useStore.getState().applySnapshot({ ...snapWith(peers(4).map(p => p.peer_id)), nodes: peers(4).map(p => ({ ...p, state: 'decoded' as const })) }); flush(); expect(layerIds()).not.toContain('pulses')
 })

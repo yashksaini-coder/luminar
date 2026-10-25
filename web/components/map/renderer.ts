@@ -4,20 +4,25 @@ import { Deck, type Layer, OrthographicView } from '@deck.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { IconLayer, LineLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { RETICLE_CURSOR } from '@/components/dither/Reticle'
+import { subscribeEvents } from '@/lib/api/dispatch'
 import { isAttackerId, isPruned, isSimPeer, shortName } from '@/lib/format'
 import { monoFamily } from '@/lib/fonts'
 import { reducedMotion } from '@/lib/prefs'
 import { useStore } from '@/lib/store'
-import type { PeerNode } from '@/lib/types'
+import type { AppEvent, NodeState, PeerNode, RGBA } from '@/lib/types'
 import { atlasKey, buildAtlas, type GlyphId, glyphFor, HALO_OUTER, haloFor, type IconAtlas } from './atlas'
-import { breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA } from './geometry'
+import { bezierPoint, breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA, PARTICLE_CAP, particleFrame, PULSE_CAP, pulseAlpha } from './geometry'
 import { attackerLayoutEdges, computeLayout, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
-import { PAL, refreshPalette, scoreBand, withAlpha } from './palette'
+import { PAL, type PaletteKey, PARTICLE_KEY, type ParticleKind, refreshPalette, scoreBand, withAlpha } from './palette'
 
 export const LAYER_IDS = ['world-land', 'edges', 'attack-links', 'mesh-edges', 'hover-edges', 'hover-peer-rings', 'pulses', 'particles', 'halos', 'nodes', 'observer-rings', 'reticle', 'event-highlight-edges', 'event-highlight-rings', 'labels'] as const
 
 type Pos = [number, number]
 type Seg = [Pos, Pos]
+interface Particle { fromId: string; toId: string; start: number; kind: ParticleKind; fizzle: boolean }
+interface Pulse { id: string; start: number; color: RGBA }
+interface ParticleDraw { kind: ParticleKind; pos: Pos; angle: number; color: RGBA }
+interface PulseDraw { id: string; pos: Pos; color: RGBA }
 
 declare global {
   interface Window { __luminar?: { store: typeof useStore; fitView: typeof fitView; viewState: typeof getViewState; layerIds: typeof layerIds } }
@@ -39,6 +44,19 @@ let W = 0, H = 0
 let fontsReady = false
 let observersVisible = false
 let frameNow = 0
+let unsubEvents: (() => void) | null = null
+let particles: Particle[] = []
+let pulses: Pulse[] = []
+let prevStates = new Map<string, string>()
+let lastNodes: PeerNode[] | null = null
+
+const STATE_KEY: Record<NodeState, PaletteKey> = {
+  idle: 'nodeIdle', origin: 'nodeOrigin', receiving: 'nodeReceiving', decoded: 'nodeDecoded',
+  error: 'nodeError', joining: 'nodeJoining', failed: 'nodeFailed', attacker: 'nodeAttacker',
+}
+/** An attacker's graft↔prune flip is a state change too. */
+const stateKey = (n: PeerNode) => (n.state === 'attacker' ? `attacker${n.connected_peers.length ? '+' : '-'}` : n.state)
+const pulseColor = (n: PeerNode) => PAL[isPruned(n) ? 'nodePruned' : STATE_KEY[n.state]]
 
 /** Peers with a gossip history worth a score halo; idle has none yet, the rest carry their own glyphs. */
 const HALO_STATES = new Set<PeerNode['state']>(['origin', 'receiving', 'decoded'])
@@ -46,8 +64,55 @@ const hasHalo = (n: PeerNode) => isSimPeer(n) && HALO_STATES.has(n.state)
 
 export function markDirty(): void { dirty = true }
 
-/** Observer rings breathe while visible; Task 2.6 adds particles and pulses. */
-const animating = () => observersVisible && !reducedMotion()
+/** The loop renders every frame only while something moves; otherwise only when the store is dirty. */
+const animating = () => particles.length > 0 || pulses.length > 0 || (observersVisible && !reducedMotion())
+
+type ParticleSpec = { from: string; to: string; kind: ParticleKind; fizzle: boolean }
+
+/** Pure trigger table (A.17 "Particle triggers"). R10: neighbours(id) is the node's connected_peers, [] when unknown. */
+export function particlesFor(evt: AppEvent, pick: (ids: string[]) => string | undefined, neighbours: (id: string) => string[]): ParticleSpec[] {
+  const one = (from: string | undefined, to: string | undefined, kind: ParticleKind, fizzle = false): ParticleSpec[] =>
+    from && to ? [{ from, to, kind, fizzle }] : []
+  switch (evt.event_type) {
+    case 'GossipMessage': return one(evt.from_peer, evt.to_peer, evt.from_peer?.startsWith('sybil-') ? 'spam' : 'message', !!evt.dropped)
+    case 'GossipGraft': return one(evt.from_peer, evt.to_peer, 'graft')
+    case 'GossipPrune': return one(evt.from_peer, evt.to_peer, 'prune')
+    case 'DHTQueryStarted': {
+      const from = evt.initiator ?? evt.peer_id   // the backend sends `initiator`
+      return from ? one(from, pick(neighbours(from)), 'dht') : []
+    }
+    case 'FaultInjected': {
+      const t = evt.target
+      return t ? neighbours(t).slice(0, 4).map(to => ({ from: t, to, kind: 'fault' as const, fizzle: false })) : []   // a non-node target has no neighbours
+    }
+    default: return []
+  }
+}
+
+const randomPick = (ids: string[]) => ids[Math.floor(Math.random() * ids.length)]
+const neighboursOf = (id: string) => useStore.getState().nodeById.get(id)?.connected_peers ?? []
+
+/** Cap 600; no-op when particles are off or either peer is unknown. Hidden endpoints drop at the next frame. */
+export function spawnParticle(fromId: string, toId: string, kind: ParticleKind = 'message', fizzle = false): void {
+  if (!useStore.getState().particlesEnabled || particles.length >= PARTICLE_CAP) return
+  if (!nodeIndex.has(fromId) || !nodeIndex.has(toId)) return
+  particles.push({ fromId, toId, start: frameNow, kind, fizzle })   // rAF clock, the same one the frames age against
+}
+
+/** Pulse on any state change to non-idle (first sight is not a change); off under reduced motion. */
+function diffStates(nodes: PeerNode[]): void {
+  const next = new Map<string, string>()
+  const motion = !reducedMotion()
+  for (const n of nodes) {
+    const k = stateKey(n)
+    next.set(n.peer_id, k)
+    const prev = prevStates.get(n.peer_id)
+    if (motion && prev !== undefined && prev !== k && n.state !== 'idle' && pulses.length < PULSE_CAP) {
+      pulses.push({ id: n.peer_id, start: frameNow, color: pulseColor(n) })
+    }
+  }
+  prevStates = next
+}
 
 const fontsLoaded = () => { fontsReady = true; markDirty() }
 
@@ -85,6 +150,9 @@ export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement |
   fontsReady = false
   document.fonts?.load(`500 10px ${monoFamily()}`).then(fontsLoaded, fontsLoaded)
   unsubStore = useStore.subscribe(markDirty)
+  unsubEvents = subscribeEvents(batch => {
+    for (const e of batch) for (const p of particlesFor(e, randomPick, neighboursOf)) spawnParticle(p.from, p.to, p.kind, p.fizzle)
+  })
   dirty = true
   raf = requestAnimationFrame(tick)
   window.__luminar = { store: useStore, fitView, viewState: getViewState, layerIds }
@@ -93,9 +161,15 @@ export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement |
 export function destroyRenderer(): void {
   cancelAnimationFrame(raf)
   unsubStore?.()
+  unsubEvents?.()
   deck?.finalize()
   deck = null
   unsubStore = null
+  unsubEvents = null
+  particles = []
+  pulses = []
+  prevStates = new Map()
+  lastNodes = null
   raf = 0
   atlas = null
   atlasK = ''
@@ -149,9 +223,11 @@ export function renderLayers(): void {
     fitPending = true
   }
 
+  if (nodes !== lastNodes) { diffStates(nodes); lastNodes = nodes }
+
   const visible = nodes.filter(n => isNodeVisible(layoutMode, n))
   observersVisible = false
-  if (visible.length === 0) { setLayers([]); return }
+  if (visible.length === 0) { particles = []; pulses = []; setLayers([]); return }
   const posOf = (id: string): Pos | undefined => {
     const i = nodeIndex.get(id)
     return i !== undefined && isNodeVisible(layoutMode, nodes[i]) ? nodePositions[i] : undefined
@@ -245,6 +321,40 @@ export function renderLayers(): void {
         getLineColor: PAL.paper1, lineWidthUnits: 'pixels', getLineWidth: 1,
       }))
     }
+  }
+
+  // Positions are looked up by id every frame; an expired particle/pulse or one whose endpoint is hidden is dropped in the same pass.
+  const pulseData: PulseDraw[] = []
+  pulses = pulses.filter(p => {
+    const pos = posOf(p.id), age = frameNow - p.start
+    if (!pos || pulseAlpha(age) <= 0) return false
+    pulseData.push({ id: p.id, pos, color: withAlpha(p.color, pulseAlpha(age) / 255) })
+    return true
+  })
+  if (pulseData.length) {
+    layers.push(new ScatterplotLayer<PulseDraw>({
+      id: 'pulses', data: pulseData, getPosition: d => d.pos, getFillColor: d => d.color,
+      radiusUnits: 'pixels', getRadius: 2.5 * r, pickable: false,
+    }))
+  }
+
+  const particleData: ParticleDraw[] = []
+  particles = particles.filter(p => {
+    const f = particleFrame(frameNow - p.start, p.fizzle), src = posOf(p.fromId), tgt = posOf(p.toId)
+    if (!f || !src || !tgt) return false
+    const pos = bezierPoint(src, tgt, f.t), ahead = bezierPoint(src, tgt, f.t + 0.01)   // the curve extrapolates past t = 1, so the tangent holds at the end
+    const color = withAlpha(p.fizzle ? PAL.nodeError : PAL[PARTICLE_KEY[p.kind]], f.alpha / 255)
+    particleData.push({ kind: p.kind, pos, angle: (Math.atan2(ahead[1] - pos[1], ahead[0] - pos[0]) * 180) / Math.PI, color })
+    return true
+  })
+  if (particleData.length) {
+    layers.push(new IconLayer<ParticleDraw>({
+      id: 'particles', data: particleData, ...atlasProps,
+      getIcon: d => (d.kind === 'spam' ? 'squareTrail' : 'square'),   // the trail's cell sits at −x, so the angle points the head along travel
+      getSize: 2 * a.cellPx * s.scale.particle, getPosition: d => d.pos, getAngle: d => d.angle, getColor: d => d.color,
+      pickable: false,
+      textureParameters: { minFilter: 'nearest', magFilter: 'nearest', mipmapFilter: 'nearest' },   // hard squares, no smear
+    }))
   }
 
   const haloData = visible.filter(hasHalo)
