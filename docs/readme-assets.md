@@ -1,8 +1,8 @@
 # README assets
 
 Everything under `assets/readme/` is reproducible from a running `make dev` at 1440×840 and the
-HTML sources in `assets/readme/src/` (they load Geist from `frontend/node_modules/@fontsource`, so
-run `make install` first).
+HTML sources in `assets/readme/src/` (they load Geist from the vendored woff2 files in
+`assets/readme/fonts/`, OFL-1.1, from `@fontsource/geist` and `@fontsource/geist-mono` 5.3.0).
 
 | file | how |
 |---|---|
