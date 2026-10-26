@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "studio": "remotion studio",
-    "video": "remotion render LaunchWide video-out/luminar-16x9.mp4 --codec h264 --crf 18 && remotion render LaunchTall video-out/luminar-9x16.mp4 --codec h264 --crf 18 && remotion still LaunchWide video-out/cover.png --frame 1620 && remotion still LaunchWide public/video/poster.png --frame 1620 && remotion ffmpeg -y -i video-out/luminar-16x9.mp4 -vf scale=1280:720 -c:v libx264 -crf 28 -pix_fmt yuv420p -an public/video/launch-16x9.mp4",
+    "video": "remotion render LaunchV2 public/video/launch-16x9.mp4 --codec h264 --crf 28 --x264-preset slow --audio-codec aac --audio-bitrate 96k && remotion still LaunchV2 public/video/poster.png --frame 560",
     "reel-stats": "node scripts/reel-stats.mjs",
     "prebuild": "npm run reel-stats"
   },
