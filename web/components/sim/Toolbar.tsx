@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { setDurationPreset, setNodePreset, toggleMainnet } from '@/lib/actions'
 import { ARRIVAL, REPO_URL } from '@/lib/copy'
 import { formatTime } from '@/lib/format'
@@ -65,9 +66,10 @@ function Clock() {
 export default function Toolbar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
     <header className={styles.bar}>
-      <span className={styles.brand}>
+      <Link href="/" className={styles.home} aria-label="Home">← Home</Link>
+      <Link href="/" className={styles.brand} title="Back to the Luminar home page">
         LUMINAR <span className={styles.sub}>gossipsub v1.1</span>
-      </span>
+      </Link>
       <Pill />
       <Badges />
       <span className={styles.spacer} />
