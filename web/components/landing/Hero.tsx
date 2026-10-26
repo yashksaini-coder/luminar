@@ -2,8 +2,9 @@
 // the serif headline, the lead (ending on the honesty line) and two CTAs. Right: the PixelField globe of
 // fifty peers with a publish wave crossing it, under a status chip and a level meter. Below, one grid row:
 // the "modelled on" wordmarks (text, not logos) and the stats bar from the recording with blinking cursors.
-// The section reveals once (D2); the inline script after it sets data-in at parse time because the lead is
-// the LCP element and must not wait for the Reveal island to hydrate (hence suppressHydrationWarning: data-in).
+// The section reveals once (D2). The lead is the LCP element and must not wait for the Reveal island to hydrate,
+// so the root layout's head script sets data-in on [data-hero-reveal] at DOMContentLoaded (suppressHydrationWarning:
+// data-in). Keeping that script in the layout means React never renders a <script> on client navigation.
 import type { CSSProperties } from 'react'
 import Cursor from '@/components/fx/Cursor'
 import PixelField from '@/components/fx/PixelField'
@@ -24,8 +25,8 @@ const METER = 14
 const i = (n: number) => ({ '--i': n }) as CSSProperties
 
 export default function Hero() {
-  return (<>
-    <section className={styles.top} data-reveal="" aria-labelledby="hero-h" suppressHydrationWarning>
+  return (
+    <section className={styles.top} data-reveal="" data-hero-reveal="" aria-labelledby="hero-h" suppressHydrationWarning>
       <div className={styles.cells} data-grid="">
         <div className={styles.copy}>
           <p className={styles.chip} data-k="up" style={i(0)}>GossipSub v1.1 simulator<Cursor /></p>
@@ -59,6 +60,5 @@ export default function Hero() {
       </div>
       <div className={styles.close} data-grid="" aria-hidden="true" />
     </section>
-    <script dangerouslySetInnerHTML={{ __html: "(function(s){s.offsetWidth;s.dataset.in='1'})(document.currentScript.previousElementSibling)" }} />
-  </>)
+  )
 }

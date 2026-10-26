@@ -117,6 +117,9 @@ test('setPref flips scale; toasts queue; resetRun clears the run; selectors', ()
   S().applyMetrics({ type: 'metrics', node_count: 1, state_distribution: { idle: 1 }, total_messages_sent: 0, total_messages_received: 0, event_counts: {}, total_events: 0, stream_manager: { open: 0, max: 64, available: 64 }, dht_coordinator: { active: 0, available: 8 } })
   expect(selectStateCounts(S())).toEqual({ idle: 1, attacker: 1, pruned: 1 })
   expect(selectAttackers(S()).length).toBe((selectStateCounts(S()).attacker ?? 0) + (selectStateCounts(S()).pruned ?? 0))
+  // a recording's first snapshot arrives before any metrics frame: the breakdown still matches the 50 nodes on the map
+  useStore.setState({ stateDistribution: {} }); S().applySnapshot({ ...snapWith([]), nodes: [peerNode('peer-0', 0), peerNode('peer-1', 1, { state: 'receiving' }), peerNode('obs-1', 2, { is_real: true })] })
+  expect(selectStateCounts(S())).toEqual({ idle: 1, receiving: 1 })   // the real observer is not a simulated peer
   // R2: flat primitives so useShallow can compare them
   expect(selectKpis(S())).toEqual({ delivery: null, propagationMs: null, hops: null, degAvg: null, degMin: null, degMax: null })
 })

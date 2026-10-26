@@ -42,9 +42,9 @@ test('stats bar: three numbers straight from reel-stats.json, each followed by a
   for (const dd of dds) expect(dd.lastElementChild!.getAttribute('aria-hidden')).toBe('true')
 })
 
-test('grid rows, reveal order and the parse-time reveal script', () => {
+test('grid rows, reveal order, and no <script> inside the component (the layout reveals the hero)', () => {
   const m = r(h(Hero)), d = doc()
   expect(d.querySelectorAll('section [data-grid]')).toHaveLength(3)
   expect([...d.querySelectorAll('section [data-k]')].map(e => e.getAttribute('style'))).toEqual(['--i:0', '--i:1', '--i:2', '--i:3', '--i:4', '--i:5', '--i:6', '--i:7', '--i:8'])
-  expect(m).toMatch(/<\/section><script>\(function\(s\)\{s\.offsetWidth;s\.dataset\.in='1'\}\)\(document\.currentScript\.previousElementSibling\)<\/script>$/)
+  expect(m).not.toContain('<script'); expect(m).toContain('data-hero-reveal=""')
 })

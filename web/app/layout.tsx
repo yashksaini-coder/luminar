@@ -54,8 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }
     >
       <head>
-        {/* data-js gates the reveal's hidden state (globals.css): no JS, no hidden sections. Runs before paint. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js='1'" }} />
+        {/* data-js gates the reveal's hidden state (globals.css): no JS, no hidden sections. Runs before paint.
+            The landing hero (the LCP element) reveals as soon as the document is parsed, without waiting for hydration. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js='1';document.addEventListener('DOMContentLoaded',function(){var s=document.querySelector('[data-hero-reveal]');if(s){s.offsetWidth;s.dataset.in='1'}})" }} />
       </head>
       <body>
         {children}

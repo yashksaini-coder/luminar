@@ -43,6 +43,9 @@ test('empty list text: None → "no categories selected · All restores them"; n
   expect(host.querySelectorAll('[role=button]').length).toBe(500)
   act(() => { useStore.setState({ events: [] }) })
   expect(list().textContent).toBe('waiting for the first event')
+  // a recording seeked to T+0 has counted events it does not replay: say so instead of 'waiting'
+  act(() => { useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1000, durationSim: 39.7 }, eventCount: 50 }) })
+  expect(list().textContent).toBe('events before this moment are not replayed · press play')
 })
 
 // T8 (prod-09): until the first socket open/close the list is skeleton rows and the rail is aria-busy; a reel never opens a socket, so it is not busy.

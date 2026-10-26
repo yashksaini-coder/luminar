@@ -22,6 +22,7 @@ export default function LogRail() {
   const busy = useStore(s => s.connecting && s.reel === null)   // booting: no socket open/close yet, not a reel
   const live = useStore(s => s.events)
   const eventCount = useStore(s => s.eventCount)
+  const inReel = useStore(s => s.reel !== null)
   const dropped = useStore(s => s.droppedEvents)
   const selectedPeer = useStore(s => s.selectedPeer)
   const [active, setActive] = useState<Set<EventCategory>>(initialFilters)
@@ -88,7 +89,8 @@ export default function LogRail() {
       <div ref={listRef} className={styles.list} onScroll={onScroll}>
         {busy && rows.length === 0 && Array.from({ length: SKELETON_ROWS }, (_, i) => <div key={i} className={`skeleton ${styles.skelRow}`} />)}
         {!busy && rows.length === 0 && (
-          <p className={styles.empty}>{active.size === 0 ? 'no categories selected · All restores them' : 'waiting for the first event'}</p>
+          <p className={styles.empty}>{active.size === 0 ? 'no categories selected · All restores them'
+            : inReel && eventCount > 0 ? 'events before this moment are not replayed · press play' : 'waiting for the first event'}</p>
         )}
         {rows.map((evt, i) => {
           const { code, tone } = TYPE_CODES[evt.event_type] ?? DEFAULT_TYPE

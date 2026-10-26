@@ -378,13 +378,17 @@ export const selectHoveredNode = (s: AppState) => s.hoveredPeer ? s.nodeById.get
 export const selectAttackers = (s: AppState) => s.nodes.filter(n => n.state === 'attacker')   // use with useShallow
 export const selectPrunedCount = (s: AppState) => s.nodes.reduce((k, n) => k + (isPruned(n) ? 1 : 0), 0)
 
-/** stateDistribution (node-pool peers only) plus attacker/pruned taken from the snapshot nodes, the same
- *  source as selectAttackers, since synthetic attackers never reach the backend count; fresh object, read with useShallow (R2). */
+/** Per-state counts from the snapshot nodes, the same list the map draws and the NODES header counts, so the
+ *  breakdown can never disagree with them (a recording's first frames carry a snapshot before any metrics frame,
+ *  which left stateDistribution empty beside "50 nodes"). Simulated peers by state; synthetic attackers split into
+ *  attacker/pruned; real observers (mainnet) are not simulated peers and stay out. Fresh object: read with useShallow (R2). */
 export const selectStateCounts = (s: AppState): Record<string, number> => {
-  const counts = { ...s.stateDistribution }
-  delete counts.attacker
+  const counts: Record<string, number> = {}
   let attacker = 0, pruned = 0
-  for (const n of s.nodes) if (n.state === 'attacker') { if (isPruned(n)) pruned++; else attacker++ }
+  for (const n of s.nodes) {
+    if (n.state === 'attacker') { if (isPruned(n)) pruned++; else attacker++ }
+    else if (isSimPeer(n)) counts[n.state] = (counts[n.state] ?? 0) + 1
+  }
   if (attacker) counts.attacker = attacker
   if (pruned) counts.pruned = pruned
   return counts

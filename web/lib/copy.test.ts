@@ -10,7 +10,7 @@ test('honesty sentences are verbatim', () => {
   expect(RECORDING_NOT_RUN).toBe('reproducible recording, not an identical run')
   expect(REEL_GUARD).toBe('Press 0 to leave the reel first')
   expect(geoOnly('radial')).toBe('Geo shows real observers only — switched to radial')
-  expect(FIG3).toBe('45 seconds: one publish, five Sybils, one eclipse, one heal.')
+  expect(FIG3).toBe('47 seconds: one publish, five Sybils, one eclipse, one heal.')
 })
 test('Fig. 3 caption states the LaunchV2 length', () => {
   expect(FIG3.startsWith(`${Math.floor(DURATION / FPS)} seconds:`)).toBe(true)
