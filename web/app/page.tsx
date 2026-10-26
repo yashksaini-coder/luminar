@@ -1,8 +1,10 @@
+import AttackExplorer from '@/components/landing/AttackExplorer'
 import Faq from '@/components/landing/Faq'
 import FigurePlate from '@/components/landing/FigurePlate'
 import FinalCta from '@/components/landing/FinalCta'
 import Footer from '@/components/landing/Footer'
 import Hero from '@/components/landing/Hero'
+import HowItWorks from '@/components/landing/HowItWorks'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
 import Readouts from '@/components/landing/Readouts'
@@ -24,6 +26,8 @@ export default function Home() {
       <Readouts />
       <Tagline />
       <WhatItDoes />
+      <HowItWorks />
+      <AttackExplorer />
       <FigurePlate />
       <VideoPlate />
       <SameNames />

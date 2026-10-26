@@ -1,0 +1,72 @@
+/* Attack explorer: header in the prose measure, then one hairline card holding the tablist and the panels.
+   Panel ≥1024: text left, diagram right; below: stacked, diagram last. */
+.section { width: min(var(--col-wide), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
+.kicker { margin: 0 0 var(--s-4); font: 500 var(--t-body)/1 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--fg-3); }
+.h2 { margin: 0 0 var(--s-6); font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.lead { max-width: var(--col-prose); margin: 0 0 var(--s-12); font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); }
+
+.card { background: var(--panel); border: var(--hair-w) solid var(--hair); }
+
+/* tabs: four equal cells, 48 px tall; the selected one is raised with a 2 px bar that grows from the left */
+/* 1 px gaps over a hairline background draw the dividers; 2 × 2 on a phone so no label clips */
+.tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border-bottom: var(--hair-w) solid var(--hair); }
+@media (min-width: 640px) { .tabs { grid-template-columns: repeat(4, 1fr); } }
+.tab {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: var(--s-2);
+  min-height: 48px; padding: 0 var(--s-2); background: var(--panel); color: var(--fg-3); cursor: pointer;
+  font: 500 var(--t-ui)/1 var(--font-mono); touch-action: manipulation;
+  transition: background-color var(--d-fast) var(--e2), box-shadow var(--d-fast) var(--e2), color var(--d-fast) var(--e2);
+}
+.tab::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--fg); transform: scaleX(0); transform-origin: left; transition: transform 300ms var(--e); }
+.tab:hover { box-shadow: inset 0 0 0 100px var(--wash); color: var(--fg); }
+.tab:active { transform: translateY(1px); }
+.tab:focus-visible { outline-offset: -2px; }
+.tab[aria-selected="true"] { background: var(--raised); color: var(--fg); }
+.tab[aria-selected="true"]::after { transform: scaleX(1); }
+.glyph { flex: none; overflow: visible; }
+
+.panel { display: grid; gap: var(--s-8); padding: var(--s-6); }
+.panel[hidden] { display: none; }
+.panel:focus-visible { outline-offset: -2px; }
+@media (min-width: 1024px) { .panel { grid-template-columns: 1.3fr 1fr; gap: var(--s-12); padding: var(--s-10); } }
+@media (prefers-reduced-motion: no-preference) { .panel { animation: rise 400ms var(--e2); } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+.text { min-width: 0; }
+.what { margin: 0 0 var(--s-6); font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg); }
+.h3 { margin: 0 0 var(--s-3); font: 500 var(--t-body)/1 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--fg-3); }
+.see { margin: 0 0 var(--s-6); padding: 0; list-style: none; display: grid; gap: var(--s-2); }
+.see li { position: relative; padding-left: var(--s-5); font: 400 var(--t-lead)/var(--lh-body) var(--font-display); color: var(--fg-2); }
+.see li::before { content: ''; position: absolute; left: 2px; top: .6em; width: 6px; height: 6px; background: var(--fg-mute); transform: rotate(45deg); }
+
+/* outcome: three tiles; on a phone each tile is a row, number left */
+.outcome { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border: var(--hair-w) solid var(--hair); }
+.outcome div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: var(--s-2); padding: var(--s-4); min-width: 0; }
+.outcome div + div { box-shadow: inset 1px 0 0 var(--hair); }
+.outcome dd { margin: 0; font: 500 clamp(24px, 1.9vw, 28px)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; }
+.outcome dt { font: 400 var(--t-body)/1.35 var(--font-mono); color: var(--fg-2); }
+@media (max-width: 639px) {
+  .outcome { grid-template-columns: 1fr; }
+  .outcome div { flex-direction: row-reverse; justify-content: flex-end; align-items: baseline; gap: var(--s-4); }
+  .outcome div + div { box-shadow: inset 0 1px 0 var(--hair); }
+  .outcome dd { flex: none; width: 9ch; }
+}
+.source { margin: var(--s-3) 0 var(--s-4); font: 400 var(--t-body)/1.4 var(--font-mono); color: var(--fg-3); }
+.actions { display: flex; flex-wrap: wrap; column-gap: var(--s-8); row-gap: var(--s-2); }
+
+/* diagram: the map's glyph language on a pitch plate */
+.figure { margin: 0; align-self: start; width: 100%; max-width: 480px; border: var(--hair-w) solid var(--hair); background: var(--bg); }
+.svg { width: 100%; height: auto; padding: var(--s-4); }
+.caption { padding: var(--s-3) var(--s-4); border-top: var(--hair-w) solid var(--hair); font: 400 var(--t-body)/1.3 var(--font-mono); color: var(--fg-2); }
+.mesh { stroke: var(--fg-mute); stroke-width: 1; }
+.attack { stroke: var(--flame); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.gone { stroke: var(--flame); stroke-width: 1; stroke-dasharray: 4 3; opacity: .35; }
+.cut { stroke: var(--fg-mute); stroke-width: 1; stroke-dasharray: 2 4; }
+.honest { fill: var(--fg); }
+.core { fill: var(--bg); }
+.decoded { fill: var(--signal); }
+.idle { fill: var(--raised); stroke: var(--fg-mute); stroke-width: 1; }
+.ring { fill: none; stroke: var(--fg-mute); stroke-width: 1; }
+.attacker { fill: var(--flame); }
+.pruned { fill: var(--bg); stroke: var(--flame); stroke-width: 1.5; }
+.note { font: 500 13px/1 var(--font-mono); fill: var(--fg-2); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
