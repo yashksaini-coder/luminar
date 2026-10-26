@@ -10,14 +10,19 @@
   align-items: center;
   gap: var(--gutter);
   padding: 0 var(--gutter);
-  overflow: hidden;
+  overflow-x: auto;              /* narrow desktops (≈1280) scroll the last cell into reach instead of clipping it */
+  overflow-y: hidden;
+  scrollbar-width: none;
   white-space: nowrap;
   background: var(--pitch-1);
   border-top: 1px solid var(--hair-strong);
 }
 
 .cell { display: flex; align-items: center; gap: var(--s-2); min-width: 0; flex: none; }
-.cell:first-child { flex: 0 1 auto; }   /* the phase cell truncates, never wraps */
+/* The phase cell is the only one that may shrink: it keeps a floor (so a long phase never collapses it to 0 and runs its
+   key into DELIVERY) and truncates past that; its value is a sentence, so it sits at a text size, not the 48 px figures. */
+.cell:first-child { flex: 1 1 auto; min-width: 220px; }
+.cell:first-child .value { font-size: min(24px, calc(var(--ticker-h) - 24px)); }
 
 .key {
   font: 600 var(--t-label)/1 var(--font-ui);
@@ -33,7 +38,7 @@
   text-overflow: ellipsis;
   font: 500 var(--t-hero-n)/1 var(--font-mono);
   /* --t-hero-n reaches 88 px, which cannot sit in a 56 px bar: cap at the bar height minus 8 px (48 px, still ≥ 44) */
-  font-size: min(var(--t-hero-n), calc(var(--ticker-h) - 8px));
+  font-size: min(var(--t-hero-n), calc(var(--ticker-h) - 8px), 2.1vw);   /* 2.1vw: eight cells plus the phase floor fit at 1440 and 1920 */
   font-variant-numeric: tabular-nums;
   color: var(--paper-0);
   text-box: trim-both cap alphabetic;   /* centre the digits, not the font's ascent/descent box */
@@ -41,8 +46,15 @@
 }
 .cell[data-danger] .value { color: var(--flame); }
 
+/* Below the 1920 stage target the gaps tighten so all eight cells fit beside the phase floor */
+@media (max-width: 1600px) {
+  .ticker { gap: var(--s-4); }
+  .value { font-size: min(var(--t-hero-n), calc(var(--ticker-h) - 8px), 2vw); }
+  .cell:first-child .value { font-size: min(22px, 1.6vw); }
+}
+
 /* Touch band: smaller numbers, tighter gaps, the phase cell truncates and the rest scrolls */
 @media (max-width: 1024px) {
   .ticker { --t-hero-n: clamp(20px, 3.2vw, 44px); gap: var(--s-3); overflow-x: auto; scrollbar-width: none; }
-  .cell:first-child { min-width: 0; overflow: hidden; }
+  .cell:first-child { min-width: 140px; overflow: hidden; }
 }

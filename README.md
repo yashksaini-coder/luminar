@@ -12,16 +12,13 @@
 
 Luminar is a real-time simulator of libp2p GossipSub v1.1: 2–500 peers run mesh maintenance, flood publish, IHAVE/IWANT and P1–P4 peer scoring in a trio loop, and a deck.gl map draws every GRAFT, PRUNE and message hop as it happens. You inject the attack (Sybil, eclipse, partition, drop, latency) and watch which ones scoring catches and which it cannot see. Same mechanism as a beacon node, toy constants.
 
-Built for a talk at Devcon 8 (Mumbai, 3–6 Nov 2026). _Talk link added once published._
-
 ## See it
 
-> [!NOTE]
-> The screen captures below (both GIFs, `ui-main`, `ui-radial`, `stage-hero`) were shot on the retired Vite frontend. `web/` keeps the same map, keys and reels, but its rails and inspector differ: [docs/ui.md](docs/ui.md) describes the current screens, [docs/readme-assets.md](docs/readme-assets.md) how to re-shoot them.
+![The landing page: the headline "Watch a peer-to-peer network defend itself" on a hatched grid cell beside a rotating cyan pixel globe of the mesh with an "All peers gossiping" status chip, and a "Modelled on" row of libp2p, GossipSub v1.1, Ethereum, OpenTelemetry and Prometheus.](assets/readme/landing.png)
 
-![Hero mode, 50 peers, reel sybil-eclipse: at T+10 s five Sybil nodes (red) graft into the mesh and flood it; P4 drives their score past −10 and the mesh prunes them with reason=score within two heartbeats, their markers turning hollow. At T+16 s four silent attackers close around peer-10; scoring sees only a small P3 deficit and never prunes them. At T+24 s the faults clear and the mesh heals in about 1.4 s.](assets/readme/demo-sybil-eclipse.gif)
+![Stage theme, hero layout, the sybil-eclipse recording from T+8 s: five Sybils graft in and flood, P4 scoring prunes them into hollow diamonds within two heartbeats, then four silent attackers close around peer-10 and scoring never sees them; the narrator caption names each phase and the lower-third ticker tracks delivery, mesh degree, hops, latency, attackers and invalid messages.](assets/readme/demo-sybil-eclipse.gif)
 
-![Geo layout, live Ethereum mainnet, Free Play underneath: 140 real observer nodes light up across the world map in the order they saw one slot's block, first sighting and p50 in the ticker. Arrival at observer nodes, ~2.5 min behind, not mesh paths.](assets/readme/live-mainnet.gif)
+![The recorded mainnet block wave on the Geo layout: 138 real observer nodes light up across the world map in the order they first saw the block of slot 15466393, with the slot, first sighting and p50 in the ticker. Arrival at observer nodes, not mesh paths; data from ethPandaOps (CC BY 4.0).](assets/readme/mainnet-wave.gif)
 
 Offline, no backend: `http://localhost:3000/reels/sybil-eclipse/?theme=stage&hero=1`.
 
@@ -66,7 +63,7 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 | stage · hero | `t` · `h`, or `?theme=stage&hero=1` | projector theme; hero hides the rails, legend and tooltip and shows the ticker; both persist in `localStorage` |
 | share | `s` | copies the current URL with `&peer=<id>`, plus `&t=<sec>` in a paused reel, so a link opens that moment |
 
-![Main screen, Force layout, 50 peers after a Sybil attack: the five attackers sit pruned outside the mesh, n7 is selected and the inspector shows its score history, ten connected peers and live events; the stats panel has delivery, propagation, the delivery CDF and event categories.](assets/readme/ui-main.png)
+![The simulator on the sybil-eclipse recording at T+13.4 s, Force layout: the five Sybils sit pruned outside the mesh, peer n7 is selected and the inspector shows its score (+5.48), full mesh (6/6), mesh and topology peers and its live events; the left rail charts delivery, propagation, hops and mesh degree, the node breakdown, message counts with 40 invalid, the delivery CDF and the beats so far.](assets/readme/ui-main.png)
 
 | scenario | topology | phases |
 |---|---|---|
@@ -83,7 +80,9 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 | `3` | `healthy-publish` | 50 | 2.3 MB |
 | `4` | `mainnet-block-wave` (real, slots 15466393–15466400) | 138 | 7.0 MB |
 
-![Radial layout, 50 peers: rings ordered by mesh degree, message particles crossing between rings during a flood publish.](assets/readme/ui-radial.png)
+![Radial layout of the same moment: 50 peers on rings ordered by mesh degree, the pruned Sybils on the rim, the event log streaming gossip messages on the right.](assets/readme/ui-radial.png)
+
+![Fig. 2, the relay globe (`/figure/`): a hand-inked desk globe with twelve relay stations and their mesh arcs; Post, Heartbeat, Sybil, Eclipse, Partition and Heal buttons act out each attack, here two heartbeats after a Sybil bolted on, its score at −10.00 and 12/12 delivered.](assets/readme/globe.png)
 
 <details>
 <summary>Recording a reel</summary>
@@ -248,11 +247,11 @@ make docker      # builds web/, serves it with the backend from one container on
 - [docs/research-live-network.md](docs/research-live-network.md): mainnet data sources and what they can and cannot show
 - [docs/readme-assets.md](docs/readme-assets.md): how every image and GIF above is regenerated
 
-## Devcon 8
+## Stage mode
 
-![Stage theme with the hero layout on a 1440×840 viewport: the mesh alone, stats panel, event log and inspector hidden, the phase ticker along the bottom, paused at T+12.9 s with all five Sybils pruned, as projected during the talk.](assets/readme/stage-hero.png)
+![Stage theme with the hero layout at 1440×840: the mesh alone, the rails, legend and inspector hidden, the lower-third ticker reading the phase, delivery, mesh degree, hops, latency, attackers and invalid messages, paused at T+12.4 s with all five Sybils pruned.](assets/readme/stage-hero.png)
 
-The stage build is `/reels/sybil-eclipse/?theme=stage&hero=1`; `t` and `h` toggle the same at a live backend. Mumbai, 3–6 Nov 2026.
+The stage build is `/reels/sybil-eclipse/?theme=stage&hero=1`; `t` and `h` toggle the same at a live backend.
 
 ## License
 
