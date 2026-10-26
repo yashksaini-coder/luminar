@@ -45,7 +45,6 @@ Owned by Yash (not an OSS contribution — the `~/oss_contribution_logs/` rule d
   (build-time, unset in the container), `LUMINAR_NODE_COUNT`, `LUMINAR_LOG_LEVEL`, `PORT`.
 
 ## Devcon 8 work (branch feat/devcon8, Oct–Nov 2026)
-- Plan of record: `docs/roadmap-devcon8.md` (status block at top). Must tier is shipped.
 - Reels: `web/public/reels/*.jsonl` + `manifest.json`; record with
   `uv run python scripts/record_reel.py record <name> <scenario> --nodes 50 --duration 40`
   against a backend started with `LUMINAR_ALLOW_RECORD=1`; `/reels/<name>/?theme=stage&hero=1`

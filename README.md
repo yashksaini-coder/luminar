@@ -246,7 +246,6 @@ make docker      # builds web/, serves it with the backend from one container on
 - [docs/ui.md](docs/ui.md): panels, inspector, keyboard
 - [docs/deployment.md](docs/deployment.md): Docker, Render, DigitalOcean, env vars
 - [docs/research-live-network.md](docs/research-live-network.md): mainnet data sources and what they can and cannot show
-- [docs/roadmap-devcon8.md](docs/roadmap-devcon8.md): plan of record for the talk
 - [docs/readme-assets.md](docs/readme-assets.md): how every image and GIF above is regenerated
 
 ## Devcon 8

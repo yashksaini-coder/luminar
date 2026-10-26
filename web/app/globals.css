@@ -4,7 +4,6 @@
    "poster-minimal" (display voice, brief-exact base colours, hatch, rails) and
    "editorial-dither" (@supports OKLCH pattern, light-mode plate override,
    stage scale tokens, score-band densities, CSS dither patterns, stamp).
-   Verdict and scoring: docs/design/direction-verdict.md
 
    HOW COLOUR WORKS HERE — one rule per colour, nothing else may use it
    ---------------------------------------------------------------------------

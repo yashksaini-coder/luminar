@@ -52,3 +52,10 @@ htmlcov/
 # Reel recordings (raw); shipped reels live in web/public/reels/
 recordings/
 !web/public/reels/*.jsonl
+
+# Planning material (plans, specs, design notes, walk screenshots, build workspace): kept locally, never pushed.
+/docs/superpowers/
+/.superpowers/
+/docs/design/*.md
+/docs/design-prompt.md
+/docs/roadmap-devcon8.md

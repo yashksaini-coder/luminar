@@ -2,7 +2,7 @@
 
 Verified against web/ at 52790f4 on 2026-10-25. Trust code over this file.
 
-The reference for whoever presents Luminar and whoever touches `web/`. The design and its reasons live in `docs/superpowers/specs/2026-10-24-ui-overhaul-design.md`; this file only says what each screen does and which file does it. Every path in backticks exists at the commit above. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
+The reference for whoever presents Luminar and whoever touches `web/`. This file says what each screen does and which file does it. Every path in backticks exists at the commit above. The old screenshots under `assets/` show the retired Vite UI, so they are not shown here.
 
 ## 1. Routes and URL parameters
 
