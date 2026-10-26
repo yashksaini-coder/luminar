@@ -5,15 +5,13 @@ import { renderToStaticMarkup as r } from 'react-dom/server'
 import { expect, test, vi } from 'vitest'
 import Faq, { QA } from '@/components/landing/Faq'
 import FinalCta from '@/components/landing/FinalCta'
-import Tagline from '@/components/landing/Tagline'
-import { MECHANISM, RECORDING_NOT_RUN } from '@/lib/copy'
+import { RECORDING_NOT_RUN } from '@/lib/copy'
 import stats from '@/lib/reel-stats.json'
 import Home from './page'
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
 const src = readFileSync(resolve(__dirname, 'page.tsx'), 'utf8')
-const text = (m: string) => m.replace(/<[^>]+>/g, '')
 
 // Spec §4.8: `/?reel=<n>` redirects, so the phase-4 island must stay the first child of the landing page.
 // Until phase 4 merges, a marker comment holds its slot; after the merge `<ReelRedirect />` replaces it.
@@ -24,8 +22,8 @@ test('redirect island slot is the first child, before <Nav>', () => {
   expect(src.slice(src.indexOf('<>') + 2, island).trim()).toBe('')
 })
 
-test('page order: skip link, Nav, main#main with Hero → Readouts → Tagline → Features → HowItWorks → AttackExplorer → FigurePlate → VideoPlate → Observability → MainnetCard → Faithfulness → QuickStart → Faq → FinalCta, then Footer', () => {
-  const order = ['className="skip"', '<Nav', '<main id="main"', '<Hero', '<Readouts', '<Tagline', '<Features', '<HowItWorks', '<AttackExplorer', '<FigurePlate', '<VideoPlate', '<Observability', '<MainnetCard', '<Faithfulness', '<QuickStart', '<Faq', '<FinalCta', '</main>', '<Footer']
+test('page order: skip link, GridFrame, Nav, main#main with Hero → Features → HowItWorks → AttackExplorer → FigurePlate → VideoPlate → Observability → MainnetCard → Faithfulness → QuickStart → Faq → FinalCta, then Footer', () => {
+  const order = ['className="skip"', '<GridFrame>', '<Nav', '<main id="main"', '<Hero', '<Features', '<HowItWorks', '<AttackExplorer', '<FigurePlate', '<VideoPlate', '<Observability', '<MainnetCard', '<Faithfulness', '<QuickStart', '<Faq', '<FinalCta', '</main>', '<Footer', '</GridFrame>']
   const idx = order.map((s) => src.indexOf(s))
   expect(idx.every((i) => i > -1)).toBe(true)
   expect([...idx].sort((a, b) => a - b)).toEqual(idx)
@@ -38,16 +36,6 @@ test('rendered page: the skip link is the first focusable element and points at 
   expect(document.querySelector('main#main')).not.toBeNull()
   expect(document.querySelectorAll('main#main dl dt').length).toBeGreaterThanOrEqual(8)
   document.body.innerHTML = ''
-})
-
-test('tagline: data-reveal section, words carry data-w with a continuous --i, raw text is the two honesty lines', () => {
-  const m = r(h(Tagline))
-  expect(m).toMatch(/<section data-reveal/)
-  expect(text(m)).toBe(MECHANISM + RECORDING_NOT_RUN)   // the capital R is CSS (::first-letter), so the grep still finds the constant
-  const n = (MECHANISM + ' ' + RECORDING_NOT_RUN).split(' ').length
-  expect((m.match(/data-w/g) ?? []).length).toBe(n)
-  for (let i = 0; i < n; i++) expect(m).toContain(`--i:${i}`)
-  expect(m).toContain('<br/>')
 })
 
 test('faq: h2 Questions, eight pairs with `up` reveal, mainnet comparison and recording timestamps', () => {
