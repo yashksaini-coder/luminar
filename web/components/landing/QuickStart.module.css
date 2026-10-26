@@ -1,0 +1,81 @@
+/* Quick start: intro column + one terminal card (pitch-1 surface, hairline, mono). Two columns at ≥1024. */
+.section { width: min(var(--col-wide), 100% - 2 * var(--gutter)); margin: var(--s-24) auto; scroll-margin-top: var(--s-16); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-12); align-items: start; }
+.kicker { margin: 0 0 var(--s-4); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--fg-3); }
+.h2 { margin: 0; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); text-wrap: balance; }
+.lead { margin: var(--s-5) 0 var(--s-8); max-width: 44ch; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); text-wrap: pretty; }
+
+.ports { margin: 0 0 var(--s-6); border-top: var(--hair-w) solid var(--hair); font: 400 var(--t-body)/1.45 var(--font-mono); }
+.ports > div { display: grid; grid-template-columns: 7ch 1fr; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: var(--hair-w) solid var(--hair); }
+.ports dt { color: var(--fg); font-feature-settings: var(--tnum); }
+.ports dd { margin: 0; color: var(--fg-2); }
+.links { display: flex; flex-wrap: wrap; column-gap: var(--s-6); row-gap: var(--s-2); }
+
+/* terminal */
+.term { border: var(--hair-w) solid var(--hair); background: var(--panel); min-width: 0; }
+.bar { display: flex; align-items: stretch; justify-content: space-between; border-bottom: var(--hair-w) solid var(--hair); }
+.tabs { display: flex; }
+.tab, .copy { min-height: 44px; padding: 0 var(--s-4); border: 0; background: transparent; color: var(--fg-3); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; cursor: pointer; touch-action: manipulation; transition: color var(--d-fast) var(--e2), background-color var(--d-fast) var(--e2), transform var(--d-press) var(--ease); }
+.tab { position: relative; border-right: var(--hair-w) solid var(--hair); }
+.tab::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: var(--hair-w2); background: var(--fg); transform: scaleX(0); transition: transform var(--d-row) var(--e); }
+.tab:hover, .copy:hover { color: var(--fg); background: var(--wash); }
+.tab:active, .copy:active { transform: translateY(1px); }
+.tab[aria-selected="true"] { color: var(--fg); }
+.tab[aria-selected="true"]::after { transform: none; }
+.tab:focus-visible, .copy:focus-visible { outline-offset: -2px; }
+.copy { display: inline-flex; align-items: center; gap: var(--s-2); border-left: var(--hair-w) solid var(--hair); }
+.copy[data-state="copied"] { color: var(--signal-text); }
+.copy[data-state="failed"] { color: var(--fg); }
+
+.panel { padding: var(--s-6) var(--s-5) var(--s-5); outline-offset: -2px; }
+.lines { margin: 0 0 var(--s-6); overflow-x: auto; overscroll-behavior-x: contain; font: 400 var(--t-ui)/1.9 var(--font-mono); color: var(--fg); }
+.line { display: block; white-space: pre; }
+.lines code { display: block; }
+.prompt { color: var(--fg-3); user-select: none; }
+.cmd { display: inline-block; vertical-align: top; }
+.cmt { color: var(--fg-3); }
+.caret { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.2em; background: var(--fg); }
+
+.opens { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s-3); row-gap: var(--s-1); margin: 0; padding-top: var(--s-4); border-top: var(--hair-w) solid var(--hair); font: 400 var(--t-body)/1.5 var(--font-mono); color: var(--fg-2); }
+.opens code { color: var(--fg); overflow-wrap: anywhere; }
+.dot { align-self: center; width: 6px; height: 6px; background: var(--signal); }
+.needs { flex-basis: 100%; color: var(--fg-3); }
+
+.reels { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0; padding: 0 var(--s-5) var(--s-5); list-style: none; }
+.reels a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s-3); border: var(--hair-w) solid var(--hair); font: 400 var(--t-body)/1 var(--font-mono); color: var(--fg-2); text-decoration: none; transition: color var(--d-fast) var(--e2), border-color var(--d-fast) var(--e2), transform var(--d-press) var(--ease); }
+.reels a:hover { color: var(--fg); border-color: var(--hair-strong); }
+.reels a:active { transform: translateY(1px); }
+
+/* story: commands type glyph by glyph, comments and the result fade in after, the caret blinks while idle.
+   Gated on data-js so no-JS readers get the text; paused until the section is on screen. */
+@media (prefers-reduced-motion: no-preference) {
+  /* backwards fill only: once a track ends the element's own (fully shown) style applies, never a stuck last step */
+  :root[data-js] .cmd { animation: type var(--t) steps(var(--n), end) var(--d) backwards; }
+  :root[data-js] .line { animation: show 1ms linear var(--d) backwards; }
+  :root[data-js] .cmt { animation: fade 400ms var(--e2) calc(var(--d) + var(--t)) backwards; }
+  :root[data-js] .opens { animation: rise 600ms var(--e) calc(var(--d) + 150ms) backwards; }
+  @media (max-width: 719px) {   /* commands wrap on phones, where a glyph clip would cut both rows at once: fade them in */
+    :root[data-js] .cmd { animation: fade 300ms var(--e2) var(--d) backwards; }
+  }
+  :root[data-js] .caret { animation: blink 1s steps(1, end) var(--d) infinite; }
+  .section:not([data-play]) :is(.cmd, .line, .cmt, .opens, .caret) { animation-play-state: paused; }
+}
+@keyframes type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes show { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+@media (max-width: 1023px) {
+  .section { grid-template-columns: minmax(0, 1fr); gap: var(--s-10); }
+  .lead { max-width: var(--col-prose); }
+}
+@media (max-width: 719px) {
+  .section { margin: var(--s-16) auto; }
+  .panel { padding: var(--s-5) var(--s-4) var(--s-4); }
+  .lines { font-size: var(--t-body); line-height: 1.7; overflow-x: visible; }
+  .line { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+  .line + .line { margin-top: var(--s-1); }
+  .cmd { display: inline; }
+  .tab, .copy { padding: 0 var(--s-3); }
+  .reels { padding: 0 var(--s-4) var(--s-4); }
+}

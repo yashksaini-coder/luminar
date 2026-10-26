@@ -1,4 +1,5 @@
 import AttackExplorer from '@/components/landing/AttackExplorer'
+import Faithfulness from '@/components/landing/Faithfulness'
 import Faq from '@/components/landing/Faq'
 import Features from '@/components/landing/Features'
 import FigurePlate from '@/components/landing/FigurePlate'
@@ -10,6 +11,7 @@ import MainnetCard from '@/components/landing/MainnetCard'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
 import Observability from '@/components/landing/Observability'
+import QuickStart from '@/components/landing/QuickStart'
 import Readouts from '@/components/landing/Readouts'
 import Tagline from '@/components/landing/Tagline'
 import VideoPlate from '@/components/landing/VideoPlate'
@@ -34,6 +36,8 @@ export default function Home() {
       <VideoPlate />
       <Observability />
       <MainnetCard />
+      <Faithfulness />
+      <QuickStart />
       <Faq />
       <FinalCta />
     </main>
