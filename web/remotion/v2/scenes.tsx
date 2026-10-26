@@ -23,6 +23,12 @@ const honestCount = (d: ReelData) => d.nodes.filter(n => !n.attacker).length
 const sybilFault = (d: ReelData) => d.faults.find(f => f.type === 'sybil')
 const eclipseFault = (d: ReelData) => d.faults.find(f => f.type === 'eclipse')
 const firstPrune = (d: ReelData) => d.prunes[0]?.at ?? Infinity
+/** When the score the bar shows (the lagging 0.5 s snapshot) first reaches the prune line: the beat may say
+ *  'pruned' only from here, so no frame claims a prune while the bar still reads above −10. */
+const shownCrossing = (d: ReelData, id: string, from: number) => {
+  for (let t = from; t < from + 5; t += 0.05) { const s = shownScoreAt(d, id, t); if (s !== null && s <= TOY.pruneThreshold) return t }
+  return from
+}
 
 /** A line that fades up 16 px from frame `at`. */
 function Rise({ at, children, style }: { at: number; children: ReactNode; style?: CSSProperties }): JSX.Element {
@@ -257,13 +263,14 @@ export function Sybil({ data, span }: V2SceneProps): JSX.Element {
   const t = simTimeAt(span, f)
   const fault = sybilFault(data)
   const pruneAt = firstPrune(data)
-  const pruned = t >= pruneAt
+  const shownAt = shownCrossing(data, 'sybil-0', pruneAt)
+  const pruned = t >= shownAt
   const densest = useMemo(
     () => attackersAt(data, 11).reduce<{ id?: string; n: number }>((b, a) => (a.victims.length > b.n ? { id: a.id, n: a.victims.length } : b), { n: -1 }).id,
     [data],
   )
   const camera = lerpCamera({ scale: 1.05 }, { scale: 1.2, focus: densest }, interpolate(f, [0, 90], [0, 1], { ...CLAMP, easing: Easing.inOut(Easing.cubic) }))
-  const pruneFrame = (frameAt(span, pruneAt) ?? span.from) - span.from
+  const pruneFrame = (frameAt(span, shownAt) ?? span.from) - span.from
   const hb = heartbeatsBetween(data, fault?.at ?? 0, Math.min(t, pruneAt))
   const beat: Beat = pruned
     ? { num: '03', name: 'Prune', tone: 'signal', title: ['Pruned in', `${word(hb)} heartbeats.`], body: 'P4 charges every invalid message. Their scores fall through the prune line and each honest peer drops them on its own.', at: pruneFrame }

@@ -18,15 +18,16 @@ export interface V2Span {
 }
 
 export const SPANS: V2Span[] = [
+  // sybil runs to sim 13.2 so the displayed score's crossing of the prune line (first snapshot below −10, T+12.4) reads for over 2 s
   { id: 'open', from: 0, durationInFrames: 75 },
   { id: 'title', from: 75, durationInFrames: 120 },
   { id: 'publish', from: 195, durationInFrames: 210, simOffset: 5.4, speed: 0.65 },
-  { id: 'sybil', from: 405, durationInFrames: 270, simOffset: 9.9, speed: 0.3 },
-  { id: 'pruned', from: 675, durationInFrames: 105 },
-  { id: 'eclipse', from: 780, durationInFrames: 225, simOffset: 16.0, speed: 1 },
-  { id: 'heal', from: 1005, durationInFrames: 120, simOffset: 23.8, speed: 1 },
-  { id: 'honesty', from: 1125, durationInFrames: 120 },
-  { id: 'end', from: 1245, durationInFrames: 120 },
+  { id: 'sybil', from: 405, durationInFrames: 330, simOffset: 9.9, speed: 0.3 },
+  { id: 'pruned', from: 735, durationInFrames: 105 },
+  { id: 'eclipse', from: 840, durationInFrames: 225, simOffset: 16.0, speed: 1 },
+  { id: 'heal', from: 1065, durationInFrames: 120, simOffset: 23.8, speed: 1 },
+  { id: 'honesty', from: 1185, durationInFrames: 120 },
+  { id: 'end', from: 1305, durationInFrames: 120 },
 ]
 
 export const DURATION = SPANS.at(-1)!.from + SPANS.at(-1)!.durationInFrames
