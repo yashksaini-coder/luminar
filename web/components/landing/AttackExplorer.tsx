@@ -47,17 +47,17 @@ export const ATTACKS: Attack[] = [
     what: `Attackers take every mesh slot around one peer, ${stats.eclipseTarget} in the recording, and then stay silent. Scoring cannot see it: ${ECLIPSE_WHY}. Only clearing the fault heals it.`,
     see: [
       `Dashed flame links close in on ${stats.eclipseTarget} from every side`,
-      'Its score sinks only to the P3 floor, −0.25, far above the PRUNE bar at −10',
+      'The attackers\' scores sink only to the P3 floor, −0.25, far above the PRUNE bar at −10',
       `The scrubber marks the eclipse from T+${stats.eclipseAt} s to the clear at T+${stats.clearedAt} s`,
     ],
-    outcome: [['−0.25', 'score floor, P3 deficit only'], [stats.eclipseTarget, `eclipsed at T+${stats.eclipseAt} s`], [`${stats.healedInS} s`, `to heal after the clear at T+${stats.clearedAt} s`]],
+    outcome: [['−0.25', 'attacker score floor, P3 only'], [stats.eclipseTarget, `eclipsed at T+${stats.eclipseAt} s`], [`${stats.healedInS} s`, `to heal after the clear at T+${stats.clearedAt} s`]],
     source: `Measured in the sybil-eclipse recording, ${stats.peers} peers.`,
     caption: `${stats.eclipseTarget} eclipsed, T+${stats.eclipseAt} s`,
     diagram: {
       label: `${stats.eclipseTarget} in the centre, surrounded by four attacker diamonds with dashed attack links; the honest peers around them have no link to it.`,
       nodes: [[160, 112, 'target'], [108, 70, 'attacker'], [212, 70, 'attacker'], [108, 156, 'attacker'], [212, 156, 'attacker'], [36, 40, 'honest'], [284, 40, 'honest'], [30, 182, 'honest'], [290, 182, 'honest'], [160, 24, 'honest'], [160, 204, 'honest']],
       edges: [[1, 0, 'attack'], [2, 0, 'attack'], [3, 0, 'attack'], [4, 0, 'attack'], [5, 9, 'mesh'], [9, 6, 'mesh'], [5, 7, 'mesh'], [6, 8, 'mesh'], [7, 10, 'mesh'], [10, 8, 'mesh'], [5, 1, 'mesh'], [6, 2, 'mesh'], [7, 3, 'mesh'], [8, 4, 'mesh']],
-      notes: [[160, 146, stats.eclipseTarget], [160, 162, '−0.25']],
+      notes: [[160, 146, stats.eclipseTarget], [160, 54, 'attackers −0.25']],
     },
   },
   {
