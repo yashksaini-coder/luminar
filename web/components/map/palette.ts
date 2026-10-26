@@ -34,10 +34,10 @@ let paletteKey: string | null = null
  *  or the tokens are not applied yet (computed --paper-0 empty). */
 export function refreshPalette(): boolean {
   const html = document.documentElement
+  const key = `${html.dataset.theme}|${html.dataset.stage}`
+  if (key === paletteKey) return false   // cheap dataset check first: this runs every animating frame
   const style = getComputedStyle(html)
   if (!style.getPropertyValue('--paper-0').trim()) return false
-  const key = `${html.dataset.theme}|${html.dataset.stage}`
-  if (key === paletteKey) return false
   paletteKey = key
   for (const [k, v] of Object.entries(PALETTE_TOKENS)) PAL[k as PaletteKey] = cssToRgba(style.getPropertyValue(v).trim())
   return true

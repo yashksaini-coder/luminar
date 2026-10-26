@@ -171,29 +171,29 @@ export function setReelSpeed(s: number): void { speed = Math.max(REEL_MIN_SPEED,
 export function seekReel(ms: number, opts?: { eventTailMs?: number }): void {
   const tailMs = opts?.eventTailMs ?? 0
   const target = Math.max(0, Math.min(ms, reelDurationMs()))
-  const last = new Map<string, WsFrame>()
+  // Rebuild the time-dependent state from scratch, so a seek backwards cannot keep the log, chart samples,
+  // narrator beats or counters of the later moment it left: clear the run, then replay every frame up to the
+  // target in order. Typed frames go through dispatchFrame; events go straight into the store (no particle
+  // subscribers), except the last `eventTailMs`, which play normally.
+  const store = useStore.getState()
+  const keep = { selectedPeer: store.selectedPeer, highlightPeers: store.highlightPeers }
+  store.resetRun()
+  useStore.setState({ activeFaults: 0 })
+  let quiet: AppEvent[] = []
   const tail: WsFrame[] = []
+  const settle = () => { if (quiet.length) { useStore.getState().applyEvents(quiet); quiet = [] } }
   let i = 0
   for (; i < frames.length && frames[i].t <= target; i++) {
     const { t, frame } = frames[i]
-    const type = typeOf(frame)
-    if (type) last.set(type, frame)
+    if (typeOf(frame)) { settle(); dispatchFrame(frame) }
     else if (tailMs > 0 && t > target - tailMs) tail.push(frame)
+    else quiet.push(frame as AppEvent)
   }
-  for (const type of SEEK_STATE_TYPES) {
-    const f = last.get(type)
-    if (f) dispatchFrame(f)
-  }
+  settle()
   for (const f of tail) dispatchFrame(f)
   flushEvents()
-  // Events are skipped, so the phase state they build (hero PHASE cell, caption, phase beats) comes from the scenario instead.
-  const s = useStore.getState()
-  const fired = (s.activeScenario?.scenario?.phases ?? []).filter(p => p.at <= s.simTime)
-  const phase = fired[fired.length - 1]
-  if (phase) {
-    useStore.setState({ phaseLabel: phase.label, beats: fired.map(p => ({ label: p.label, time: p.at, kind: 'phase' as const })) })
-    s.setCaption({ text: phase.label, kind: 'phase', at: phase.at })
-  }
+  const after = useStore.getState()
+  if (keep.selectedPeer && after.nodeById.has(keep.selectedPeer)) useStore.setState(keep)   // a seek keeps the inspected peer
   cursor = i
   elapsed = target
   lastTick = performance.now()

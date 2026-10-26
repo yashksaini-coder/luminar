@@ -69,8 +69,11 @@ test('play, pause, reset and speed toast only when the POST fails (T9: backend o
   api.simSpeed.mockResolvedValue({ ok: true, status: 200, data: { speed: 4 } }); await setSpeed(4); expect(texts()).toEqual(['backend offline'])
   api.simReset.mockResolvedValue({ ok: false, status: 500, data: null }); await reset(); expect(texts().at(-1)).toBe('Reset failed · 500')
   api.simPlay.mockResolvedValue({ ok: false, status: 0, data: null }); await togglePlay(); expect(texts().at(-1)).toBe('backend offline'); expect(texts()).toHaveLength(3)
-  api.simPause.mockResolvedValue({ ok: true, status: 200, data: null }); await togglePlay(); expect(texts()).toHaveLength(3)
-  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } }); await setSpeed(8); expect(texts()).toHaveLength(3); expect(api.simSpeed).toHaveBeenCalledTimes(2)
+  expect(useStore.getState().playing).toBe(false)   // a failed Play rolls the button back
+  api.simPlay.mockResolvedValue({ ok: true, status: 200, data: null }); await togglePlay(); expect(texts()).toHaveLength(3); expect(useStore.getState().playing).toBe(true)
+  api.simPause.mockResolvedValue({ ok: false, status: 0, data: null }); await togglePlay(); expect(useStore.getState().playing).toBe(true)   // a failed Pause leaves it playing
+  expect(texts()).toHaveLength(4)
+  useStore.setState({ reel: { name: 'r', title: 'R', durationMs: 1, durationSim: 1 } }); await setSpeed(8); expect(texts()).toHaveLength(4); expect(api.simSpeed).toHaveBeenCalledTimes(2)
 })
 test('autoPauseIfDue pauses live at the limit, never in reels', () => {
   api.simPause.mockResolvedValue({ ok: true, status: 200, data: null })

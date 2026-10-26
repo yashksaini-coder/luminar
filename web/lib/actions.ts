@@ -56,13 +56,17 @@ export async function togglePlay(): Promise<void> {
   if (s.reel) { toggleReel(); return }   // the player sets store.playing itself (A.0)
   if (s.playing) {
     s.setPlaying(false)
-    failToast(await api.simPause(), 'Pause')
+    const r = await api.simPause()
+    failToast(r, 'Pause')
+    if (!r.ok) S().setPlaying(true)   // the backend is still running: put the button back
     return
   }
   // Play at the limit means "one more period", so the sim still pauses at the total the timeline shows.
   if (s.maxDuration > 0 && s.simTime >= s.maxDuration) s.extendDuration()
   s.setPlaying(true)
-  failToast(await api.simPlay(), 'Play')
+  const r = await api.simPlay()
+  failToast(r, 'Play')
+  if (!r.ok) S().setPlaying(false)   // nothing started (offline, 403 without the admin token): the button must not claim it did
 }
 
 export async function reset(): Promise<void> {
@@ -87,8 +91,15 @@ export async function setSpeed(speed: number): Promise<void> {
 }
 
 /** Reels only; the live scrubber is disabled (spec §6.2). */
+// A seek rebuilds the store from the recording's start (replay.ts), so a scrubber drag that fires on every
+// pointer move coalesces to one seek per animation frame, taking the latest position.
+let pendingSeek: number | null = null
 export function seekTo(simSec: number): void {
-  if (S().reel) seekReelToSimTime(simSec)
+  if (!S().reel) return
+  if (typeof requestAnimationFrame === 'undefined') { seekReelToSimTime(simSec); return }
+  const first = pendingSeek === null
+  pendingSeek = simSec
+  if (first) requestAnimationFrame(() => { const t = pendingSeek; pendingSeek = null; if (t !== null && S().reel) seekReelToSimTime(t) })
 }
 
 export function autoPauseIfDue(): void {

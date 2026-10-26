@@ -82,6 +82,7 @@ export const faultEclipse = (target_peer_id: string, n_attackers = 4) =>
   post<{ ok: boolean; fault_id: string }>('/api/fault/eclipse', { target_peer_id, n_attackers })
 export const faultDrop = (peer_id: string) =>
   post<{ ok: boolean; fault_id: string }>('/api/fault/drop', { peer_id })
+export const faultActive = () => get<{ faults: unknown[] }>('/api/fault/active')
 export const faultClearAll = () => post<{ ok: boolean; cleared: number }>('/api/fault/clear-all')
 
 // Live network

@@ -127,3 +127,12 @@ test('setLayoutMode without remember forgets the remembered layout (R9)', () => 
   useStore.setState({ geoAvailable: true, layoutMode: 'geo', layoutBeforeGeo: 'radial' }); S().setLayoutMode('force')
   expect(S().layoutMode).toBe('force'); expect(S().layoutBeforeGeo).toBeNull()
 })
+
+test('a (re)connect keeps the fault count; the next scenario frame (a fresh run) clears it', () => {
+  useStore.setState(useStore.getInitialState(), true)
+  const scenario = { type: 'scenario' as const, active: false, scenario: null }
+  useStore.setState({ activeFaults: 2 })
+  useStore.getState().setConnected(true)
+  useStore.getState().applyScenario(scenario); expect(useStore.getState().activeFaults).toBe(2)   // the connect-time frame
+  useStore.getState().applyScenario(scenario); expect(useStore.getState().activeFaults).toBe(0)   // reset / launch / reconfigure
+})

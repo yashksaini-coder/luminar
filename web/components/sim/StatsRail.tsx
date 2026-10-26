@@ -242,12 +242,13 @@ export default function StatsRail({ onBeat }: { onBeat: (b: Beat) => void }) {
           </div>
           <div className={styles.barRow}>
             <span className={styles.barLabel}>DHT</span>
-            <span className={styles.segs} data-segments={dht.available}>
-              {Array.from({ length: dht.available }, (_, i) => (
+            {/* the backend sends free permits (semaphore value): capacity is busy + free */}
+            <span className={styles.segs} data-segments={dht.active + dht.available}>
+              {Array.from({ length: dht.active + dht.available }, (_, i) => (
                 <span key={i} className={styles.seg} data-on={i < dht.active ? '' : undefined} />
               ))}
             </span>
-            <span className={styles.barValue}>{dht.active}/{dht.available}</span>
+            <span className={styles.barValue}>{dht.active}/{dht.active + dht.available}</span>
           </div>
         </div>
       </section>

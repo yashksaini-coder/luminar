@@ -29,11 +29,18 @@ export function isTypingTarget(t: EventTarget | null): boolean {
   return t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range'
 }
 
+/** Elements whose own keyboard activation Space/Enter must reach: buttons, links, role=button rows, switches, tabs. */
+function isActivatable(t: EventTarget | null): boolean {
+  return t instanceof HTMLElement && !!t.closest('button, a[href], summary, [role="button"], [role="switch"], [role="tab"], [role="menuitem"], [role="option"]')
+}
+
 // Shift is allowed: '?' needs it.
 export function actionForKey(
   e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'target'>,
 ): { action: KeyAction; arg?: number } | null {
   if (e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) return null
+  // Space (and Enter) on a focused control is that control's own activation, never the global play toggle
+  if ((e.key === ' ' || e.key === 'Enter') && isActivatable(e.target)) return null
   const b = KEY_BINDINGS.find((k) => k.key === e.key)
   if (!b) return null
   return b.arg === undefined ? { action: b.action } : { action: b.action, arg: b.arg }

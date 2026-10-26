@@ -61,11 +61,13 @@ test('play dispatches by wall clock × speed, ignores recorded state, auto-pause
   expect(reelPlaying()).toBe(false); expect(useStore.getState().playing).toBe(false); expect(reelElapsedMs()).toBe(2100)
   playReel(); expect(reelElapsedMs()).toBe(0)   // from the end → seekReel(0) first
 })
-test('seek replays state frames in order, skips events, clamps, optional tail; speed floors at 0.1', async () => {
-  await loadReel(meta); seekReelToSimTime(1.0); expect(useStore.getState().simTime).toBe(1.5); expect(useStore.getState().events).toHaveLength(0)
+test('seek rebuilds the store from every frame up to t (events into the log, no particles), clamps, optional tail; speed floors at 0.1', async () => {
+  await loadReel(meta); seekReelToSimTime(1.0); expect(useStore.getState().simTime).toBe(1.5); const at1 = useStore.getState().events.length
+  seekReelToSimTime(99); const atEnd = useStore.getState().events.length; expect(atEnd).toBeGreaterThanOrEqual(at1)
+  seekReelToSimTime(1.0); expect(useStore.getState().events).toHaveLength(at1)   // a seek back drops the later events
   seekReelToSimTime(99); expect(reelElapsedMs()).toBe(2100)
   seekReel(99_999); expect(reelElapsedMs()).toBe(2100); seekReel(-5); expect(reelElapsedMs()).toBe(0)
-  seekReel(2100, { eventTailMs: 200 }); expect(useStore.getState().events.map(e => e.msg_id)).toEqual(['msg-1'])
+  seekReel(2100, { eventTailMs: 200 }); expect(useStore.getState().events.at(-1)?.msg_id).toBe('msg-1')   // the tail event plays last
   setReelSpeed(0.01); seekReel(0); playReel(); vi.advanceTimersByTime(50); expect(reelElapsedMs()).toBe(5); pauseReel()
 })
 test('stopReel keeps frames; unloadReel drops them', async () => {
@@ -123,7 +125,7 @@ test('seekReelToSimTime lands on the snapshot a rounded ?t= names, not the next 
   vi.stubGlobal('fetch', vi.fn(async () => new Response(drift, { status: 200 })))
   await loadReel(meta); seekReelToSimTime(12.9); expect(reelElapsedMs()).toBe(500)
 })
-test('seek derives phaseLabel, caption and phase beats from the scenario phases at or before t (events are skipped)', async () => {
+test('seek rebuilds phaseLabel, caption and phase beats from the recorded events at or before t', async () => {
   const phases = [{ at: 1, label: 'Sybils graft in', action: 'inject_sybil' }, { at: 3, label: 'Faults cleared', action: 'clear_faults' }]
   const scenario = { id: 's', name: 'S', description: '', icon: '', topology_type: 'random', phases, duration: 5 }
   const reel = [
@@ -131,13 +133,14 @@ test('seek derives phaseLabel, caption and phase beats from the scenario phases 
     { t: 100, frame: snapWith(['peer-0'], { time: 0 }) },
     { t: 1200, frame: { at: 1.1, event_type: 'ScenarioPhaseFired', category: 'simulation', label: 'Sybils graft in' } },
     { t: 1500, frame: snapWith(['peer-0'], { time: 1.5 }) },
+    { t: 3200, frame: { at: 3.1, event_type: 'ScenarioPhaseFired', category: 'simulation', label: 'Faults cleared' } },   // recordings carry one event per phase
     { t: 3500, frame: snapWith(['peer-0'], { time: 3.5 }) },
   ].map(l => JSON.stringify(l)).join('\n') + '\n'
   vi.stubGlobal('fetch', vi.fn(async () => new Response(reel, { status: 200 })))
   await loadReel(meta); expect(useStore.getState().phaseLabel).toBe('')
   seekReelToSimTime(1.5)
-  expect(useStore.getState().phaseLabel).toBe('Sybils graft in'); expect(useStore.getState().caption).toMatchObject({ text: 'Sybils graft in', kind: 'phase', at: 1 })
-  expect(useStore.getState().beats).toEqual([{ label: 'Sybils graft in', time: 1, kind: 'phase' }]); expect(useStore.getState().events).toHaveLength(0)
+  expect(useStore.getState().phaseLabel).toBe('Sybils graft in'); expect(useStore.getState().caption).toMatchObject({ text: 'Sybils graft in', kind: 'phase' })
+  expect(useStore.getState().beats.map(b => b.label)).toEqual(['Sybils graft in'])   // rebuilt from the recorded phase event
   seekReelToSimTime(3.5); expect(useStore.getState().phaseLabel).toBe('Faults cleared'); expect(useStore.getState().beats).toHaveLength(2)
   seekReelToSimTime(0); expect(useStore.getState().phaseLabel).toBe(''); expect(useStore.getState().beats).toEqual([])
 })

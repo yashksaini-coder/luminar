@@ -1,6 +1,6 @@
 /** The live /ws/events socket: one socket at a time, 50 ms event batching, reconnect backoff 1 s doubling to 10 s. */
 
-import { API_BASE } from '@/lib/api/client'
+import { API_BASE, faultActive } from '@/lib/api/client'
 import { dispatchFrame, flushEvents } from '@/lib/api/dispatch'
 import { useStore } from '@/lib/store'
 import type { WsFrame } from '@/lib/types'
@@ -11,7 +11,8 @@ export const RECONNECT_MAX_MS = 10_000
 
 export function wsUrl(loc: Pick<Location, 'protocol' | 'host' | 'port'> = location): string {
   if (API_BASE) return API_BASE.replace(/^http/, 'ws') + '/ws/events'
-  if (loc.port === '3000') return (process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8000') + '/ws/events'
+  // Next dev (any port: :3000 moves to :3001 when Grafana holds it) proxies only /api, not the socket
+  if (process.env.NODE_ENV === 'development' || loc.port === '3000') return (process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8000') + '/ws/events'
   return `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/events`
 }
 
@@ -57,17 +58,21 @@ class WSManager {
     const sock = new WebSocket(wsUrl())
     this.socket = sock
 
+    sock.binaryType = 'arraybuffer'   // orjson bytes decode synchronously through TextDecoder (no Blob round trip)
+
     sock.onopen = () => {
       if (sock !== this.socket) return
       this.reconnectDelay = RECONNECT_MIN_MS
       useStore.getState().setConnected(true)
       this.batchTimer = setInterval(flushEvents, BATCH_MS)
+      // faults injected before this connect (a reload, a second tab, a reconnect) never replay as FaultInjected here
+      void faultActive().then(r => { if (sock === this.socket && r.ok && r.data) useStore.setState({ activeFaults: r.data.faults.length }) })
     }
 
     sock.onmessage = (e: MessageEvent) => {
       if (sock !== this.socket) return
       if (typeof e.data === 'string') parse(e.data)
-      else if (e.data instanceof Blob) e.data.text().then(parse, () => {})
+      else if (e.data instanceof Blob) e.data.text().then(t => { if (sock === this.socket) parse(t) }, () => {})
       else parse(new TextDecoder().decode(e.data))   // ArrayBuffer; no instanceof, it fails across realms (jsdom)
     }
 

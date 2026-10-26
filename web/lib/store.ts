@@ -39,6 +39,7 @@ export interface AppState {
   events: AppEvent[]
   droppedEvents: number
   activeFaults: number   // FaultInjected since the last FaultCleared; counted here, not from the events ring
+  connectScenarioPending: boolean   // the backend sends one scenario frame on every (re)connect: that one is not a fresh run
   scenarios: ScenarioDefinition[]
   activeScenario: ScenarioStatus | null
   reel: ReelState | null
@@ -129,7 +130,7 @@ const initialState: AppState = {
   nodes: NONE, nodeById: new Map(), edges: NONE, mesh: {},
   layoutMode: 'force', geoAvailable: false, layoutBeforeGeo: null, geoAutoDone: false,
   selectedPeer: null, hoveredPeer: null, highlightPeers: NONE, scoreHistory: NONE,
-  events: NONE, droppedEvents: 0, activeFaults: 0,
+  events: NONE, droppedEvents: 0, activeFaults: 0, connectScenarioPending: false,
   scenarios: NONE, activeScenario: null, reel: null, reelLoad: null, mainnet: null,
   telemetry: { active: false, peerCount: 0 },
   stateDistribution: {}, totalMessagesSent: 0, totalMessagesReceived: 0, eventCounts: {},
@@ -226,7 +227,11 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     const duration = f.scenario?.duration ?? 0
     if (f.active && duration > 0) put(s, p, 'maxDuration', duration)
     resetNarratorPatch(s, p)
-    put(s, p, 'activeFaults', 0)   // sent only when the backend starts a fresh run (reset, launch, reconfigure): its faults are gone, and their FaultCleared never reaches the socket
+    // A scenario frame also goes out once on every (re)connect (main.py last_launch_gen = -1), and the backend's faults
+    // survive that: keep the count (the socket's open handler re-reads it from /api/fault/active). Any later frame marks a
+    // fresh run (reset, launch, reconfigure) whose faults are gone and whose FaultCleared never reaches the socket.
+    if (s.connectScenarioPending) put(s, p, 'connectScenarioPending', false)
+    else put(s, p, 'activeFaults', 0)
     set(p)
   },
 
@@ -306,7 +311,7 @@ export const useStore = create<AppStore>()(subscribeWithSelector((set, get) => (
     set(p)
   },
 
-  setConnected: v => set({ connected: v, connecting: false }),
+  setConnected: v => set(v ? { connected: true, connecting: false, connectScenarioPending: true } : { connected: false, connecting: false }),
   setPlaying: v => set({ playing: v }),
 
   selectPeer(id, highlight = NONE) {

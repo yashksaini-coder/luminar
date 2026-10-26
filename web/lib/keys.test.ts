@@ -26,3 +26,10 @@ test('KEY_BINDINGS lists 18 rows and KBD_HINT is verbatim', () => {
   expect(KEY_BINDINGS.filter(b => b.action === 'reel').map(b => b.arg)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8])
   expect(KBD_HINT).toBe('SPACE play · F fit · T stage · H hero · ? keys')
 })
+
+test('Space and Enter on a focused control belong to that control, not the play toggle', () => {
+  const btn = document.createElement('button'), row = document.createElement('div'), body = document.body
+  row.setAttribute('role', 'button')
+  for (const t of [btn, row]) for (const key of [' ', 'Enter']) expect(actionForKey({ key, ctrlKey: false, metaKey: false, altKey: false, target: t })).toBeNull()
+  expect(actionForKey({ key: ' ', ctrlKey: false, metaKey: false, altKey: false, target: body })).not.toBeNull()   // on the page it still plays
+})
