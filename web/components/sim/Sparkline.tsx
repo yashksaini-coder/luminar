@@ -1,11 +1,12 @@
 'use client'
 
-// Canvas sparkline: dithered area (2×2 checker at --cell-ui, the only dither here), 1.5 px line,
-// optional dashed zero line. Colours re-read per draw because the stage theme swaps tokens.
+// Canvas sparkline: a translucent area under a 1.5 px accent line, a hairline baseline and a dot on the
+// latest value, optional dashed zero line. Plain chart marks, no dither: the trend has to read at a glance.
+// Colours re-read per draw because the stage theme swaps tokens.
 import { useEffect, useRef, useState } from 'react'
 import { sparkPoints } from '@/lib/spark'
 
-// Shared with StatsRail's CDF so DPR policy and dither cell live in one place.
+// Shared with StatsRail's CDF so the DPR policy lives in one place.
 export function sizeCanvas(cv: HTMLCanvasElement, ctx: CanvasRenderingContext2D, w: number, h: number) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   cv.width = Math.round(w * dpr)
@@ -14,14 +15,17 @@ export function sizeCanvas(cv: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
   ctx.clearRect(0, 0, w, h)
 }
 
-export function checkerPattern(ctx: CanvasRenderingContext2D, ink: string, cell: number) {
-  const tile = document.createElement('canvas')
-  tile.width = tile.height = cell * 2
-  const tctx = tile.getContext('2d')!
-  tctx.fillStyle = ink
-  tctx.fillRect(0, 0, cell, cell)
-  tctx.fillRect(cell, cell, cell, cell)
-  return ctx.createPattern(tile, 'repeat')
+/** Fills the path under a line (closed down to the baseline) with the ink at low alpha. */
+export function fillUnder(ctx: CanvasRenderingContext2D, pts: readonly (readonly [number, number])[], base: number, ink: string, alpha = 0.16) {
+  ctx.beginPath()
+  ctx.moveTo(pts[0][0], base)
+  for (const [x, y] of pts) ctx.lineTo(x, y)
+  ctx.lineTo(pts[pts.length - 1][0], base)
+  ctx.closePath()
+  ctx.globalAlpha = alpha
+  ctx.fillStyle = ink
+  ctx.fill()
+  ctx.globalAlpha = 1
 }
 
 export interface SparklineProps {
@@ -49,32 +53,31 @@ export default function Sparkline({ values, height = 36, domain, zeroLine, alarm
     if (values.length < 2) return
     const css = getComputedStyle(document.documentElement)
     const tok = (n: string) => css.getPropertyValue(n).trim()
-    const ink = tok(alarm ? '--flame' : '--fg')
-    const cell = parseFloat(tok('--cell-ui')) || 4
-    const { pts, zeroY } = sparkPoints(values, width, h, domain)
+    const ink = tok(alarm ? '--flame' : '--signal')
+    const { pts } = sparkPoints(values, width - 3, h - 3, domain)   // room for the end dot
+    const shifted = pts.map(([x, y]) => [x + 1, y + 1.5] as const)
 
-    const pattern = checkerPattern(ctx, ink, cell)
-    if (pattern) {
-      ctx.beginPath()
-      ctx.moveTo(pts[0][0], h)
-      for (const [x, y] of pts) ctx.lineTo(x, y)
-      ctx.lineTo(pts[pts.length - 1][0], h)
-      ctx.closePath()
-      ctx.fillStyle = pattern
-      ctx.fill()
-    }
+    ctx.beginPath()   // baseline
+    ctx.moveTo(0, h - 0.5); ctx.lineTo(width, h - 0.5)
+    ctx.strokeStyle = tok('--hair'); ctx.lineWidth = 1; ctx.stroke()
 
+    fillUnder(ctx, shifted, h, ink)
     ctx.beginPath()
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    shifted.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
     ctx.strokeStyle = ink
     ctx.lineWidth = 1.5
+    ctx.lineJoin = 'round'
     ctx.stroke()
 
+    const [ex, ey] = shifted[shifted.length - 1]   // latest value
+    ctx.beginPath(); ctx.arc(ex, ey, 2, 0, Math.PI * 2); ctx.fillStyle = ink; ctx.fill()
+
+    const { zeroY } = sparkPoints(values, width - 3, h - 3, domain)
     if (zeroLine && zeroY !== null) {
       ctx.beginPath()
       ctx.setLineDash([2, 2])
-      ctx.moveTo(0, zeroY)
-      ctx.lineTo(width, zeroY)
+      ctx.moveTo(0, zeroY + 1.5)
+      ctx.lineTo(width, zeroY + 1.5)
       ctx.strokeStyle = tok('--hair-strong')
       ctx.lineWidth = 1
       ctx.stroke()

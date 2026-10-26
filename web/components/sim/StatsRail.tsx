@@ -8,7 +8,8 @@ import { cdfStats, fmtCount, fmtLatency, formatNumber, isPruned } from '@/lib/fo
 import { selectAttackers, selectHasMessages, selectKpis, selectStateCounts, useStore } from '@/lib/store'
 import type { AnalyticsSample, Beat, CdfPoint } from '@/lib/types'
 import Glyph, { type GlyphRole } from './Glyph'
-import Sparkline, { checkerPattern, sizeCanvas } from './Sparkline'
+import { monoFamily } from '@/lib/fonts'
+import Sparkline, { fillUnder, sizeCanvas } from './Sparkline'
 import styles from './StatsRail.module.css'
 
 const CATS = ['gossip', 'connection', 'stream', 'dht', 'fault', 'health'] as const
@@ -68,7 +69,8 @@ function StateStrip() {
   return <canvas ref={ref} className={styles.strip} height={6} role="img" aria-label="node states in order" />
 }
 
-// x = latency (linear min→max), y = percentile; not Sparkline, whose x is the sample index.
+// x = latency (linear min→max), y = percentile with a 0/50/100 % grid; not Sparkline, whose x is the sample index.
+const CDF_H = 92
 function DeliveryCdf({ pts }: { pts: CdfPoint[] }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const { min, max, p50 } = cdfStats(pts)   // R29: callers guard non-empty
@@ -76,45 +78,46 @@ function DeliveryCdf({ pts }: { pts: CdfPoint[] }) {
     const cv = ref.current
     const ctx = cv?.getContext('2d')
     if (!cv || !ctx) return
-    const h = 56
+    const h = CDF_H
     const draw = () => {
       const w = cv.clientWidth
       if (w === 0) return
       sizeCanvas(cv, ctx, w, h)
       const css = getComputedStyle(document.documentElement)
       const tok = (n: string) => css.getPropertyValue(n).trim()
-      const ink = tok('--fg')
-      const cell = parseFloat(tok('--cell-ui')) || 4
+      const ink = tok('--signal')
+      const left = 28, top = 6, bottom = h - 7   // y labels live in the left gutter; room for the 0 % label
+      const plotW = w - left - 4
       const span = max - min || 1
-      const x = (ms: number) => ((ms - min) / span) * w
-      const y = (pc: number) => h - (pc / 100) * (h - 1.5) - .75
-      const xy = pts.map(p => [x(p.latency_ms), y(p.percentile)] as const)
+      const x = (ms: number) => left + ((ms - min) / span) * plotW
+      const y = (pc: number) => bottom - (pc / 100) * (bottom - top)
 
-      const pattern = checkerPattern(ctx, ink, cell)
-      if (pattern) {
-        ctx.beginPath()
-        ctx.moveTo(xy[0][0], h)
-        for (const [px, py] of xy) ctx.lineTo(px, py)
-        ctx.lineTo(xy[xy.length - 1][0], h)
-        ctx.closePath()
-        ctx.fillStyle = pattern
-        ctx.fill()
+      // grid: 0 / 50 / 100 %, labelled in the gutter
+      ctx.font = `10px ${monoFamily()}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'right'
+      for (const pc of [0, 50, 100]) {
+        const gy = Math.round(y(pc)) + 0.5
+        ctx.beginPath(); ctx.moveTo(left, gy); ctx.lineTo(w, gy)
+        ctx.strokeStyle = tok(pc === 0 ? '--hair-strong' : '--hair'); ctx.lineWidth = 1; ctx.stroke()
+        ctx.fillStyle = tok('--fg-3'); ctx.fillText(`${pc}%`, left - 5, gy)
       }
 
-      ctx.beginPath()
-      ctx.setLineDash([2, 2])
-      ctx.moveTo(x(p50), 0)
-      ctx.lineTo(x(p50), h)
-      ctx.strokeStyle = tok('--hair-strong')
-      ctx.lineWidth = 1
-      ctx.stroke()
-      ctx.setLineDash([])
-
+      // the CDF as a step curve: each point holds its percentile until the next latency
+      const xy: [number, number][] = []
+      pts.forEach((p, i) => {
+        if (i) xy.push([x(p.latency_ms), y(pts[i - 1].percentile)])
+        xy.push([x(p.latency_ms), y(p.percentile)])
+      })
+      fillUnder(ctx, xy, bottom, ink, 0.14)
       ctx.beginPath()
       xy.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)))
-      ctx.strokeStyle = ink
-      ctx.lineWidth = 1.5
-      ctx.stroke()
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke()
+
+      // p50: dashed guides to the 50 % point, marked with a dot
+      const px50 = x(p50), py50 = y(50)
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = tok('--fg-3'); ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo(px50, bottom); ctx.lineTo(px50, py50); ctx.lineTo(left, py50); ctx.stroke()
+      ctx.setLineDash([])
+      ctx.beginPath(); ctx.arc(px50, py50, 3, 0, Math.PI * 2); ctx.fillStyle = tok('--fg'); ctx.fill()
     }
     draw()
     const ro = new ResizeObserver(draw)
@@ -124,8 +127,9 @@ function DeliveryCdf({ pts }: { pts: CdfPoint[] }) {
   return (
     <>
       <h2 className={styles.heading}>Delivery CDF<span className={styles.meta}>p50 {fmtLatency(p50)}</span></h2>
-      <canvas ref={ref} className={styles.cdf} height={56} role="img" aria-label="delivery latency CDF" />
-      <div className={styles.axis}><span>{fmtLatency(min)}</span><span>p50</span><span>{fmtLatency(max)}</span></div>
+      <canvas ref={ref} className={styles.cdf} height={CDF_H} role="img"
+        aria-label={`delivery latency CDF: ${fmtLatency(min)} to ${fmtLatency(max)}, half of deliveries within ${fmtLatency(p50)}`} />
+      <div className={styles.axis}><span>{fmtLatency(min)}</span><span>latency</span><span>{fmtLatency(max)}</span></div>
     </>
   )
 }
