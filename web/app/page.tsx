@@ -4,7 +4,6 @@ import Faithfulness from '@/components/landing/Faithfulness'
 import Faq from '@/components/landing/Faq'
 import Features from '@/components/landing/Features'
 import FigurePlate from '@/components/landing/FigurePlate'
-import FinalCta from '@/components/landing/FinalCta'
 import Footer from '@/components/landing/Footer'
 import Hero from '@/components/landing/Hero'
 import HowItWorks from '@/components/landing/HowItWorks'
@@ -37,7 +36,6 @@ export default function Home() {
       <Faithfulness />
       <QuickStart />
       <Faq />
-      <FinalCta />
     </main>
     <Footer />
     </GridFrame>
