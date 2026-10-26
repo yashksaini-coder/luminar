@@ -110,7 +110,7 @@ const CONTRACT: [string, Record<string, unknown>, Record<string, Kind>][] = [
     drawDither: F, drawLoupe: F,
   }],
   ['scripts/reel-stats', reelStats, {
-    computeStats: F, computeCard: F, STAMP_MAX: N, PLATE_MAX_BYTES: N, CARDS_MAX_BYTES: N,
+    computeStats: F, computeCard: F, computePartition: F, STAMP_MAX: N, PLATE_MAX_BYTES: N, CARDS_MAX_BYTES: N,
   }],
 ]
 

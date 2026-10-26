@@ -113,6 +113,18 @@ export function computeStats(lines, reel = 'sybil-eclipse') {
   return { stats, plate }
 }
 
+/** Partition card numbers from the partition-heal reel: the scenario's split/clear phases, delivery while cut, time to heal. */
+export function computePartition(lines) {
+  const { snapshots, analytics } = parse(lines)
+  const scenario = lines.map(l => JSON.parse(l).frame).find(f => f?.type === 'scenario' && f.scenario)?.scenario
+  const phase = action => scenario?.phases.find(p => p.action === action)?.at
+  const splitAt = phase('inject_partition'), clearedAt = phase('clear_faults')
+  const cut = analytics.filter(a => a.simT > splitAt && a.simT <= clearedAt).at(-1)
+  const healed = analytics.find(a => a.simT > clearedAt && a.recent_delivery_ratio >= 0.95)
+  if (!snapshots.length || splitAt === undefined || clearedAt === undefined || !cut || !healed) throw new Error('partition-heal: missing a beat the landing needs')
+  return { peers: snapshots[0].node_count, splitAt, clearedAt, cutDeliveryPct: Math.round(cut.recent_delivery_ratio * 100), healedInS: round1(healed.simT - clearedAt) }
+}
+
 /** One-frame PlateFrames for a reel card: the busiest real snapshot (geo) or the first at 30 % of the run. */
 export function computeCard(lines, meta) {
   const snapshots = []; const edgesAt = []   // edgesAt[k] = latest edges frame before snapshot k (line order)
@@ -148,7 +160,8 @@ function main() {
   const longStamp = plate.frames.find(f => f.stamp.length > STAMP_MAX)
   if (longStamp) { console.error(`stamp over ${STAMP_MAX} chars: "${longStamp.stamp}"`); process.exit(1) }
   if (plateJson.length >= PLATE_MAX_BYTES) { console.error(`plate-frames.json is ${plateJson.length} B, limit ${PLATE_MAX_BYTES}`); process.exit(1) }
-  const statsJson = JSON.stringify(stats, null, 2) + '\n'
+  const partition = computePartition(readFileSync(join(here, '../public/reels/partition-heal.jsonl'), 'utf8').split('\n').filter(Boolean))
+  const statsJson = JSON.stringify({ ...stats, partition }, null, 2) + '\n'
   for (const [name, body] of [['reel-stats.json', statsJson], ['plate-frames.json', plateJson + '\n']]) {
     const out = join(here, '../lib', name)
     writeFileSync(out, body)

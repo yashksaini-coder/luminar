@@ -22,8 +22,8 @@ test('redirect island slot is the first child, before <Nav>', () => {
   expect(src.slice(src.indexOf('<>') + 2, island).trim()).toBe('')
 })
 
-test('page order: skip link, GridFrame, Nav, main#main with Hero → Features → HowItWorks → AttackExplorer → FigurePlate → VideoPlate → Observability → MainnetCard → Faithfulness → QuickStart → Faq → FinalCta, then Footer', () => {
-  const order = ['className="skip"', '<GridFrame>', '<Nav', '<main id="main"', '<Hero', '<Features', '<HowItWorks', '<AttackExplorer', '<FigurePlate', '<VideoPlate', '<Observability', '<MainnetCard', '<Faithfulness', '<QuickStart', '<Faq', '<FinalCta', '</main>', '<Footer', '</GridFrame>']
+test('page order: skip link, GridFrame, Nav, main#main with Hero → Features → Problem → AttackCards → Statement → FigurePlate → VideoPlate → Observability → MainnetCard → Faithfulness → QuickStart → Faq → FinalCta, then Footer', () => {
+  const order = ['className="skip"', '<GridFrame>', '<Nav', '<main id="main"', '<Hero', '<Features', '<Problem', '<AttackCards', '<Statement', '<FigurePlate', '<VideoPlate', '<Observability', '<MainnetCard', '<Faithfulness', '<QuickStart', '<Faq', '<FinalCta', '</main>', '<Footer', '</GridFrame>']
   const idx = order.map((s) => src.indexOf(s))
   expect(idx.every((i) => i > -1)).toBe(true)
   expect([...idx].sort((a, b) => a - b)).toEqual(idx)
