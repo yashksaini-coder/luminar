@@ -22,6 +22,9 @@ export const STEPS: [string, string][] = [
 /** tag, label, href, external */
 const LINKS: [string, string, string, boolean][] = [
   ['GH', 'GitHub', GITHUB, true],
+  ['IN', 'LinkedIn', 'https://www.linkedin.com/in/yashksaini', true],
+  ['X', 'X / Twitter', 'https://x.com/0xcrackedDev', true],
+  ['WEB', 'Website', 'https://yashksaini.vercel.app/', true],
   ['SIM', 'Simulator', '/sim/', false],
   ['REC', 'Recordings', reelHref('sybil-eclipse'), false],
   ['FIG', 'Figure', '/figure/', false],
