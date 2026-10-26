@@ -19,8 +19,7 @@ test('drawPlateFrame draws every layer of a pre-Sybil frame (a: [], m: []) and o
   const ctx = new Proxy({}, { get: (_, k) => (k === 'canvas' ? { width: 620, height: 248 } : () => { calls.push(String(k)); return k === 'measureText' ? { width: 10 } : undefined }), set: () => true }) as unknown as CanvasRenderingContext2D
   const p = plate as PlateFrames; const empty = { ...p, frames: [{ ...p.frames[0], a: [], m: [] }] }
   for (const layer of ['base', 'attackers'] as const) expect(() => drawPlateFrame(ctx, empty, 0, 620, 248, layer)).not.toThrow()
-  expect(calls).toContain('arc'); expect(calls.filter(c => c === 'fillText')).toHaveLength(0)        // no text outside the loupe layer (spec §7: never dither text)
-  calls.length = 0; drawPlateFrame(ctx, empty, 0, 620, 248, 'loupe'); expect(calls.filter(c => c === 'fillText').length).toBeGreaterThanOrEqual(50)   // one id per node
+  expect(calls).toContain('arc'); expect(calls.filter(c => c === 'fillText')).toHaveLength(0)        // no text on the dithered plate (spec §7: never dither text)
   const geo = { ...p, geo: true, bounds: { minX: -450, minY: -145, maxX: 450, maxY: 210 } }; expect(() => drawPlateFrame(ctx, geo, 0, 96, 60, 'base')).not.toThrow()
 })
 test('a geo card (y flipped) lands every node inside the canvas', () => {

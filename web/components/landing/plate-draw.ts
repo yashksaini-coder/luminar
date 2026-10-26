@@ -1,6 +1,5 @@
 import { BAND_DENSITY } from '@/components/map/palette'
 import { FLAME, PAPER, PITCH } from '@/components/dither/dither'
-import { monoFamily } from '@/lib/fonts'
 import type { RGBA } from '@/lib/types'
 
 /** Fig. 1 plate and reel-card drawing: pure canvas calls over lib/plate-frames.json / lib/reel-cards.json (A.21). */
@@ -8,7 +7,7 @@ import type { RGBA } from '@/lib/types'
 export interface PlateFrame { t: number; s: string; b: string; a: { id: string; x: number; y: number; p: boolean; v: number[] }[]; m: [number, number][]; r: { peers: number; sybil: number; pruned: number }; stamp: string }
 export interface PlateFrames { reel: string; from: number; to: number; step: number; geo?: boolean; nodes: { id: string; x: number; y: number }[]; edges: [number, number][]; bounds: { minX: number; minY: number; maxX: number; maxY: number }; frames: PlateFrame[] }
 /** base is dithered (greys are densities); attackers stays flat; loupe adds the ids. */
-export type PlateLayer = 'base' | 'attackers' | 'loupe'
+export type PlateLayer = 'base' | 'attackers'
 
 export const PLATE_FPS = 2
 export const STILL_T = 11.9
@@ -92,11 +91,4 @@ export function drawPlateFrame(ctx: CanvasRenderingContext2D, plate: PlateFrames
     ctx.fillRect(a[0] + (b[0] - a[0]) * 0.65 - 2, a[1] + (b[1] - a[1]) * 0.65 - 2, 4, 4)
   }
 
-  if (layer === 'loupe') {
-    ctx.font = `500 9px ${monoFamily()}`   // weight before size: "9px 500" is not a valid font shorthand
-    ctx.fillStyle = PAPER_FILL
-    pts.forEach(([x, y], k) => ctx.fillText(`n${k}`, x + r + 2, y + 3))
-    ctx.fillStyle = FLAME_FILL
-    for (const a of f.a) { const [x, y] = to(a.x, a.y); ctx.fillText(a.id, x + r + 2, y + 3) }
-  }
 }

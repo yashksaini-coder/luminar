@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import CanvasReveal from '@/components/sim/CanvasReveal'
 import Tooltip from '@/components/sim/Tooltip'
-import { destroyRenderer, initRenderer, resizeRenderer } from './renderer'
+import { destroyRenderer, initRenderer, resizeRenderer, setBackendFailureHandler, fallBackToCanvas2D } from './renderer'
+
+let contextLosses = 0   // per page: a GPU that keeps dropping contexts gets the Canvas 2D backend
 import styles from './DeckCanvas.module.css'
 
 /** The mesh canvas: React owns the elements, the renderer module owns everything drawn on them. */
@@ -18,9 +20,14 @@ export default function DeckCanvas({ className }: { className?: string }) {
     initRenderer(canvas, tipRef.current)
     const ro = new ResizeObserver(([e]) => resizeRenderer(e.contentRect.width, e.contentRect.height))
     ro.observe(canvas.parentElement!)
-    const lost = (e: Event) => { e.preventDefault(); setGen(g => g + 1) }
+    const lost = (e: Event) => {
+      e.preventDefault()
+      if (++contextLosses >= 2) fallBackToCanvas2D()
+      setGen(g => g + 1)
+    }
     canvas.addEventListener('webglcontextlost', lost)
-    return () => { canvas.removeEventListener('webglcontextlost', lost); ro.disconnect(); destroyRenderer() }
+    setBackendFailureHandler(() => setGen(g => g + 1))   // deck.gl could not create a context: remount on Canvas 2D
+    return () => { canvas.removeEventListener('webglcontextlost', lost); setBackendFailureHandler(null); ro.disconnect(); destroyRenderer() }
   }, [gen])
   return (
     <div className={className ? `${className} ${styles.field}` : styles.field}>

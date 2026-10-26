@@ -13,6 +13,7 @@ import { useStore } from '@/lib/store'
 import type { AppEvent, Edge, LayoutMode, NodeState, PeerNode, RGBA } from '@/lib/types'
 import { atlasKey, buildAtlas, type GlyphId, glyphFor, HALO_OUTER, haloFor, type IconAtlas } from './atlas'
 import { bezierPoint, breathe, glyphScale, nodeRadiusPx, OBSERVER_STATIC_ALPHA, PARTICLE_CAP, particleFrame, PULSE_CAP, pulseAlpha } from './geometry'
+import { Canvas2DDeck, webglAvailable } from './canvas2d'
 import { attackerLayoutEdges, computeLayout, edgesKey, GEO_SCALE, isNodeVisible, resetLayoutMemory, topologyKey, WORLD_BOUNDS } from './layout'
 import { PAL, type PaletteKey, PARTICLE_KEY, type ParticleKind, refreshPalette, scoreBand, withAlpha } from './palette'
 
@@ -29,7 +30,20 @@ declare global {
   interface Window { __luminar?: { store: typeof useStore; fitView: typeof fitView; viewState: typeof getViewState; layerIds: typeof layerIds } }
 }
 
-let deck: Deck<OrthographicView> | null = null
+// Either a real deck.gl Deck or the Canvas 2D stand-in; renderer.ts only calls setProps/finalize on it.
+type Backend = { setProps(p: Record<string, unknown>): void; finalize(): void }
+let deck: Backend | null = null
+let forceCanvas2D = false
+let onBackendFailure: (() => void) | null = null
+
+/** 'canvas2d' when WebGL is unavailable (hardware acceleration off, GPU blocklisted) or failed this session. */
+export function rendererBackend(): 'webgl' | 'canvas2d' {
+  return forceCanvas2D || (process.env.NODE_ENV !== 'test' && !webglAvailable()) ? 'canvas2d' : 'webgl'
+}
+/** Switch the rest of this session to the Canvas 2D backend (the next initRenderer uses it). */
+export function fallBackToCanvas2D(): void { forceCanvas2D = true }
+/** DeckCanvas registers a remount: deck.gl reports a dead GPU only after construction, asynchronously. */
+export function setBackendFailureHandler(cb: (() => void) | null): void { onBackendFailure = cb }
 let nodePositions: Pos[] = []
 let nodeIndex = new Map<string, number>()
 let topoKey = ''
@@ -154,19 +168,30 @@ export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement |
   refreshPalette()
   W = canvas.parentElement?.clientWidth || window.innerWidth
   H = canvas.parentElement?.clientHeight || window.innerHeight
-  deck = new Deck({
+  const props = {
     canvas,
     views: new OrthographicView({ flipY: false }),
     initialViewState: { target: [0, 0, 0], zoom: 0 },
     controller: true,
     layers: [],
-    getCursor: ({ isHovering }) => (isHovering ? 'pointer' : RETICLE_CURSOR),
+    getCursor: ({ isHovering }: { isHovering: boolean }) => (isHovering ? 'pointer' : RETICLE_CURSOR),
     // Deck's root onClick is a tap (a pan never fires it) and runs after the nodes layer's onClick.
-    onClick: info => { if (!info.picked) useStore.getState().selectPeer(null) },
-    onViewStateChange: ({ viewState }) => { viewZoom = (viewState as { zoom: number }).zoom; markDirty() },
+    onClick: (info: { picked?: boolean }) => { if (!info.picked) useStore.getState().selectPeer(null) },
+    onViewStateChange: ({ viewState }: { viewState: unknown }) => { viewZoom = (viewState as { zoom: number }).zoom; markDirty() },
     width: W,
     height: H,
-  })
+  }
+  deck = rendererBackend() === 'canvas2d'
+    ? new Canvas2DDeck(props as unknown as ConstructorParameters<typeof Canvas2DDeck>[0])
+    : new Deck({
+        ...(props as unknown as ConstructorParameters<typeof Deck<OrthographicView>>[0]),
+        // A GPU that refuses a context fails inside deck's async device setup: fall back to Canvas 2D and remount.
+        onError: (err: Error) => {
+          if (!/webgl|context|device/i.test(err?.message ?? '')) return
+          forceCanvas2D = true
+          onBackendFailure?.()
+        },
+      }) as unknown as Backend
   // Labels wait for the mono face so the TextLayer never bakes a fallback font into its atlas; a failed load draws with the fallback.
   fontsReady = false
   document.fonts?.load(`500 10px ${monoFamily()}`).then(fontsLoaded, fontsLoaded)
@@ -552,9 +577,9 @@ export function fitView({ durationMs = reducedMotion() ? 0 : 500 }: { durationMs
   const padBottom = pad + STRIP_CLEAR_PX   // the floating command strip covers the bottom of the field
   const dx = maxX - minX || 1, dy = maxY - minY || 1
   const zoom = Math.min(4, Math.log2(Math.min((W - 2 * pad) / dx, (H - pad - padBottom) / dy)))
-  const lift = (padBottom - pad) / 2 / 2 ** zoom   // centre the mesh in the band above the strip
+  const lift = (padBottom - pad) / 2 / 2 ** zoom   // centre the mesh in the band above the strip (y is up: lower the target)
   // Deck ignores an initialViewState deep-equal to the previous one, so a refit after a pan would be dropped: the seq makes each fit new.
-  const fit = { target: [(minX + maxX) / 2, (minY + maxY) / 2 + lift, 0] as [number, number, number], zoom, transitionDuration: durationMs, fitSeq: ++fitSeq }
+  const fit = { target: [(minX + maxX) / 2, (minY + maxY) / 2 - lift, 0] as [number, number, number], zoom, transitionDuration: durationMs, fitSeq: ++fitSeq }
   deck.setProps({ initialViewState: fit })
   viewZoom = zoom   // a 0 ms fit fires no onViewStateChange; a transition's frames overwrite this on the way
   markDirty()
