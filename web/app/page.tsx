@@ -1,4 +1,5 @@
 import Faq from '@/components/landing/Faq'
+import Features from '@/components/landing/Features'
 import FigurePlate from '@/components/landing/FigurePlate'
 import FinalCta from '@/components/landing/FinalCta'
 import Footer from '@/components/landing/Footer'
@@ -6,7 +7,7 @@ import Hero from '@/components/landing/Hero'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
 import Readouts from '@/components/landing/Readouts'
-import { LiveMainnet, SameNames, WhatItDoes } from '@/components/landing/Sections'
+import { LiveMainnet, SameNames } from '@/components/landing/Sections'
 import Tagline from '@/components/landing/Tagline'
 import VideoPlate from '@/components/landing/VideoPlate'
 import ReelRedirect from '@/components/sim/ReelRedirect'
@@ -23,7 +24,7 @@ export default function Home() {
       <Hero />
       <Readouts />
       <Tagline />
-      <WhatItDoes />
+      <Features />
       <FigurePlate />
       <VideoPlate />
       <SameNames />
