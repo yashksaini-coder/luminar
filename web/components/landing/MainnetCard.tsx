@@ -92,14 +92,14 @@ function WorldMap() {
       if (msEl.current) msEl.current.textContent = ms < 0 ? '····' : String(Math.round(ms))
       if (nEl.current) nEl.current.textContent = String(CUM[n])
     }
-    paint(-1)   // the story starts empty; the server markup is the final frame
+    // at rest the card keeps the server markup's final frame (every site lit); the story replays while on screen
     const tick = (ts: number) => {
       if (last !== undefined) clock += ts - last
       last = ts; paint(msAt(clock)); raf = requestAnimationFrame(tick)
     }
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !raf) { last = undefined; raf = requestAnimationFrame(tick) }
-      else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0 }
+      else if (!e.isIntersecting && raf) { cancelAnimationFrame(raf); raf = 0; clock = 0; paint(LAST_MS) }
     }, { threshold: 0.3 })
     io.observe(box)
     return () => { io.disconnect(); cancelAnimationFrame(raf) }
@@ -134,7 +134,7 @@ export default function MainnetCard() {
         <div className={styles.copy}>
           <p className={styles.kicker}><span className={styles.observer} aria-hidden="true"><Glyph role="observer" size={14} /></span>Mainnet arrivals</p>
           <h2 id="mainnet-h" className={styles.h2}>Real blocks, real observers</h2>
-          <p className={styles.body}>{`The MAINNET badge polls ethPandaOps once per slot and lights each observer node as a block reaches it: ${ARRIVAL}. The Geo view hides simulated peers, so the pattern is the real network's, never the route a block took.`}</p>
+          <p className={styles.body}>{`In mainnet mode the simulator polls ethPandaOps once per slot and lights each observer node as a block reaches it: ${ARRIVAL}. The Geo view hides simulated peers, so the pattern is the real network's, never the route a block took.`}</p>
           <dl className={styles.facts}>
             <div><dt>Recorded slots</dt><dd>{SLOTS}</dd></div>
             <div><dt>Observer nodes</dt><dd>{OBSERVERS}</dd></div>

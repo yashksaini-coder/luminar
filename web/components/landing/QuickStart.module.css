@@ -49,15 +49,15 @@
    Gated on data-js so no-JS readers get the text; paused until the section is on screen. */
 @media (prefers-reduced-motion: no-preference) {
   /* backwards fill only: once a track ends the element's own (fully shown) style applies, never a stuck last step */
-  :root[data-js] .cmd { animation: type var(--t) steps(var(--n), end) var(--d) backwards; }
-  :root[data-js] .line { animation: show 1ms linear var(--d) backwards; }
-  :root[data-js] .cmt { animation: fade 400ms var(--e2) calc(var(--d) + var(--t)) backwards; }
-  :root[data-js] .opens { animation: rise 600ms var(--e) calc(var(--d) + 150ms) backwards; }
+  .section[data-play] .cmd { animation: type var(--t) steps(var(--n), end) var(--d) backwards; }
+  .section[data-play] .line { animation: show 1ms linear var(--d) backwards; }
+  .section[data-play] .cmt { animation: fade 400ms var(--e2) calc(var(--d) + var(--t)) backwards; }
+  .section[data-play] .opens { animation: rise 600ms var(--e) calc(var(--d) + 150ms) backwards; }
   @media (max-width: 719px) {   /* commands wrap on phones, where a glyph clip would cut both rows at once: fade them in */
-    :root[data-js] .cmd { animation: fade 300ms var(--e2) var(--d) backwards; }
+    .section[data-play] .cmd { animation: fade 300ms var(--e2) var(--d) backwards; }
   }
-  :root[data-js] .caret { animation: blink 1s steps(1, end) var(--d) infinite; }
-  .section:not([data-play]) :is(.cmd, .line, .cmt, .opens, .caret) { animation-play-state: paused; }
+  .section[data-play] .caret { animation: blink 1s steps(1, end) var(--d) infinite; }
+  /* off screen there is no animation at all, so the panel shows every command typed (the finished frame) */
 }
 @keyframes type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes show { from { opacity: 0; } to { opacity: 1; } }

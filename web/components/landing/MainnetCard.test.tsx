@@ -54,15 +54,14 @@ function mount(reduce: boolean) {
   return { host, root, show: (on: boolean) => act(() => cbs.forEach(cb => cb([{ isIntersecting: on }]))) }
 }
 
-test('in view the sites light in arrival order; off screen the story pauses', () => {
+test('in view the sites light in arrival order; off screen the card returns to every site lit', () => {
   const { host, root, show } = mount(false)
-  expect(lit(host)).toBe(0)                       // starts empty
+  expect(lit(host)).toBe(ARR.length)              // rest: every site lit (the server markup's final frame)
   show(true)
-  act(() => { vi.advanceTimersByTime(1000) }); const a = lit(host); expect(a).toBeGreaterThan(0); expect(a).toBeLessThan(ARR.length)
-  show(false)
-  act(() => { vi.advanceTimersByTime(3000) }); expect(lit(host)).toBe(a)
-  show(true)
+  act(() => { vi.advanceTimersByTime(1000) }); const a = lit(host); expect(a).toBeLessThan(ARR.length)   // replaying in order
   act(() => { vi.advanceTimersByTime(3000) }); expect(lit(host)).toBeGreaterThan(a)
+  show(false)
+  act(() => { vi.advanceTimersByTime(100) }); expect(lit(host)).toBe(ARR.length)   // off screen: back to the final frame
   act(() => root.unmount())
 })
 

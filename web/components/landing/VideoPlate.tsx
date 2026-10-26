@@ -1,10 +1,9 @@
 'use client'
-// Fig. 3: the launch video as a native <video>. A dithered poster covers it (and its control bar) until
+// Fig. 3: the launch video as a native <video>. The poster frame (shown clean, not dithered) covers it (and its control bar) until
 // play, so the poster is itself the play button: one click starts the video and the overlay unmounts.
 // The wrapper is a reveal section (plan D2): the plate rises as a card and the play chip's square ring
 // (D5) starts 600 ms after data-in; a video that fails to load disables the poster and points at the reel.
 import { useRef, useState } from 'react'
-import DitherImage from '@/components/dither/DitherImage'
 import Figure from '@/components/dither/Figure'
 import { FIG3 } from '@/lib/copy'
 import { reelHref } from '@/lib/reels'
@@ -20,7 +19,8 @@ export default function VideoPlate() {
         <video ref={videoRef} className={styles.video} src="/video/launch-16x9.mp4" preload="metadata" playsInline controls onPlay={() => setPlaying(true)} onError={() => setMissing(true)} />
         {!playing && (
           <button type="button" className={styles.poster} aria-label="Play the launch video" aria-disabled={missing || undefined} onClick={() => { if (!missing) void videoRef.current?.play().catch(() => {}) }}>
-            <DitherImage src="/video/poster.png" alt="Launch video poster: the mesh at the end card" depth={0.6} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- static export: next/image optimisation is off */}
+            <img className={styles.still} src="/video/poster.png" alt="Launch video poster: the LUMINAR end card over the gossip mesh" width={1920} height={1080} loading="lazy" decoding="async" />
             {!missing && <span className={styles.play} aria-hidden>Play ›</span>}
           </button>
         )}

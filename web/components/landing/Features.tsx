@@ -38,14 +38,14 @@ export function useStory(loop: number, still: number, draw: Draw, offset = 0) {
     const tick = (ts: number) => {
       elapsed += Math.min(ts - (last || ts), 100) / 1000   // a long frame (tab switch) never skips a beat
       last = ts
-      draw(root, elapsed < 0 ? 0 : elapsed % loop)
+      draw(root, elapsed < 0 ? still : elapsed % loop)   // before its offset a card shows its finished frame
       raf = requestAnimationFrame(tick)
     }
-    draw(root, 0)
+    draw(root, still)   // at rest (off screen, before the first play) every visual shows its finished frame
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting === on) return
       on = e.isIntersecting
-      if (on) { last = 0; raf = requestAnimationFrame(tick) } else cancelAnimationFrame(raf)
+      if (on) { last = 0; elapsed = -offset; raf = requestAnimationFrame(tick) } else { cancelAnimationFrame(raf); draw(root, still) }
     }, { threshold: 0.3 })
     io.observe(root)
     return () => { io.disconnect(); cancelAnimationFrame(raf) }

@@ -59,14 +59,15 @@ function mount(reduce: boolean) {
   return { host, root, see, time }
 }
 
-test('stories start from rest, run only while on screen and pause off screen', () => {
+test('at rest every visual shows its finished frame; the story runs only while on screen', () => {
   const { root, see, time, host } = mount(false)
-  expect(time()).toBe('0.0')                                       // draw(0): rest frame on mount
-  act(() => { vi.advanceTimersByTime(4000) }); expect(time()).toBe('0.0')   // not visible: no clock
+  const done = String(stats.simDurationS)
+  expect(time()).toBe(done)                                        // rest: the finished frame on mount
+  act(() => { vi.advanceTimersByTime(4000) }); expect(time()).toBe(done)    // not visible: no clock
   see(true); for (let k = 0; k < 240; k++) act(() => { vi.advanceTimersByTime(16) })
-  const mid = time(); expect(+mid!).toBeGreaterThan(0)
+  const mid = time(); expect(+mid!).toBeLessThan(stats.simDurationS)        // playing: mid story
   expect(host.querySelector<HTMLElement>('[data-a="cmd"]')!.textContent!.length).toBeLessThan(28)
-  see(false); act(() => { vi.advanceTimersByTime(3000) }); expect(time()).toBe(mid)   // paused where it was
+  see(false); act(() => { vi.advanceTimersByTime(3000) }); expect(time()).toBe(done)   // off screen: back to finished
   act(() => root.unmount())
 })
 
