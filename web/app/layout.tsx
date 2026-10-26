@@ -42,6 +42,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
+      suppressHydrationWarning
       lang="en"
       data-theme="dark"
       style={

@@ -122,17 +122,17 @@ test('geo draws only real nodes; empty visible set yields no layers and fitView 
   expect(layerIds()).toEqual([]); const calls = FakeDeck.instances[0].setPropsCalls.length; fitView(); expect(FakeDeck.instances[0].setPropsCalls.length).toBe(calls)
   useStore.getState().applySnapshot({ ...snapWith(['obs-1']), nodes: [{ ...peers(1)[0], peer_id: 'obs-1', is_real: true, x: 10, y: -25 }] }); flush()
   expect(FakeDeck.instances[0].lastLayer('nodes').props.data).toHaveLength(1)
-  fitView(); const vs = FakeDeck.instances[0].setPropsCalls.at(-1)!.initialViewState; expect(vs.target).toEqual([0, (WORLD_BOUNDS.minY + WORLD_BOUNDS.maxY) / 2, 0]); expect(vs.zoom).toBeLessThanOrEqual(4); expect(vs.transitionDuration).toBe(500)
+  fitView(); const vs = FakeDeck.instances[0].setPropsCalls.at(-1)!.initialViewState; expect(vs.target).toEqual([0, (WORLD_BOUNDS.minY + WORLD_BOUNDS.maxY) / 2 + 44 / 2 ** vs.zoom, 0])   // lifted half the 88 px strip band; expect(vs.zoom).toBeLessThanOrEqual(4); expect(vs.transitionDuration).toBe(500)
 })
 
-test('fitView pads 80 px, caps zoom at 4 and is called on the rAF after a relayout', () => {
+test('fitView pads 80 px (plus the strip band at the bottom), caps zoom at 4 and is called on the rAF after a relayout', () => {
   const c = mount(); Object.defineProperty(c.parentElement!, 'clientWidth', { value: 800 }); Object.defineProperty(c.parentElement!, 'clientHeight', { value: 600 }); resizeRenderer(800, 600)
   useStore.getState().applyEdges({ type: 'edges', edges: ring(2) }); useStore.getState().applySnapshot(snapWith(['peer-0', 'peer-1'])); flush()
   expect(FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState)).toHaveLength(0); flush()   // the fit waits for the rAF after the relayout
   const [[x0, y0], [x1, y1]] = [...visiblePositions().values()]   // two linked nodes sit max(40, 400/√2) ≈ 283 apart, so this fit is padding-bound
   const fit = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).at(-1)!.initialViewState
-  expect(fit.zoom).toBeCloseTo(Math.log2(Math.min((800 - 160) / (Math.abs(x1 - x0) || 1), (600 - 160) / (Math.abs(y1 - y0) || 1))))
-  expect(fit.target).toEqual([(x0 + x1) / 2, (y0 + y1) / 2, 0])
+  expect(fit.zoom).toBeCloseTo(Math.log2(Math.min((800 - 160) / (Math.abs(x1 - x0) || 1), (600 - 160 - 88) / (Math.abs(y1 - y0) || 1))))   // bottom pad clears the strip
+  expect(fit.target[0]).toBe((x0 + x1) / 2); expect(fit.target[1]).toBeCloseTo((y0 + y1) / 2 + 44 / 2 ** fit.zoom)
   useStore.getState().applyEdges({ type: 'edges', edges: [] }); useStore.getState().applySnapshot(snapWith(['peer-0'])); flush(); flush()
   const vs = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).at(-1)!.initialViewState; expect(vs.zoom).toBe(4)   // one node → zero bbox → capped
   fitView(); const [prev, last] = FakeDeck.instances[0].setPropsCalls.filter(p => p.initialViewState).slice(-2).map(p => p.initialViewState)

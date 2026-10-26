@@ -533,6 +533,9 @@ export function renderLayers(): void {
   setLayers(layers)
 }
 
+/** Strip height (52) + its bottom offset (36): the band the strip owns at the bottom of the canvas. */
+const STRIP_CLEAR_PX = 88
+
 export function fitView({ durationMs = reducedMotion() ? 0 : 500 }: { durationMs?: number } = {}): void {
   if (!deck) return
   const { nodes, layoutMode } = useStore.getState()
@@ -546,10 +549,12 @@ export function fitView({ durationMs = reducedMotion() ? 0 : 500 }: { durationMs
   if (layoutMode === 'geo') ({ minX, minY, maxX, maxY } = WORLD_BOUNDS)   // the whole map, not just where observers are
   if (W < 200 || H < 200) return                              // 0×0 field: keep fitPending; resizeRenderer re-arms the loop
   const pad = 80
+  const padBottom = pad + STRIP_CLEAR_PX   // the floating command strip covers the bottom of the field
   const dx = maxX - minX || 1, dy = maxY - minY || 1
-  const zoom = Math.min(4, Math.log2(Math.min((W - 2 * pad) / dx, (H - 2 * pad) / dy)))
+  const zoom = Math.min(4, Math.log2(Math.min((W - 2 * pad) / dx, (H - pad - padBottom) / dy)))
+  const lift = (padBottom - pad) / 2 / 2 ** zoom   // centre the mesh in the band above the strip
   // Deck ignores an initialViewState deep-equal to the previous one, so a refit after a pan would be dropped: the seq makes each fit new.
-  const fit = { target: [(minX + maxX) / 2, (minY + maxY) / 2, 0] as [number, number, number], zoom, transitionDuration: durationMs, fitSeq: ++fitSeq }
+  const fit = { target: [(minX + maxX) / 2, (minY + maxY) / 2 + lift, 0] as [number, number, number], zoom, transitionDuration: durationMs, fitSeq: ++fitSeq }
   deck.setProps({ initialViewState: fit })
   viewZoom = zoom   // a 0 ms fit fires no onViewStateChange; a transition's frames overwrite this on the way
   markDirty()

@@ -153,7 +153,7 @@ export default function StatsRail({ onBeat }: { onBeat: (b: Beat) => void }) {
     <div className={styles.rail} aria-busy={busy || undefined}>
       <section className={styles.section} data-section="kpi">
         <div className={styles.kpis}>
-          <Kpi label="Delivery" value={k.delivery === null ? null : (k.delivery * 100).toFixed(1)} unit="%"
+          <Kpi label="Delivery" value={k.delivery === null ? null : (k.delivery * 100).toFixed(k.delivery >= 0.9995 ? 0 : 1)} unit="%"
             series={delivery} aria="delivery, last 60 analytics frames" busy={busy} />
           <Kpi label="Propagation" value={k.propagationMs === null ? null : k.propagationMs.toFixed(0)} unit="ms"
             series={prop} aria="propagation, last 60 analytics frames" busy={busy} />

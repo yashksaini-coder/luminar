@@ -25,7 +25,7 @@
 .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
 .kpi { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
 .kpiLabel { font: 500 var(--t-label)/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
-.kpiValue { font: 400 var(--t-kpi)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; }
+.kpiValue { font: 400 var(--t-kpi)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; overflow: hidden; }
 .unit { margin-left: .25em; font-size: var(--t-label); color: var(--fg-2); }
 
 .strip { display: block; width: 100%; height: 6px; margin-bottom: var(--s-2); }
