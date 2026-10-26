@@ -17,10 +17,10 @@ test('with analytics, attackers and spam: recent delivery preferred, flame on at
   expect(cells.map(c => c.value)).toEqual(['Sybil attack: 5 attackers graft in', '97%', '5.8', '4.0', '190 ms', '2 · 1 pruned', '12', '12.3s'])
   expect(cells.filter(c => c.danger).map(c => c.key)).toEqual(['attackers', 'invalid'])
 })
-test('scenario name when no phase has fired; geo + mainnet swaps cells 2–5', () => {
+test('scenario name when no phase has fired; geo + mainnet replaces the six simulated-mesh cells with the arrival readout', () => {
   const s = { ...base(), activeScenario: { active: true, scenario: { id: 'x', name: 'Healthy mesh', description: '', icon: '', topology_type: '', phases: [], duration: 60 } } }
   expect(tickerCells(s)[0].value).toBe('Healthy mesh')
   const geo = tickerCells({ ...s, layoutMode: 'geo', mainnet: { enabled: true, observers: 150, with_geo: 138, slot: 15466393, first_ms: 3247, first_client: 'lighthouse', p50_ms: 1850 } })
-  expect(geo.slice(1, 5).map(c => [c.key, c.value])).toEqual([['slot', '15466393'], ['first seen', '3247 ms · lighthouse'], ['p50', '1850 ms'], ['observers', '138']]); expect(geo).toHaveLength(8)
+  expect(geo.slice(1, 5).map(c => [c.key, c.value])).toEqual([['slot', '15466393'], ['first seen', '3247 ms · lighthouse'], ['p50', '1850 ms'], ['observers', '138']]); expect(geo.map(c => c.key)).toEqual(['phase', 'slot', 'first seen', 'p50', 'observers', 'T+'])
   expect(tickerCells({ ...s, layoutMode: 'force', mainnet: { enabled: true, observers: 1 } })[1].key).toBe('delivery')
 })

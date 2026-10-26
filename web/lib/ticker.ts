@@ -22,7 +22,9 @@ export function tickerCells(s: AppState): TickerCell[] {
   ]
   const m = s.mainnet
   if (m?.enabled && s.layoutMode === 'geo') {
-    cells.splice(1, 4,
+    // Geo + mainnet shows real observers only: the simulated mesh's delivery/degree/hops/latency and its attacker and
+    // invalid counts say nothing about that map, so the arrival readout replaces all six (and fits the bar at 1440 px).
+    cells.splice(1, 6,
       { key: 'slot', value: String(m.slot ?? '—') },
       { key: 'first seen', value: m.first_ms != null ? `${m.first_ms} ms · ${m.first_client || '?'}` : '—' },
       { key: 'p50', value: m.p50_ms != null ? `${m.p50_ms} ms` : '—' },
