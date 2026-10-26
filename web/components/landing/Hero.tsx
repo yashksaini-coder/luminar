@@ -1,6 +1,8 @@
 // Landing hero: the two-line poster, the lead (ending on the honesty line), the two calls to action,
 // the proof line from the recording and Fig. 1, the live replay plate. The section reveals once (D2):
-// poster lines, lead, CTA, chevron, proof and Fig. 1 caption rise in reading order.
+// poster lines, lead, CTA, chevron, proof and Fig. 1 caption rise in reading order. The inline script
+// after the section sets data-in at parse time (a forced reflow first so the transition still runs):
+// the lead is the LCP element and must not wait for the Reveal island to hydrate (Lighthouse LCP 7 s → ~FCP).
 import type { CSSProperties } from 'react'
 import Figure from '@/components/dither/Figure'
 import PlateReplay from '@/components/landing/PlateReplay'
@@ -16,7 +18,7 @@ export const PROOF = `${stats.peers} peers · ${stats.sybils} Sybils · first pr
 const i = (n: number) => ({ '--i': n }) as CSSProperties
 
 export default function Hero() {
-  return (
+  return (<>
     <section className={styles.hero} data-reveal="">
       <div className={styles.prose}>
         <h1 className={styles.poster}><span data-k="up" style={i(0)}>Gossip,</span><br /><span data-k="up" style={i(1)}><em>scored.</em></span></h1>
@@ -33,5 +35,6 @@ export default function Hero() {
         <Figure n={1} caption={FIG1} captionI={5}><PlateReplay plate={plateFrames as PlateFrames} /></Figure>
       </div>
     </section>
-  )
+    <script dangerouslySetInnerHTML={{ __html: "(function(s){s.offsetWidth;s.dataset.in='1'})(document.currentScript.previousElementSibling)" }} />
+  </>)
 }

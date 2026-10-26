@@ -4,7 +4,7 @@
   top: var(--s-3);
   left: var(--s-3);
   z-index: 2;
-  max-width: 320px;
+  max-width: min(320px, calc(50% - 120px));   /* never reaches the centred Layout switch (1280 wide, both rails open) */
   padding: var(--s-2) var(--s-3);
   background: var(--panel);
   border: 1px solid var(--hair);
