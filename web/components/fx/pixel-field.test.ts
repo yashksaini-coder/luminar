@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { DOT_PRESETS, PRESETS, easeCount, jitter, network, renderField } from './pixel-field'
+import { DOT_PRESETS, PRESETS, easeCount, jitter, network, renderField, treeShape } from './pixel-field'
 
 const lit = (t: Uint8Array) => t.reduce((n, v) => n + (v ? 1 : 0), 0)
 
@@ -46,4 +46,16 @@ test('dot presets carry coverage in v; scatter jitter stays inside its cell, tig
 
 test('easeCount runs 0 → 1 symmetrically', () => {
   expect(easeCount(0)).toBe(0); expect(easeCount(1)).toBe(1); expect(easeCount(0.5)).toBe(0.5)
+})
+
+test('tree: the trunk rises from the bottom centre, 1+3+9+27+81 branches, the crown sits above, corners dark', () => {
+  const sh = treeShape(80, 80)
+  expect(sh.hop.length).toBe(1 + 3 + 9 + 27 + 81)
+  expect(sh.segs[0]).toBe(40); expect(sh.segs[1]).toBe(79)
+  const f = renderField('tree', 1, 80, 80)
+  expect(f.tone[79 * 80 + 40]).toBeGreaterThanOrEqual(2)   // the trunk's foot
+  for (const i of [0, 79, 80 * 79]) expect(f.tone[i]).toBe(0)
+  const top = f.tone.slice(0, 40 * 80).reduce((n, v) => n + (v === 1 ? 1 : 0), 0), bottom = f.tone.slice(40 * 80).reduce((n, v) => n + (v === 1 ? 1 : 0), 0)
+  expect(top).toBeGreaterThan(bottom)
+  expect(treeShape(80, 80)).toBe(sh)
 })

@@ -4,7 +4,7 @@
 // PixelField draws circles whose radius follows it. Same inputs, same output: no Math.random, no clock.
 import { bayer } from '@/components/dither/dither'
 
-export const PRESETS = ['sphere', 'swirl', 'rays', 'rings', 'split', 'halftone', 'scatter'] as const
+export const PRESETS = ['sphere', 'swirl', 'rays', 'rings', 'split', 'halftone', 'scatter', 'tree'] as const
 export type Preset = (typeof PRESETS)[number]
 /** Presets drawn as round dots sized by `v` instead of Bayer squares. */
 export const DOT_PRESETS: readonly Preset[] = ['halftone', 'scatter']
@@ -155,7 +155,7 @@ function polar(cols: number, rows: number) {
 }
 
 interface Flat { v: (t: number) => (r: number, a: number, x: number, y: number) => number; hot: (t: number, r: number, x: number) => boolean }
-const FLAT: Record<Exclude<Preset, 'sphere' | 'scatter' | 'halftone'>, Flat> = {
+const FLAT: Record<Exclude<Preset, 'sphere' | 'scatter' | 'halftone' | 'tree'>, Flat> = {
   // spiral arms winding into the centre (pink swirl card)
   swirl: { v: t => (r, a) => 0.5 + 0.5 * Math.sin(6 * a + 5 * Math.log(r + 0.08) + t * 1.2), hot: (_, r) => r < 0.16 },
   // eight rays converging, bands travelling inward along them (Sybils closing on a peer)
@@ -216,6 +216,72 @@ export function renderField(preset: Preset, t: number, cols: number, rows: numbe
   if (preset === 'sphere') sphere(f, t, density, nodes)
   else if (preset === 'halftone') halftone(f, t, density)
   else if (preset === 'scatter') scatter(f, t, density)
+  else if (preset === 'tree') tree(f, t, density)
   else flat(f, t, density, FLAT[preset])
   return f
+}
+
+// ---- tree (footer lane): one publish fanning out hop by hop, a dithered crown of peers at the tips ----
+// The Framer footer's point-cloud tree, read as gossip: a trunk from the publisher, three branches per
+// hop for four hops, the crown is the peers that received it. The wave climbs one hop at a time.
+
+const TREE_HOPS = 4
+interface Tree { segs: Float32Array; hop: Uint8Array; tips: Float32Array; crown: Float32Array }
+const trees = new Map<string, Tree>()
+
+/** Branch geometry and the crown's static coverage, memoised per size (deterministic: hash, no random). */
+export function treeShape(cols: number, rows: number): Tree {
+  const key = `${cols}x${rows}`, hit = trees.get(key)
+  if (hit) return hit
+  const U = Math.min(cols * 1.1, rows), segs: number[] = [], hop: number[] = [], tips: number[] = []
+  const grow = (x: number, y: number, ang: number, len: number, h: number) => {
+    const ex = x + Math.sin(ang) * len, ey = y - Math.cos(ang) * len
+    segs.push(x, y, ex, ey); hop.push(h)
+    if (h >= 1) tips.push(ex, ey, h)
+    if (h === TREE_HOPS) return
+    const spread = [0.7, 0.56, 0.46, 0.4][h]
+    for (let k = -1; k <= 1; k++) grow(ex, ey, ang * 0.6 + k * spread + (hash(segs.length, h) - 0.5) * 0.28, len * 0.72, h + 1)
+  }
+  grow(cols / 2, rows - 1, 0.04, U * 0.26, 0)
+  const crown = new Float32Array(cols * rows)
+  for (let k = 0; k < tips.length; k += 3) {   // a soft disc of peers round every branch tip, larger at the edge
+    const tx = tips[k], ty = tips[k + 1], R = U * (tips[k + 2] === TREE_HOPS ? 0.085 : 0.06)
+    for (let y = Math.max(0, Math.floor(ty - R)); y <= Math.min(rows - 1, Math.ceil(ty + R)); y++)
+      for (let x = Math.max(0, Math.floor(tx - R)); x <= Math.min(cols - 1, Math.ceil(tx + R)); x++) {
+        const d = Math.hypot(x + 0.5 - tx, y + 0.5 - ty) / R, i = y * cols + x
+        if (d < 1) crown[i] = Math.max(crown[i], (1 - d) ** 0.7)
+      }
+  }
+  const out = { segs: Float32Array.from(segs), hop: Uint8Array.from(hop), tips: Float32Array.from(tips), crown }
+  if (trees.size > 16) trees.clear()
+  trees.set(key, out)
+  return out
+}
+
+function tree(f: Field, t: number, density: number) {
+  const { cols, rows, tone } = f, sh = treeShape(cols, rows), s = Math.max(cols, rows) / 3
+  for (let i = 0; i < sh.crown.length; i++) {   // the crown shimmers: a slow field over the static cover
+    if (!sh.crown[i]) continue
+    const x = i % cols, y = (i - x) / cols
+    const v = clamp01(sh.crown[i] * (0.45 + 0.7 * waves(x / s, y / s, t * 0.5)) * density)
+    f.v[i] = v
+    if (v > bayer(x, y)) tone[i] = 1
+  }
+  const front = ((t % WAVE_S) / WAVE_S) * (TREE_HOPS + 2)
+  const put = (x: number, y: number, k: number) => {
+    if (x >= 0 && y >= 0 && x < cols && y < rows) { const i = y * cols + x; if (tone[i] < k) tone[i] = k }
+  }
+  for (let n = 0; n < sh.hop.length; n++) {   // branches: accent; the stretch the message is crossing: hot
+    const x0 = sh.segs[n * 4], y0 = sh.segs[n * 4 + 1], x1 = sh.segs[n * 4 + 2], y1 = sh.segs[n * 4 + 3]
+    const at = front - sh.hop[n], steps = Math.ceil(Math.hypot(x1 - x0, y1 - y0)) + 1
+    for (let k = 0; k <= steps; k++) {
+      const u = k / steps
+      put(Math.floor(x0 + (x1 - x0) * u), Math.floor(y0 + (y1 - y0) * u), u <= at && at - u < 1.1 ? 3 : 2)
+    }
+  }
+  for (let k = 0; k < sh.tips.length; k += 3) {   // a tip flashes as the message lands on it
+    if (Math.abs(front - sh.tips[k + 2] - 0.5) > 0.5) continue
+    const x = Math.floor(sh.tips[k]), y = Math.floor(sh.tips[k + 1])
+    put(x, y, 3); put(x - 1, y, 3); put(x, y - 1, 3); put(x - 1, y - 1, 3)
+  }
 }

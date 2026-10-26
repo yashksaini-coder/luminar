@@ -3,7 +3,6 @@ import AttackCards from '@/components/landing/AttackCards'
 import Faq from '@/components/landing/Faq'
 import Features from '@/components/landing/Features'
 import FigurePlate from '@/components/landing/FigurePlate'
-import FinalCta from '@/components/landing/FinalCta'
 import Footer from '@/components/landing/Footer'
 import Hero from '@/components/landing/Hero'
 import HonestByDesign from '@/components/landing/HonestByDesign'
@@ -33,7 +32,6 @@ export default function Home() {
       <Features />
       <HonestByDesign />
       <Faq />
-      <FinalCta />
     </main>
     <Footer />
     </GridFrame>

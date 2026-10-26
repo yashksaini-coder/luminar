@@ -1,7 +1,76 @@
-.faq { width: min(var(--col-prose), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
-.h2 { margin: 0 0 42px; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
-.list { margin: 0; }
-.pair { padding: var(--s-5) 0; border-top: var(--hair-w) solid var(--hair); }
-.pair:last-child { border-bottom: var(--hair-w) solid var(--hair); }
-.pair dt { font: italic 400 var(--t-lead)/var(--lh-body) var(--font-display); color: var(--fg); }
-.pair dd { margin: var(--s-2) 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }
+/* ---- v2 FAQ: an intro cell (label, serif heading, halftone plate) beside the Radix accordion ---------- */
+.faq { padding-top: var(--s-16); }
+.cells { display: grid; grid-template-columns: 5fr 7fr; padding-inline: var(--frame-x); }
+.intro {
+  position: relative; display: flex; flex-direction: column; padding: var(--s-16) var(--s-12) var(--s-12);
+  border-right: var(--hair-w) solid var(--hair);
+}
+.intro::before {   /* + where the divider meets the row rule */
+  content: ''; position: absolute; z-index: 3; top: -6px; right: -6px; width: 11px; height: 11px;
+  background: var(--hair-strong); -webkit-mask: var(--plus-mark); mask: var(--plus-mark); pointer-events: none;
+}
+.label { margin: 0 0 var(--s-6); font: 500 12px/1 var(--font-mono); letter-spacing: .12em; color: var(--fg-3); }
+.h2 { margin: 0; font: 400 clamp(2.25rem, 3.6vw, 3.75rem)/1 var(--font-display); letter-spacing: -.015em; color: var(--fg); text-wrap: balance; }
+.sub { max-width: 30em; margin: var(--s-6) 0 0; font: 400 16px/1.6 var(--font-ui); color: var(--fg-2); text-wrap: pretty; }
+.art {
+  position: relative; margin-top: auto; padding-top: var(--s-12);
+}
+.art .field { height: 220px; border: var(--hair-w) solid var(--hair); background: var(--panel); }
+.count {
+  position: absolute; left: -1px; bottom: -1px; display: inline-flex; align-items: center; gap: var(--s-2); height: 28px; margin: 0;
+  padding: 0 var(--s-3); border: var(--hair-w) solid var(--signal-dim); background: color-mix(in srgb, var(--signal) 9%, var(--bg));
+  font: 500 11px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--signal-text);
+}
+.count span { color: var(--fg); font-feature-settings: var(--tnum); }
+
+.list { padding: var(--s-8) 0 var(--s-12) var(--s-12); }
+.item { border-bottom: var(--hair-w) solid var(--hair); }
+.head { margin: 0; }
+.trigger {
+  display: grid; grid-template-columns: var(--s-12) 1fr 24px; align-items: center; gap: var(--s-4); width: 100%;
+  min-height: 76px; padding: var(--s-4) var(--s-4) var(--s-4) 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: 500 18px/1.4 var(--font-ui); color: var(--fg-2); touch-action: manipulation;
+  transition: color var(--d-fast) var(--e2), background var(--d-fast) var(--e2);
+}
+.trigger:hover { color: var(--fg); background: var(--wash); }
+.trigger:active .q { transform: translateY(1px); }
+.trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.trigger[data-state='open'] { color: var(--fg); }
+.idx { padding-left: var(--s-3); font: 500 12px/1 var(--font-mono); letter-spacing: .08em; color: var(--fg-3); font-feature-settings: var(--tnum); transition: color var(--d-fast) var(--e2); }
+.trigger:hover .idx, .trigger[data-state='open'] .idx { color: var(--signal-text); }
+.q { text-wrap: balance; transition: transform var(--d-press) var(--ease); }
+
+/* a square plus that folds to a minus: two 2px bars, the vertical one rotates flat */
+.icon { position: relative; width: 14px; height: 14px; justify-self: end; }
+.icon::before, .icon::after { content: ''; position: absolute; left: 0; top: 6px; width: 14px; height: 2px; background: currentColor; transition: transform var(--d-menu) var(--ease); }
+.icon::after { transform: rotate(90deg); }
+.trigger[data-state='open'] .icon { color: var(--signal); }
+.trigger[data-state='open'] .icon::after { transform: rotate(0deg); }
+
+.content { overflow: hidden; }
+.a { max-width: 62ch; margin: 0; padding: 0 var(--s-12) var(--s-6) calc(var(--s-12) + var(--s-4)); font: 400 16px/1.65 var(--font-ui); color: var(--fg-2); text-wrap: pretty; }
+@media (prefers-reduced-motion: no-preference) {
+  .content[data-state='open'] { animation: open 320ms var(--io); }
+  .content[data-state='closed'] { animation: shut 240ms var(--io); }
+}
+@keyframes open { from { height: 0; opacity: 0; } to { height: var(--radix-accordion-content-height); opacity: 1; } }
+@keyframes shut { from { height: var(--radix-accordion-content-height); opacity: 1; } to { height: 0; opacity: 0; } }
+
+@media (max-width: 1100px) {
+  .intro { padding: var(--s-12) var(--s-8) var(--s-8); }
+  .list { padding-left: var(--s-8); }
+}
+@media (max-width: 900px) {
+  .faq { padding-top: var(--s-8); }
+  .cells { grid-template-columns: 1fr; }
+  .intro { padding: var(--s-12) var(--s-6) var(--s-8); border-right: 0; border-bottom: var(--hair-w) solid var(--hair); }
+  .intro::before { display: none; }
+  .art { padding-top: var(--s-8); }
+  .art .field { height: 140px; }
+  .list { padding: 0 0 var(--s-8); }
+}
+@media (max-width: 560px) {
+  .intro { padding: var(--s-10) var(--s-4) var(--s-8); }
+  .trigger { grid-template-columns: var(--s-10) 1fr 20px; gap: var(--s-2); min-height: 64px; font-size: 16px; }
+  .a { padding: 0 var(--s-4) var(--s-6) calc(var(--s-10) + var(--s-2)); }
+}
