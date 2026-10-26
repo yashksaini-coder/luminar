@@ -1,3 +1,4 @@
+import Faithfulness from '@/components/landing/Faithfulness'
 import Faq from '@/components/landing/Faq'
 import FigurePlate from '@/components/landing/FigurePlate'
 import FinalCta from '@/components/landing/FinalCta'
@@ -5,6 +6,7 @@ import Footer from '@/components/landing/Footer'
 import Hero from '@/components/landing/Hero'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
+import QuickStart from '@/components/landing/QuickStart'
 import Readouts from '@/components/landing/Readouts'
 import { LiveMainnet, SameNames, WhatItDoes } from '@/components/landing/Sections'
 import Tagline from '@/components/landing/Tagline'
@@ -28,6 +30,8 @@ export default function Home() {
       <VideoPlate />
       <SameNames />
       <LiveMainnet />
+      <Faithfulness />
+      <QuickStart />
       <Faq />
       <FinalCta />
     </main>
