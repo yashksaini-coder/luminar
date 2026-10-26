@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { computeStats, PLATE_MAX_BYTES, STAMP_MAX } from './reel-stats.mjs'
+import { computePartition, computeStats, PLATE_MAX_BYTES, STAMP_MAX } from './reel-stats.mjs'
 
 const lines = readFileSync(join(__dirname, '../public/reels/sybil-eclipse.jsonl'), 'utf8').split('\n').filter(Boolean)
 const { stats, plate } = computeStats(lines)
@@ -20,4 +20,11 @@ test('plate frames: T+8..T+24 at 0.5 s, compact, stamps ≤ 24 chars and derived
 test('the committed JSON files match a fresh run', () => {
   expect(JSON.parse(readFileSync(join(__dirname, '../lib/reel-stats.json'), 'utf8'))).toMatchObject({ reel: 'sybil-eclipse', peers: 50, sybils: 5 })
   expect(JSON.parse(readFileSync(join(__dirname, '../lib/plate-frames.json'), 'utf8')).frames.length).toBe(plate.frames.length)
+})
+test('partition numbers come from the partition-heal reel and match the committed JSON', () => {
+  const p = computePartition(readFileSync(join(__dirname, '../public/reels/partition-heal.jsonl'), 'utf8').split('\n').filter(Boolean))
+  expect(p).toMatchObject({ peers: 50, splitAt: 15, clearedAt: 35 })
+  expect(p.cutDeliveryPct).toBeGreaterThanOrEqual(40); expect(p.cutDeliveryPct).toBeLessThanOrEqual(60)
+  expect(p.healedInS).toBeGreaterThan(0); expect(p.healedInS).toBeLessThan(10)
+  expect(JSON.parse(readFileSync(join(__dirname, '../lib/reel-stats.json'), 'utf8')).partition).toEqual(p)
 })

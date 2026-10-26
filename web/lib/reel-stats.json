@@ -13,5 +13,12 @@
   "clearedAt": 24.1,
   "healedInS": 1.4,
   "avgHops": 4.2,
-  "avgPropagationMs": 100
+  "avgPropagationMs": 100,
+  "partition": {
+    "peers": 50,
+    "splitAt": 15,
+    "clearedAt": 35,
+    "cutDeliveryPct": 50,
+    "healedInS": 4.5
+  }
 }
