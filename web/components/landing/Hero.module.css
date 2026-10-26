@@ -46,31 +46,37 @@
 @keyframes pulse { 50% { opacity: .25; } }
 @keyframes level { from { opacity: .3; transform: scaleY(.5); } to { opacity: 1; transform: scaleY(1); } }
 
-.marks { position: relative; display: flex; align-items: baseline; gap: var(--s-8); padding: var(--s-8) var(--s-6) var(--s-8) var(--s-12); }
-.label { margin: 0 0 var(--s-4); font: 500 11px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
-.marks ul { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-5); margin: 0; padding: 0; list-style: none; color: var(--fg-3); }
-.marks li { transition: color var(--d-fast) var(--e2); }
-.marks li:hover { color: var(--fg-2); }
-.marks [data-mark="0"] { font: 600 17px/1 var(--font-mono); letter-spacing: -.03em; }
-.marks [data-mark="1"] { font: 700 15px/1 var(--font-ui); letter-spacing: -.01em; }
-.marks [data-mark="2"] { font: 400 21px/1 var(--font-display); }
-.marks [data-mark="3"] { font: 500 15px/1 var(--font-ui); letter-spacing: -.02em; }
-.marks [data-mark="4"] { font: 700 12px/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; }
+.marks { position: relative; display: grid; grid-template-columns: minmax(160px, 14%) 1fr; align-items: stretch; padding: 0; }
+.label { display: flex; align-items: center; margin: 0; padding: var(--s-8) var(--s-6) var(--s-8) var(--s-12); border-right: var(--hair-w) solid var(--hair);
+  font: 500 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+/* five equal cells across the rest of the row, each wordmark centred, hairline dividers in the page grid's style */
+.marks ul { display: grid; grid-template-columns: repeat(5, 1fr); margin: 0; padding: 0; list-style: none; color: var(--fg-2); }
+.marks li { display: flex; align-items: center; justify-content: center; min-height: 96px; padding: var(--s-4); text-align: center;
+  transition: color var(--d-fast) var(--e2), background-color var(--d-fast) var(--e2); }
+.marks li + li { border-left: var(--hair-w) solid var(--hair); }
+.marks li:hover { color: var(--fg); background: var(--wash); }
+.marks [data-mark="0"] { font: 600 20px/1 var(--font-mono); letter-spacing: -.03em; }
+.marks [data-mark="1"] { font: 700 17px/1 var(--font-ui); letter-spacing: -.01em; }
+.marks [data-mark="2"] { font: 400 25px/1 var(--font-display); }
+.marks [data-mark="3"] { font: 500 17px/1 var(--font-ui); letter-spacing: -.02em; }
+.marks [data-mark="4"] { font: 700 13px/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; }
 
 .close { height: var(--s-16); }
 
 @media (max-width: 1100px) {
   .copy { padding: var(--s-12) var(--s-8); }
-  .marks { padding: var(--s-6) var(--s-8); }
+  .label { padding-left: var(--s-8); }
     }
 @media (max-width: 900px) {
   .top { padding-top: var(--s-8); }
   .cells { grid-template-columns: 1fr; }
-  .marks { flex-direction: column; gap: var(--s-3); }
+  .marks { grid-template-columns: 1fr; }
+  .label { border-right: 0; border-bottom: var(--hair-w) solid var(--hair); padding: var(--s-4) var(--s-6); }
+  .marks li { min-height: 72px; }
   .copy { min-height: 0; padding: var(--s-12) var(--s-6); border-right: 0; }
   .copy::before, .copy::after { display: none; }
   .visual { min-height: 0; aspect-ratio: 1; max-height: 560px; border-top: var(--hair-w) solid var(--hair); }
-  .marks { border-right: 0; border-bottom: var(--hair-w) solid var(--hair); padding: var(--s-6); }
+  .marks { border-bottom: var(--hair-w) solid var(--hair); }
   .close { height: var(--s-8); }
 }
 @media (max-width: 560px) {
@@ -79,8 +85,14 @@
   .ctas > span { flex: 1 1 100%; }
   .primary, .ghost { width: 100%; justify-content: center; }
   .visual .globe { left: var(--s-2); width: calc(100% - 2 * var(--s-2)); height: calc(100% - var(--s-10) - var(--s-2)); }
-  .marks { padding: var(--s-6) var(--s-4); }
-  .marks ul { gap: var(--s-3) var(--s-6); }
+  .label { padding: var(--s-4); }
+  /* 2 columns, the fifth mark spans the bottom row; dividers follow the cells */
+  .marks ul { grid-template-columns: 1fr 1fr; }
+  .marks li { min-height: 64px; }
+  .marks li + li { border-left: 0; }
+  .marks li:nth-child(even) { border-left: var(--hair-w) solid var(--hair); }
+  .marks li:nth-child(n + 3) { border-top: var(--hair-w) solid var(--hair); }
+  .marks li:last-child { grid-column: 1 / -1; }
         }
 @media (prefers-reduced-motion: reduce) { .dot, .meter i { animation: none; } }
 /* phone landscape (844×390): the CTAs sit above the fold */
