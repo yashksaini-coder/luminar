@@ -12,7 +12,8 @@ test('Footer: closing headline + CTAs, the tree, how it works, stay connected, c
   expect(m).toMatch(/href="\/sim\/">.*Open the simulator/); expect(m).toContain(`href="${reelHref('sybil-eclipse')}"`)
   expect(m).toContain('data-preset="tree"'); expect(m).toContain(`${stats.avgHops} hops avg`)
   for (const s of ['How it works', 'Stay connected', ...STEPS.map(([s]) => s)]) expect(m).toContain(s)
-  for (const href of ['/sim/', '/reels/sybil-eclipse/', '/figure/', `https://${REPO_URL}`, `https://${REPO_URL}/blob/master/LICENSE`, 'https://www.linkedin.com/in/yashksaini', 'https://x.com/0xcrackedDev', 'https://yashksaini.vercel.app/']) expect(m).toContain(`href="${href}"`)
+  for (const href of ['/sim/', '/reels/sybil-eclipse/', `https://${REPO_URL}`, `https://${REPO_URL}/blob/master/LICENSE`, 'https://www.linkedin.com/in/yashksaini', 'https://x.com/0xcrackedDev', 'https://yashksaini.vercel.app/']) expect(m).toContain(`href="${href}"`)
+  expect(m).not.toMatch(/\[(SIM|REC|FIG)\]/)   // Stay connected holds socials only
   expect(m).toContain('© 2026 Luminar'); expect(m).toContain('MIT licence'); expect(m).toContain('Data: ethPandaOps (CC BY 4.0)')
   expect(m).not.toMatch(/Devcon|Mumbai|Nov|Read the source|\$ |make |curl|clone/)
   expect(m).toContain('rel="noreferrer"')
