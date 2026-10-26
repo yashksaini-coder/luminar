@@ -1,0 +1,70 @@
+/* How it works: wide column, header in the prose measure, three hairline step cards.
+   ≥1024: a row of three with 64 px wires between them; below: a column with 40 px wires. */
+.section { --cycle: 4.2s; width: min(var(--col-wide), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
+.kicker { margin: 0 0 var(--s-4); font: 500 var(--t-body)/1 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--fg-3); }
+.h2 { margin: 0 0 var(--s-6); font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.lead { max-width: var(--col-prose); margin: 0 0 var(--s-12); font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); }
+
+.pipe { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-10); }
+@media (min-width: 1024px) { .pipe { grid-template-columns: repeat(3, 1fr); gap: var(--s-16); } }
+
+.step { position: relative; display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-6); background: var(--panel); border: var(--hair-w) solid var(--hair); }
+.head { display: flex; align-items: center; gap: var(--s-3); }
+/* the step's node: a 40 px square; its ::after ring lights when a pulse lands */
+.badge { position: relative; display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: var(--hair-w) solid var(--hair-strong); font: 500 var(--t-body)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.badge::after { content: ''; position: absolute; inset: -1px; border: var(--hair-w2) solid var(--signal); opacity: 0; pointer-events: none; }
+.name { font: 500 var(--t-body)/1 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--fg-3); }
+.h3 { margin: 0; font: 400 var(--t-kpi)/1.05 var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); }
+.body { margin: 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); }
+
+.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.chips li { padding: 6px var(--s-2); border: var(--hair-w) solid var(--hair); font: 500 var(--t-body)/1 var(--font-mono); color: var(--fg-2); white-space: nowrap; }
+
+.facts { margin: auto 0 0; padding-top: var(--s-4); border-top: var(--hair-w) solid var(--hair); display: grid; gap: var(--s-2); }
+.facts div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); }
+.facts dt { font: 500 var(--t-body)/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--fg-3); }
+.facts dd { margin: 0; font: 400 var(--t-body)/1.3 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); text-align: right; overflow-wrap: anywhere; }
+
+/* wire: sits in the gap after a card. Column: under the badge's centre (24 + 20 px in). Row: right of the card. */
+.wire { position: absolute; left: calc(var(--s-6) + 20px - 8px); top: 100%; width: 16px; height: var(--s-10); pointer-events: none; }
+.line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.line line { stroke: var(--hair-strong); stroke-width: 1; stroke-dasharray: 4 4; }
+.lx { display: none; }
+.run { position: absolute; inset: 0; opacity: 0; }
+.run i { position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; margin-left: -4px; border-radius: var(--r-node); background: var(--signal); }
+@media (min-width: 1024px) {
+  .wire { left: 100%; top: calc(var(--s-6) + 20px - 8px); width: var(--s-16); height: 16px; }
+  .lx { display: inline; }
+  .ly { display: none; }
+  .run i { left: auto; right: -4px; bottom: auto; top: 50%; margin: -4px 0 0; }
+}
+
+.more { margin-top: var(--s-8); }
+
+/* the story: one --cycle clock. Wire n leaves at n × .45 cycle and lands .34 cycle later; badge n lights on arrival. */
+@media (prefers-reduced-motion: no-preference) {
+  .line line { animation: march 1s linear infinite paused; }
+  .run { animation: runY var(--cycle) var(--io) infinite paused; animation-delay: calc(var(--n) * .45 * var(--cycle)); }
+  .badge::after { animation: lit var(--cycle) var(--e2) infinite paused; }
+  .step:nth-child(2) .badge::after { animation-delay: calc(.34 * var(--cycle)); }
+  .step:nth-child(3) .badge::after { animation-delay: calc(.79 * var(--cycle)); }
+  @media (min-width: 1024px) { .run { animation-name: runX; } }
+  .section[data-play] .line line, .section[data-play] .run, .section[data-play] .badge::after { animation-play-state: running; }
+}
+@keyframes march { to { stroke-dashoffset: -8; } }
+@keyframes runX {
+  0% { transform: translateX(-100%); opacity: 0; }
+  6% { opacity: 1; }
+  34% { transform: translateX(0); opacity: 1; }
+  40%, 100% { transform: translateX(0); opacity: 0; }
+}
+@keyframes runY {
+  0% { transform: translateY(-100%); opacity: 0; }
+  6% { opacity: 1; }
+  34% { transform: translateY(0); opacity: 1; }
+  40%, 100% { transform: translateY(0); opacity: 0; }
+}
+@keyframes lit {
+  0% { opacity: 1; }
+  22%, 100% { opacity: 0; }
+}
