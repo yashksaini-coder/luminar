@@ -6,7 +6,9 @@ import Hero from '@/components/landing/Hero'
 import type { PlateFrames } from '@/components/landing/plate-draw'
 import Nav from '@/components/landing/Nav'
 import Readouts from '@/components/landing/Readouts'
-import { LiveMainnet, SameNames, WhatItDoes } from '@/components/landing/Sections'
+import MainnetCard from '@/components/landing/MainnetCard'
+import Observability from '@/components/landing/Observability'
+import { WhatItDoes } from '@/components/landing/Sections'
 import Tagline from '@/components/landing/Tagline'
 import VideoPlate from '@/components/landing/VideoPlate'
 import ReelRedirect from '@/components/sim/ReelRedirect'
@@ -26,8 +28,8 @@ export default function Home() {
       <WhatItDoes />
       <FigurePlate />
       <VideoPlate />
-      <SameNames />
-      <LiveMainnet />
+      <Observability />
+      <MainnetCard />
       <Faq />
       <FinalCta />
     </main>
