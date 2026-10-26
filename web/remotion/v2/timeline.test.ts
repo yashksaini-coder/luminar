@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { parseReel } from '../reel/parse'
-import { CUTS, DURATION, FPS, SPANS, clusters, cueSheet, frameAt } from './timeline'
+import { TOY } from '../constants'
+import { CUTS, DURATION, FPS, SPANS, clusters, cueSheet, frameAt, shownScoreAt, simTimeAt } from './timeline'
 
 const d = parseReel(readFileSync(join(__dirname, '../../public/reels/sybil-eclipse.jsonl'), 'utf8'))
 const span = (id: string) => SPANS.find(s => s.id === id)!
@@ -39,4 +40,12 @@ test('cue sheet: one sweep on the prune round, heartbeat ticks a second apart, a
   expect(cues.filter(c => c.sfx === 'swell')).toHaveLength(CUTS.length)
   expect(cues.filter(c => c.sfx === 'blip').length).toBeGreaterThan(3)
   expect(cues.every(c => c.frame >= 0 && c.frame < DURATION)).toBe(true)
+})
+
+test('every Sybil-act frame at or after the first prune shows sybil-0 below the prune line, for over a second', () => {
+  const s = span('sybil'), prune = d.prunes[0].at
+  const pruned = Array.from({ length: s.durationInFrames }, (_, f) => simTimeAt(s, f)).filter(t => t >= prune)
+  pruned.forEach(t => expect(shownScoreAt(d, 'sybil-0', t)!).toBeLessThan(TOY.pruneThreshold))
+  expect(pruned.length - 12).toBeGreaterThan(FPS)                                // readable before the dissolve
+  expect(shownScoreAt(d, 'sybil-0', prune - 0.1)!).toBeGreaterThan(TOY.pruneThreshold) // the fall is real, not pinned
 })

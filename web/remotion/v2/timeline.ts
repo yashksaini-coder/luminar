@@ -1,6 +1,6 @@
 /** LaunchV2 timeline: scene spans, the cuts the pixel dissolve runs on, and the soundtrack cue sheet read off the reel. */
 import { TOY } from '../constants'
-import type { ReelData } from '../reel/parse'
+import { snapshotAt, type ReelData } from '../reel/parse'
 
 export const FPS = 30
 export const W = 1920
@@ -85,4 +85,13 @@ export function cueSheet(d: ReelData): Cue[] {
   function push(frame: number | null, sfx: Sfx) {
     if (frame !== null && frame >= 0) cues.push({ frame, sfx })
   }
+}
+
+/** The score the panel shows for `peer` at sim time t. A snapshot is taken before that tick's heartbeat runs, so the
+ *  one stamped at the first prune still holds the pre-prune score (−9.15 while peers prune on < −10). From the first
+ *  prune on, read the first snapshot after it: the score that heartbeat actually computed. */
+export function shownScoreAt(d: ReelData, peer: string, t: number): number | null {
+  const prune = d.prunes[0]?.at ?? Infinity
+  const after = t >= prune ? d.snapshots.find(s => s.time > prune + 1e-6)?.time : undefined
+  return snapshotAt(d, after === undefined ? t : Math.max(t, after))?.scores[peer] ?? null
 }

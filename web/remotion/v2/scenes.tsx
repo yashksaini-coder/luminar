@@ -12,7 +12,7 @@ import type { ReelData } from '../reel/parse'
 import { HONESTY_ROWS } from '../scenes/copy'
 import { Headline } from '../type/Headline'
 import { BayerCover, Chip, Cursor, FLAME, G, HAIR, Halftone, Hatch, Mono, PAPER, Plus, Rule, SIGNAL, SPLIT, Stat } from './fx'
-import { H, W, frameAt, simTimeAt, type V2Span } from './timeline'
+import { H, W, frameAt, shownScoreAt, simTimeAt, type V2Span } from './timeline'
 
 export interface V2SceneProps { data: ReelData; span: V2Span; repoUrl: string }
 
@@ -272,7 +272,7 @@ export function Sybil({ data, span }: V2SceneProps): JSX.Element {
     <Act data={data} span={span} camera={camera} beat={beat}
       chip={pruned ? { tone: 'signal', text: 'Sybils pruned · mesh intact' } : t >= (fault?.at ?? 0) ? { tone: 'flame', text: `Sybil attack · ${fault?.n} attackers` } : { tone: 'signal', text: 'All peers gossiping' }}
       stats={[['Sybils', fault?.n ?? 0, 'flame'], ['Invalid msgs', invalidCountAt(data, t), 'flame'], ['Heartbeats', hb, pruned ? 'signal' : undefined], ['Delivery', pct(data, t)]]}
-      extra={<Rise at={30}><ScoreCells score={scoreAt(data, 'sybil-0', t)} label="sybil-0 score" /></Rise>}
+      extra={<Rise at={30}><ScoreCells score={shownScoreAt(data, 'sybil-0', t)} label={pruned ? 'sybil-0 score · after the prune heartbeat' : 'sybil-0 score'} /></Rise>}
     />
   )
 }
