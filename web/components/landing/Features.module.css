@@ -14,7 +14,7 @@
 .grid > li { display: flex; min-width: 0; }
 .card { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: var(--s-6); background: var(--panel); border: var(--hair-w) solid var(--hair); transition: border-color var(--d-fast) var(--e2); }
 .card:hover, .card:focus-within { border-color: var(--hair-strong); }
-.visual { position: relative; display: grid; place-items: center; height: 172px; margin: 0 0 var(--s-6); padding: var(--s-4); border: var(--hair-w) solid var(--hair); overflow: hidden; }
+.visual { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; container-type: inline-size; height: 172px; margin: 0 0 var(--s-6); padding: var(--s-4); border: var(--hair-w) solid var(--hair); overflow: hidden; }
 .cardKicker { margin: 0 0 var(--s-2); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--fg-3); }
 .h3 { margin: 0; font: 400 calc(var(--t-kpi) * .8)/1.1 var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); text-wrap: balance; }
 .body { margin: var(--s-3) 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); text-wrap: pretty; }
@@ -66,7 +66,7 @@
 .ms { font: 500 var(--t-label)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
 
 /* 5 · terminal: the typed curl and four series names; the publish counter ticks with a wash */
-.code { width: 100%; font: 400 var(--t-body)/1.6 var(--font-mono); color: var(--fg-2); }
+.code { width: 100%; font: 400 min(var(--t-body), 5.4cqi)/1.6 var(--font-mono); color: var(--fg-2); }
 .code ul { margin: var(--s-2) 0 0; padding: 0; list-style: none; }
 .code li { position: relative; display: flex; justify-content: space-between; gap: var(--s-2); white-space: nowrap; }
 .code li > span:not(.flash) { overflow: hidden; text-overflow: ellipsis; }
