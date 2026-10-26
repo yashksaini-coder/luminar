@@ -1,0 +1,13 @@
+/* Self-hosted launch-video fonts: same files and custom-property names as app/layout.tsx; relative URLs so Remotion's webpack bundles them. */
+@font-face { font-family: 'Instrument Serif'; src: url('../public/fonts/instrument-serif-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Instrument Serif'; src: url('../public/fonts/instrument-serif-latin-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('../public/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('../public/fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('../public/fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'Manrope'; src: url('../public/fonts/manrope-latin-wght-normal.woff2') format('woff2'); font-weight: 200 800; font-style: normal; }
+
+:root {
+  --font-display: 'Instrument Serif', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-ui: 'Manrope', sans-serif;
+}

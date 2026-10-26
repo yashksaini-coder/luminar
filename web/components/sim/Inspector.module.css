@@ -1,0 +1,87 @@
+/* Peer inspector over the log rail. Text, chips and the score line only: no dither (spec §7). */
+.panel {
+  grid-area: rail-r;   /* placed by SimApp's grid over the log rail */
+  position: absolute; inset: 0; z-index: 1;
+  border-left: 1px solid var(--hair);
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--panel);
+  animation: slideIn var(--d-rail) var(--ease);
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.header { padding: var(--s-3); border-bottom: 1px solid var(--hair); }
+.title { display: flex; align-items: center; gap: var(--s-2); }
+.name { flex: 1; font: italic 400 20px/1.1 var(--font-display); color: var(--fg); }
+.close {
+  padding: 2px var(--s-2); border: 1px solid var(--hair-strong); background: none; cursor: pointer;
+  font: 500 var(--t-label)/1.4 var(--font-mono); color: var(--fg-2);
+}
+.close:hover { color: var(--fg); }
+.badges { display: flex; flex-wrap: wrap; gap: var(--s-1); margin-top: var(--s-2); }
+.badge {
+  padding: 1px var(--s-2); border: 1px solid var(--hair-strong);
+  font: 500 var(--t-label)/1.4 var(--font-mono); color: var(--fg-2);
+}
+.badge[data-alarm] { color: var(--flame-text); border-color: currentColor; }
+.fullId { margin-top: var(--s-1); font: 400 var(--t-micro)/1.4 var(--font-mono); color: var(--fg-3); }
+
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-2); margin: 0; padding: var(--s-3); border-bottom: 1px solid var(--hair); }
+.metrics dt { font: 500 var(--t-label)/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.metrics dd { margin: var(--s-1) 0 0; font: 400 var(--t-fig)/1.2 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.metrics dd[data-alarm] { color: var(--flame-text); }
+
+.section { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--hair); }
+.heading {
+  display: flex; justify-content: space-between; margin: 0 0 var(--s-2);
+  font: 500 var(--t-label)/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3);
+}
+.meta { color: var(--fg-2); letter-spacing: 0; text-transform: none; }
+.axis { display: flex; justify-content: space-between; font: 400 var(--t-micro)/1.4 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg-3); }
+.note { margin: 0; font: 400 var(--t-label)/1.4 var(--font-mono); color: var(--fg-3); }
+.note[data-empty] { padding: var(--s-2) var(--s-3); }
+.why { margin: 0; font: italic 400 var(--t-fig)/1.35 var(--font-display); color: var(--fg); }
+
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.chips:not(:empty) + .note { margin-top: var(--s-2); }
+.chip {
+  padding: 1px var(--s-2); border: 1px solid var(--hair-strong); background: none; cursor: pointer;
+  font: 400 var(--t-label)/1.4 var(--font-mono); color: var(--fg-2);
+}
+.chip:hover { color: var(--fg); }
+.chip[data-attacker] { color: var(--flame-text); }
+.chip[data-struck] { text-decoration: line-through; color: var(--fg-3); }
+
+.events {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 0 0 var(--s-2);
+  scrollbar-width: thin; scrollbar-color: var(--hair-strong) transparent;
+}
+.row {
+  display: grid; grid-template-columns: 7ch 3ch 2ch minmax(0, 1fr); gap: var(--s-2);
+  height: var(--row-h); padding: 0 var(--s-3);
+  font: 400 var(--t-label)/var(--row-h) var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg-2);
+}
+.at { color: var(--fg-3); }
+.detail { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.row [data-tone="ok"] { color: var(--signal-text); }
+.row [data-tone="alarm"] { color: var(--flame-text); }
+.row [data-tone="fg"] { color: var(--fg); }
+.row [data-tone="fg3"] { color: var(--fg-3); }
+
+/* ≤1024 (D1): a bottom sheet over the canvas; the title row is the 44 px grab row holding ESC. */
+@media (max-width: 1024px) {
+  .panel {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 35;
+    max-height: min(70dvh, calc(100dvh - var(--toolbar-h) - 120px)); overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-left: 0; border-top: 1px solid var(--hair-strong);
+    transform: translateY(0);
+    animation-name: sheetIn;
+  }
+  .title { min-height: 44px; }
+  .close { min-width: 44px; min-height: 44px; }
+  .events { flex: none; overflow: visible; }
+  .chips { gap: var(--s-2); }
+  .chip { min-height: 36px; padding: 0 var(--s-3); }
+}
+@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }

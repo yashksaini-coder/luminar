@@ -13,9 +13,10 @@ build/
 
 # Node
 node_modules/
-frontend/dist/
-frontend/build/
 .next/
+web/out/
+web/next-env.d.ts
+web/*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -37,6 +38,7 @@ docker/data/
 
 # Traces
 *.jsonl
+!web/public/reels/*.jsonl
 traces/
 
 # Coverage
@@ -44,8 +46,16 @@ htmlcov/
 .coverage
 
 # AI assistant config
-.claude/
+.claude/*
+!.claude/CLAUDE.md
 
-# Reel recordings (raw); shipped reels live in frontend/public/reels/
+# Reel recordings (raw); shipped reels live in web/public/reels/
 recordings/
-!frontend/public/reels/*.jsonl
+!web/public/reels/*.jsonl
+
+# Planning material (plans, specs, design notes, walk screenshots, build workspace): kept locally, never pushed.
+/docs/superpowers/
+/.superpowers/
+/docs/design/*.md
+/docs/design-prompt.md
+/docs/roadmap-devcon8.md

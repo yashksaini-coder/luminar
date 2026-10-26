@@ -1,0 +1,4 @@
+.glyph { display: inline-block; flex: none; vertical-align: middle; overflow: visible; }
+.wrap { position: relative; display: inline-grid; place-items: center; flex: none; vertical-align: middle; }
+.wrap > .glyph { position: relative; }
+.halo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }

@@ -1,0 +1,48 @@
+/* Hero lower-third. Text and numbers: no dither (spec §7). */
+.ticker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: var(--ticker-h);
+  display: flex;
+  align-items: center;
+  gap: var(--gutter);
+  padding: 0 var(--gutter);
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--pitch-1);
+  border-top: 1px solid var(--hair-strong);
+}
+
+.cell { display: flex; align-items: center; gap: var(--s-2); min-width: 0; flex: none; }
+.cell:first-child { flex: 0 1 auto; }   /* the phase cell truncates, never wraps */
+
+.key {
+  font: 600 var(--t-label)/1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  text-box: trim-both cap alphabetic;
+  color: var(--paper-2);
+}
+
+.value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 500 var(--t-hero-n)/1 var(--font-mono);
+  /* --t-hero-n reaches 88 px, which cannot sit in a 56 px bar: cap at the bar height minus 8 px (48 px, still ≥ 44) */
+  font-size: min(var(--t-hero-n), calc(var(--ticker-h) - 8px));
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-0);
+  text-box: trim-both cap alphabetic;   /* centre the digits, not the font's ascent/descent box */
+  padding-bottom: .15em;                 /* room for descenders in the phase text */
+}
+.cell[data-danger] .value { color: var(--flame); }
+
+/* Touch band: smaller numbers, tighter gaps, the phase cell truncates and the rest scrolls */
+@media (max-width: 1024px) {
+  .ticker { --t-hero-n: clamp(20px, 3.2vw, 44px); gap: var(--s-3); overflow-x: auto; scrollbar-width: none; }
+  .cell:first-child { min-width: 0; overflow: hidden; }
+}

@@ -1,0 +1,36 @@
+/* Dither on the 12 px fill only, never on the label (spec §7). */
+.wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: max-content;   /* a long title widens the backing with the label */
+  min-width: 320px;
+  max-width: calc(100% - 2 * var(--s-4));
+  transform: translate(-50%, -50%);
+  padding: var(--s-3);
+  background: var(--panel);
+  pointer-events: none;
+}
+
+.label {
+  display: flex;
+  justify-content: center;   /* a label wider than the bar overflows evenly */
+  margin: 0 0 var(--s-2);
+  white-space: nowrap;
+  font: 500 var(--t-label)/1 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--paper-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.track { height: 12px; border: 1px solid var(--hair); }
+
+.fill {
+  height: 100%;
+  background: var(--dither-50);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  transition: transform var(--d-fast) var(--io);
+}

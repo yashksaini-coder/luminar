@@ -1,0 +1,31 @@
+/* A hairline table between the rails: parameter (mono, 1fr) | Luminar (signal tinted column) | mainnet.
+   Stays three columns at 390: values are short and notes wrap under them. */
+.section { scroll-margin-top: var(--nav-h, 64px); }
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.table th:first-child { width: 26%; }
+.table th, .table td { padding: var(--s-5) var(--s-6); text-align: left; vertical-align: top; border-bottom: var(--hair-w) solid var(--hair); }
+.table thead th {
+  padding-block: var(--s-4); border-bottom-color: var(--hair-strong);
+  font: 500 12px/1.3 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg);
+}
+.thNote { display: block; margin-top: var(--s-1); letter-spacing: .04em; text-transform: none; color: var(--fg-3); }
+.mark { display: inline-block; width: 8px; height: 8px; margin-right: var(--s-2); background: var(--signal); vertical-align: 1px; }
+.ours { background: color-mix(in srgb, var(--signal) 6%, transparent); }
+.table thead .ours { color: var(--signal-text); }
+.name { display: block; font: 500 14px/20px var(--font-ui); color: var(--fg); }
+.sym { display: block; margin-top: var(--s-1); font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.val { display: block; font: 500 24px/32px var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--fg); overflow-wrap: anywhere; }
+.note { display: block; max-width: 30em; margin-top: var(--s-1); font: 400 14px/20px var(--font-ui); color: var(--fg-2); text-wrap: pretty; }
+.table tbody tr { transition: background var(--d-fast) var(--e2); }
+.table tbody tr:hover { background: var(--wash); }
+
+@media (max-width: 900px) { .val { font-size: 20px; line-height: 28px; } }
+@media (max-width: 560px) {
+  .table th, .table td { padding: var(--s-4) var(--s-2); }
+  .table th:first-child { width: 28%; padding-left: 0; }
+  .table thead th { font-size: 11px; letter-spacing: .06em; }
+  .name { font-size: 13px; line-height: 16px; }
+  .sym { font-size: 10px; letter-spacing: .06em; }
+  .val { font-size: 16px; line-height: 24px; }
+  .note { font-size: 12px; line-height: 16px; }
+}

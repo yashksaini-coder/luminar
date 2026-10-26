@@ -1,0 +1,31 @@
+/* No dither, no flame (spec §6.2 Canvas overlays). */
+.card {
+  position: absolute;
+  top: var(--s-3);
+  left: var(--s-3);
+  z-index: 2;
+  max-width: min(320px, calc(50% - 120px));   /* never reaches the centred Layout switch (1280 wide, both rails open) */
+  padding: var(--s-2) var(--s-3);
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  font: 400 var(--t-micro)/1.5 var(--font-mono);
+  color: var(--fg-2);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-1);
+  font: 600 var(--t-label)/1 var(--font-ui);
+  letter-spacing: .12em;
+  color: var(--fg);
+}
+
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
+.body { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* Touch band: under the 44 px mode switcher, clear of the legend button column on the right */
+@media (max-width: 1024px) {
+  .card { top: calc(var(--s-3) + 44px + var(--s-2)); max-width: calc(100% - 176px - 3 * var(--s-3)); }
+}

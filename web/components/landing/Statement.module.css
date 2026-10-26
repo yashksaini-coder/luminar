@@ -1,0 +1,24 @@
+/* Halftone statement: one grid cell of dots; the statement in a solid cell anchored bottom left */
+.section { padding-inline: var(--frame-x); }
+.panel { position: relative; display: flex; align-items: flex-end; min-height: 560px; padding: var(--s-16) var(--s-6) var(--s-6); background: var(--pitch-0); }
+.panel .field { position: absolute; inset: 0; opacity: .72; }   /* dots recede behind the statement, as in the Lighthouse panels */
+.copy {
+  position: relative; max-width: 620px; padding: var(--s-10) var(--s-10) var(--s-8);
+  border: var(--hair-w) solid var(--hair-strong); background: var(--pitch-0); color: var(--paper-0);
+}
+.glyph { display: grid; grid-template-columns: repeat(3, 6px); gap: 3px; margin-bottom: var(--s-8); }
+.glyph i { width: 6px; height: 6px; background: var(--paper-0); }
+.glyph i:nth-child(2), .glyph i:nth-child(6), .glyph i:nth-child(7) { opacity: .3; }
+.h2 { margin: 0; font: 400 clamp(2.5rem, 5vw, 4.5rem)/1 var(--font-display); letter-spacing: -.02em; text-wrap: balance; }
+.body { max-width: 34em; margin: var(--s-6) 0 0; font: 400 16px/1.6 var(--font-ui); color: var(--paper-1); text-wrap: pretty; }
+.attr { margin: var(--s-8) 0 0; font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--paper-2); }
+
+@media (max-width: 900px) {
+  .panel { min-height: 0; padding: 220px var(--s-4) var(--s-4); }
+  .copy { padding: var(--s-8) var(--s-6) var(--s-6); }
+}
+@media (max-width: 560px) {
+  .panel { padding: 180px var(--s-2) var(--s-2); }
+  .copy { padding: var(--s-6) var(--s-4); }
+  .body { font-size: 15px; }
+}

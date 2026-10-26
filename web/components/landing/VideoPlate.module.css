@@ -1,0 +1,92 @@
+/* Film plate: 16:9 pitch plate with a hairline frame, the poster, the dissolve canvas and the centred play
+   control; below it a mono control bar joined to the plate (one frame), then the caption. */
+.section { scroll-margin-top: var(--nav-h, 64px); }
+.figure { margin: 0; }
+.plate { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--pitch-0); outline: var(--hair-w) solid var(--hair-strong); }
+.video, .poster, .veil { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.video { background: var(--pitch-0); }
+.poster[hidden] { display: none; }
+.veil { image-rendering: pixelated; pointer-events: none; }
+.hit { position: absolute; inset: 0; padding: 0; background: none; border: 0; cursor: pointer; }
+
+/* the play control: a 96 px signal square (pixel triangle) in the middle, two square rings pulse out of it */
+.cover {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--s-6);
+  padding: 0; border: 0; background: none; color: var(--paper-0); cursor: pointer;
+}
+.cover { background: rgb(11 11 13 / .3); transition: background var(--d-fast) var(--e2); }
+.cover:hover { background: rgb(11 11 13 / .15); }
+.cover[data-started] { background: rgb(11 11 13 / .55); }
+.cover[aria-disabled] { cursor: default; }
+.play {
+  position: relative; display: grid; place-items: center; width: 96px; height: 96px;
+  background: var(--signal); color: var(--on-signal);
+  transition: transform var(--d-fast) var(--ease), background var(--d-fast) var(--e2);
+}
+.play svg { width: 33px; height: 33px; margin-left: 6px; fill: currentColor; shape-rendering: crispEdges; }
+.play::before, .play::after { content: ''; position: absolute; inset: -1px; border: 1px solid var(--signal); opacity: 0; pointer-events: none; }
+.cover:hover .play { background: var(--paper-0); transform: scale(1.04); }
+.cover:active .play { transform: scale(.97); }
+.cover:focus-visible { outline: none; }
+.cover:focus-visible .play { outline: 2px solid var(--focus); outline-offset: 6px; }
+.hint {
+  display: inline-flex; align-items: center; gap: var(--s-2); height: 28px; padding: 0 var(--s-3);
+  background: var(--pitch-0); border: var(--hair-w) solid var(--hair-strong);
+  font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--paper-0); font-variant-numeric: tabular-nums;
+}
+.hint i { font-style: normal; color: var(--paper-3); }
+@media (prefers-reduced-motion: no-preference) {
+  .play::before { animation: ring 2.4s var(--io) infinite; }
+  .play::after { animation: ring 2.4s var(--io) 1.2s infinite; }
+}
+@keyframes ring { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+
+.note { position: absolute; left: var(--s-3); right: var(--s-3); bottom: var(--s-3); margin: 0; padding: var(--s-2) var(--s-3); font: 500 12px/1.4 var(--font-mono); color: var(--paper-2); background: var(--pitch-0); border: var(--hair-w) solid var(--hair-strong); }
+.note a { color: var(--paper-0); text-decoration: underline; text-underline-offset: 2px; }
+
+/* control bar: play · seek rail · time · mute, one hairline frame continuing the plate's */
+.bar {
+  display: flex; align-items: center; gap: var(--s-4); height: 56px; padding: 0 var(--s-2);
+  border: var(--hair-w) solid var(--hair-strong); border-top: 0; background: var(--panel);
+  font: 500 12px/1 var(--font-mono); color: var(--fg-2);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); min-width: 44px; height: 44px; padding: 0 var(--s-2);
+  border: 0; background: none; color: var(--fg); cursor: pointer;
+  font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+  transition: background var(--d-fast) var(--e2), color var(--d-fast) var(--e2);
+}
+.btn svg { width: 14px; height: 14px; fill: currentColor; shape-rendering: crispEdges; }
+.btn:hover:not(:disabled) { background: var(--wash-bg); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { color: var(--fg-3); cursor: default; }
+.mute[aria-pressed="true"] { color: var(--signal-text); }
+.time { margin: 0; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--fg-3); }
+.time span { color: var(--fg); }
+
+/* seek: a 2 px rail filled to --p with signal, a square thumb */
+.seek {
+  flex: 1; min-width: 0; height: 44px; margin: 0; background: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}
+.seek:disabled { cursor: default; }
+.seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--signal) calc(var(--p) * 100%), var(--hair-strong) 0); }
+.seek::-moz-range-track { height: 2px; background: var(--hair-strong); }
+.seek::-moz-range-progress { height: 2px; background: var(--signal); }
+.seek::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -5px; border: 0; border-radius: 0; background: var(--fg); }
+.seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 0; background: var(--fg); }
+.seek:disabled::-webkit-slider-thumb { background: var(--fg-3); }
+.seek:disabled::-moz-range-thumb { background: var(--fg-3); }
+.seek:focus-visible { outline: 2px solid var(--focus); outline-offset: -8px; }
+
+.caption { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-3); margin-top: var(--s-4); font: 400 14px/1.5 var(--font-ui); color: var(--fg-3); }
+.caption span { font: 500 12px/20px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg); }
+
+@media (max-width: 560px) {
+  .play { width: 64px; height: 64px; }
+  .play svg { width: 22px; height: 22px; margin-left: 4px; }
+  .cover { gap: var(--s-3); }
+  .hint { height: 24px; font-size: 10px; letter-spacing: .08em; }
+  .bar { gap: var(--s-2); padding: 0; }
+  .mute span { display: none; }
+}

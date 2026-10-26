@@ -1,0 +1,157 @@
+import { test, expect, beforeEach, vi } from 'vitest'
+import {
+  loadReel, playReel, pauseReel, setReelSpeed, seekReel, seekReelToSimTime, stopReel, unloadReel,
+  reelLoaded, reelDurationMs, reelElapsedMs, reelPlaying, parseReelChunk, reelBeats, REEL_TICK_MS,
+} from '@/lib/api/replay'
+import { useStore } from '@/lib/store'
+import { snapWith } from '@/lib/fixtures'
+
+vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date', 'performance'] })
+
+const meta = { name: 'r', title: 'R', file: '/reels/r.jsonl' }
+const lines = [
+  { t: 0, frame: { type: 'edges', edges: [['peer-0', 'peer-1']] } },
+  { t: 452, frame: snapWith(['peer-0', 'peer-1'], { time: 0 }) },
+  { t: 1000, frame: { at: 0.5, event_type: 'ClockTick', category: 'clock' } },
+  { t: 2000, frame: snapWith(['peer-0', 'peer-1'], { time: 1.5, state: 'running', speed: 4 }) },
+  { t: 2100, frame: { at: 1.6, event_type: 'GossipMessage', category: 'gossip', from_peer: 'peer-0', to_peer: 'peer-1', msg_id: 'msg-1' } },
+].map(l => JSON.stringify(l)).join('\n') + '\n'
+
+function streamedResponse(): Response {
+  const enc = new TextEncoder()
+  const bytes = enc.encode(lines)
+  const stream = new ReadableStream<Uint8Array>({
+    start(c) {
+      for (const part of [lines.slice(0, 70), lines.slice(70, 300), lines.slice(300)]) c.enqueue(enc.encode(part))
+      c.close()
+    },
+  })
+  return new Response(stream, { status: 200, headers: { 'content-length': String(bytes.length) } })
+}
+
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(async () => streamedResponse()))
+  useStore.setState(useStore.getInitialState(), true)
+  unloadReel()
+})
+
+test('parseReelChunk carries a partial line across chunks and skips malformed lines', () => {
+  const a = parseReelChunk(lines.slice(0, 70), ''); const b = parseReelChunk(lines.slice(70), a.carry)
+  expect(a.frames.length + b.frames.length).toBe(5); expect(b.carry).toBe('')
+  expect(parseReelChunk('{"t":1,"frame":{"type":"gap","dropped":1}}\n{bad\n', '').frames).toHaveLength(1)
+  expect(parseReelChunk('{"t":1,"fra', '').carry).toBe('{"t":1,"fra')
+})
+test('loadReel streams, primes on the first snapshot, seeks to it, reports progress, lands paused', async () => {
+  const loads: unknown[] = []; const un = useStore.subscribe(s => loads.push(s.reelLoad))
+  const ok = await loadReel(meta); un()
+  expect(ok).toBe(true); expect(useStore.getState().reel).toEqual({ name: 'r', title: 'R', durationMs: 2100, durationSim: 1.5 })
+  expect(useStore.getState().nodes).toHaveLength(2); expect(useStore.getState().edges).toEqual([['peer-0', 'peer-1']]); expect(useStore.getState().simTime).toBe(0)
+  expect(useStore.getState().playing).toBe(false); expect(useStore.getState().simSpeed).toBe(1); expect(useStore.getState().reelLoad).toBeNull()
+  expect(loads.some(l => l && (l as { loaded: number }).loaded > 0)).toBe(true); expect(reelLoaded()).toBe(true); expect(reelElapsedMs()).toBe(452)
+})
+test('loadReel returns false on a fetch failure or an empty file and leaves no reel', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 404 }))); expect(await loadReel(meta)).toBe(false)
+  vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 200 }))); expect(await loadReel(meta)).toBe(false)
+  expect(useStore.getState().reel).toBeNull(); expect(useStore.getState().reelLoad).toBeNull()
+})
+test('play dispatches by wall clock × speed, ignores recorded state, auto-pauses at the end', async () => {
+  await loadReel(meta); setReelSpeed(2); playReel(); expect(reelPlaying()).toBe(true); expect(useStore.getState().playing).toBe(true)
+  vi.advanceTimersByTime(1100)
+  expect(useStore.getState().simTime).toBe(1.5); expect(useStore.getState().simSpeed).toBe(1); expect(useStore.getState().events.map(e => e.event_type)).toEqual(['ClockTick', 'GossipMessage'])
+  expect(reelPlaying()).toBe(false); expect(useStore.getState().playing).toBe(false); expect(reelElapsedMs()).toBe(2100)
+  playReel(); expect(reelElapsedMs()).toBe(0)   // from the end → seekReel(0) first
+})
+test('seek rebuilds the store from every frame up to t (events into the log, no particles), clamps, optional tail; speed floors at 0.1', async () => {
+  await loadReel(meta); seekReelToSimTime(1.0); expect(useStore.getState().simTime).toBe(1.5); const at1 = useStore.getState().events.length
+  seekReelToSimTime(99); const atEnd = useStore.getState().events.length; expect(atEnd).toBeGreaterThanOrEqual(at1)
+  seekReelToSimTime(1.0); expect(useStore.getState().events).toHaveLength(at1)   // a seek back drops the later events
+  seekReelToSimTime(99); expect(reelElapsedMs()).toBe(2100)
+  seekReel(99_999); expect(reelElapsedMs()).toBe(2100); seekReel(-5); expect(reelElapsedMs()).toBe(0)
+  seekReel(2100, { eventTailMs: 200 }); expect(useStore.getState().events.at(-1)?.msg_id).toBe('msg-1')   // the tail event plays last
+  setReelSpeed(0.01); seekReel(0); playReel(); vi.advanceTimersByTime(50); expect(reelElapsedMs()).toBe(5); pauseReel()
+})
+test('stopReel keeps frames; unloadReel drops them', async () => {
+  await loadReel(meta); playReel(); stopReel(); expect(reelPlaying()).toBe(false); expect(reelElapsedMs()).toBe(0); expect(reelLoaded()).toBe(true)
+  unloadReel(); expect(reelLoaded()).toBe(false); expect(reelDurationMs()).toBe(0)
+})
+test('a file truncated mid-line at EOF loads with the frames before the cut (global review focus 2)', async () => {
+  const cut = lines.trimEnd().slice(0, -12)                                   // the last line loses its tail and its newline
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(cut, { status: 200 })))
+  expect(await loadReel(meta)).toBe(true); expect(useStore.getState().reel?.durationMs).toBe(2000); expect(reelLoaded()).toBe(true)
+})
+test('priming renders the mesh while the stream is still open, before the reel is set (review round 2)', async () => {
+  const enc = new TextEncoder()
+  const cut = lines.indexOf('\n', lines.indexOf('\n') + 1) + 1               // edges + first snapshot only
+  let release = () => {}
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ReadableStream<Uint8Array>({
+    async start(c) {
+      c.enqueue(enc.encode(lines.slice(0, cut)))
+      await new Promise<void>(r => { release = r })
+      c.enqueue(enc.encode(lines.slice(cut))); c.close()
+    },
+  }), { status: 200 })))
+  const done = loadReel(meta)
+  await vi.waitFor(() => expect(useStore.getState().nodes).toHaveLength(2))
+  expect(useStore.getState().edges).toEqual([['peer-0', 'peer-1']])
+  expect(useStore.getState().reel).toBeNull(); expect(useStore.getState().reelLoad).not.toBeNull(); expect(reelLoaded()).toBe(false)
+  release()
+  expect(await done).toBe(true); expect(useStore.getState().reel?.durationMs).toBe(2100)
+})
+test('parseReelChunk keeps only object lines with a string type or a frame key (R33)', () => {
+  const text = ['null', '42', '"s"', '[1]', '{"t":1}', '{"type":3}', '{"t":1,"frame":{"type":"gap"}}', '{"type":"edges","edges":[]}'].join('\n') + '\n'
+  expect(parseReelChunk(text, '').frames).toEqual([{ t: 1, frame: { type: 'gap' } }, { type: 'edges', edges: [] }])
+})
+test('loadReel drops the previous reel before fetching; a superseded load cannot prime or land (R33)', async () => {
+  await loadReel(meta); expect(reelLoaded()).toBe(true)
+  let release = () => {}
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ReadableStream<Uint8Array>({
+    async start(c) { await new Promise<void>(r => { release = r }); c.enqueue(new TextEncoder().encode(lines)); c.close() },
+  }), { status: 200 })))
+  const first = loadReel(meta); expect(reelLoaded()).toBe(false)
+  await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1))
+  const firstRelease = release
+  useStore.setState(useStore.getInitialState(), true)
+  const second = loadReel({ ...meta, title: 'Second' })
+  await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+  firstRelease(); expect(await first).toBe(false); expect(useStore.getState().nodes).toHaveLength(0); expect(useStore.getState().reel).toBeNull()
+  release(); expect(await second).toBe(true); expect(useStore.getState().reel?.title).toBe('Second')
+})
+test('seekReelToSimTime lands on the snapshot a rounded ?t= names, not the next one (recorded times are float sums)', async () => {
+  const drift = [
+    { t: 0, frame: snapWith(['peer-0'], { time: 12.399999999999972 }) },
+    { t: 500, frame: snapWith(['peer-0'], { time: 12.89999999999997 }) },
+    { t: 1000, frame: snapWith(['peer-0'], { time: 13.399999999999968 }) },
+  ].map(l => JSON.stringify(l)).join('\n') + '\n'
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(drift, { status: 200 })))
+  await loadReel(meta); seekReelToSimTime(12.9); expect(reelElapsedMs()).toBe(500)
+})
+test('seek rebuilds phaseLabel, caption and phase beats from the recorded events at or before t', async () => {
+  const phases = [{ at: 1, label: 'Sybils graft in', action: 'inject_sybil' }, { at: 3, label: 'Faults cleared', action: 'clear_faults' }]
+  const scenario = { id: 's', name: 'S', description: '', icon: '', topology_type: 'random', phases, duration: 5 }
+  const reel = [
+    { t: 0, frame: { type: 'scenario', active: true, scenario } },
+    { t: 100, frame: snapWith(['peer-0'], { time: 0 }) },
+    { t: 1200, frame: { at: 1.1, event_type: 'ScenarioPhaseFired', category: 'simulation', label: 'Sybils graft in' } },
+    { t: 1500, frame: snapWith(['peer-0'], { time: 1.5 }) },
+    { t: 3200, frame: { at: 3.1, event_type: 'ScenarioPhaseFired', category: 'simulation', label: 'Faults cleared' } },   // recordings carry one event per phase
+    { t: 3500, frame: snapWith(['peer-0'], { time: 3.5 }) },
+  ].map(l => JSON.stringify(l)).join('\n') + '\n'
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(reel, { status: 200 })))
+  await loadReel(meta); expect(useStore.getState().phaseLabel).toBe('')
+  seekReelToSimTime(1.5)
+  expect(useStore.getState().phaseLabel).toBe('Sybils graft in'); expect(useStore.getState().caption).toMatchObject({ text: 'Sybils graft in', kind: 'phase' })
+  expect(useStore.getState().beats.map(b => b.label)).toEqual(['Sybils graft in'])   // rebuilt from the recorded phase event
+  seekReelToSimTime(3.5); expect(useStore.getState().phaseLabel).toBe('Faults cleared'); expect(useStore.getState().beats).toHaveLength(2)
+  seekReelToSimTime(0); expect(useStore.getState().phaseLabel).toBe(''); expect(useStore.getState().beats).toEqual([])
+})
+test('loading the sybil-eclipse reel pre-scans every beat before a frame is played; a full play-through leaves the store with the same list (T9)', async () => {
+  const { readFileSync } = await import('node:fs')
+  const text = readFileSync('public/reels/sybil-eclipse.jsonl', 'utf8')   // vitest runs from web/
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(text, { status: 200 })))
+  expect(await loadReel({ name: 'sybil-eclipse', title: 'Sybil → Eclipse', file: '/reels/sybil-eclipse.jsonl' })).toBe(true)
+  const scanned = reelBeats()
+  expect(scanned.length).toBeGreaterThan(3); expect(scanned.map(b => b.kind)).toContain('prune'); expect(useStore.getState().beats).toEqual([])
+  setReelSpeed(1000); playReel(); vi.advanceTimersByTime(REEL_TICK_MS * Math.ceil(reelDurationMs() / 1000 / REEL_TICK_MS) + REEL_TICK_MS)
+  expect(reelPlaying()).toBe(false); expect(useStore.getState().beats).toEqual(scanned)
+  unloadReel(); expect(reelBeats()).toEqual([])
+})

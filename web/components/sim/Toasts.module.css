@@ -1,0 +1,29 @@
+/* Menu/toast surfaces carry no dither (spec §7). */
+.stack {
+  position: absolute;
+  top: var(--s-3);   /* the stack lives in .canvas, whose grid row already starts under the toolbar */
+  left: var(--s-3);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 260px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: var(--s-2) var(--s-3);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  font: 400 var(--t-label)/1.4 var(--font-mono);
+  animation: toastIn var(--d-fast) var(--e2) both;   /* reduced motion zeroes --d-fast in the tokens */
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(-4px); } }
+.toast[data-kind="fail"] { color: var(--flame-text); }
+.toast[data-kind="ok"] { color: var(--fg); }
+.toast[data-kind="info"] { color: var(--fg-2); }
+
+/* Touch band: under the 44 px mode switcher, full width inside the gutters */
+@media (max-width: 1024px) {
+  .stack { top: calc(var(--s-3) + 44px + var(--s-2)); width: calc(100% - 2 * var(--s-3)); }
+}

@@ -1,0 +1,117 @@
+/* Menu surfaces carry no dither (spec §7); --flame only on attacker-named asides. */
+.trigger {
+  font: 500 var(--t-label)/1 var(--font-mono);
+  color: var(--fg-3);
+  background: none;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-0);
+  padding: 6px var(--s-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.trigger:hover, .trigger[aria-expanded="true"] { color: var(--fg); border-color: var(--hair-strong); }
+.trigger[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+
+.menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 16px));
+  padding: var(--s-1) 0;
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  color: var(--fg);
+  /* prod-11: the popover fades and settles 4 px; display/overlay stay discrete so the close can animate */
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--d-fast) var(--e2), transform var(--d-fast) var(--e),
+    display var(--d-fast) allow-discrete, overlay var(--d-fast) allow-discrete;
+}
+.menu:not(:popover-open) { opacity: 0; transform: translateY(-4px); }
+@starting-style { .menu:popover-open { opacity: 0; transform: translateY(-4px); } }
+
+.row { position: relative; }
+
+.item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 32px;
+  padding: var(--s-1) var(--s-3);
+  background: none;
+  border: 0;
+  color: var(--fg);
+  text-align: left;
+  font: 400 var(--t-body)/1.3 var(--font-mono);
+  cursor: pointer;
+}
+.item:hover, .item:focus-visible { background: var(--wash); }
+.item[aria-disabled="true"] { color: var(--fg-3); cursor: not-allowed; }
+.item[aria-current="true"] .name::before { content: '● '; }
+
+.line { display: flex; align-items: baseline; gap: var(--s-2); width: 100%; }
+.name { flex: 1; }
+.kbd { font: 400 var(--t-micro)/1 var(--font-mono); color: var(--fg-3); border: 1px solid var(--hair); padding: 2px 4px; }
+.tag { font: 500 var(--t-micro)/1 var(--font-mono); color: var(--signal-text); border: 1px solid var(--signal-text); padding: 2px 4px; letter-spacing: .12em; }
+.aside { color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.row[data-attack] .aside { color: var(--flame-text); }
+.meta { font: 400 var(--t-body)/1.3 var(--font-mono); color: var(--fg-3); }
+
+/* the stepper sits over the Sybil row's right edge, left of the aside */
+.row:has(.stepper) .aside { margin-right: 84px; }
+.stepper {
+  position: absolute;
+  right: var(--s-3);
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: 400 var(--t-body)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.stepper button {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: 1px solid var(--hair);
+  color: var(--fg);
+  cursor: pointer;
+}
+.stepper button:hover { background: var(--wash); }
+.stepper span { min-width: 2ch; text-align: center; }
+
+.sep { margin: var(--s-1) 0; border: 0; border-top: 1px solid var(--hair); }
+
+@media (max-width: 1024px) {
+  .trigger { min-width: 44px; min-height: 44px; }
+  .item { min-height: 44px; }
+  .stepper { gap: var(--s-2); }
+  .stepper button { width: 44px; height: 44px; }
+  .row:has(.stepper) .aside { margin-right: 124px; }
+}
+
+/* Menu + overlay (≤1024): serif section heads, 56 px rows, mono asides */
+.oSection { max-width: 640px; margin: 0 auto var(--s-6); }
+.oHeading { margin: 0 0 var(--s-2); font: 400 var(--t-narr)/1.1 var(--font-display); color: var(--fg); }
+.oRow {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  width: 100%; min-height: 56px; padding: var(--s-2) 0;
+  background: none; border: 0; border-bottom: 1px solid var(--hair);
+  color: var(--fg); text-align: left; font: 400 var(--t-body)/1.3 var(--font-mono); cursor: pointer;
+}
+.oRow:hover { background: var(--wash); }
+.oRow[aria-disabled="true"] { color: var(--fg-3); cursor: not-allowed; }
+.oRow[aria-current="true"] .oName::before { content: '● '; }
+.oName { flex: 1; font: 400 var(--t-narr)/1.2 var(--font-display); }
+.oPresets { display: flex; margin-bottom: var(--s-2); }
+.oPreset {
+  flex: 1; min-height: 56px; background: none; border: 1px solid var(--hair); color: var(--fg-3);
+  font: 500 var(--t-body)/1 var(--font-mono); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.oPreset + .oPreset { border-left: 0; }
+.oPreset[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }

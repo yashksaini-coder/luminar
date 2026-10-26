@@ -1,0 +1,24 @@
+{
+  "reel": "sybil-eclipse",
+  "simDurationS": 39.7,
+  "peers": 50,
+  "sybils": 5,
+  "heartbeatsToPrune": 2,
+  "deliveryPct": 100,
+  "firstPublishAt": 5.8,
+  "sybilAt": 10.2,
+  "firstScorePruneAt": 11.9,
+  "eclipseAt": 16.2,
+  "eclipseTarget": "peer-10",
+  "clearedAt": 24.1,
+  "healedInS": 1.4,
+  "avgHops": 4.2,
+  "avgPropagationMs": 100,
+  "partition": {
+    "peers": 50,
+    "splitAt": 15,
+    "clearedAt": 35,
+    "cutDeliveryPct": 50,
+    "healedInS": 4.5
+  }
+}

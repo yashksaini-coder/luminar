@@ -1,0 +1,142 @@
+.strip {
+  position: absolute;
+  bottom: var(--strip-bottom);
+  left: 50%;
+  translate: -50%;
+  width: clamp(360px, 76%, 820px);
+  height: var(--strip-h);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-3);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  z-index: 2;
+}
+
+.row { display: contents; }   /* two rows only below the breakpoint */
+.drawerBtn { display: none; }
+
+.btn, .speed {
+  font: 500 var(--t-label)/1 var(--font-mono);
+  color: var(--fg-3);
+  background: none;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-0);
+  padding: 6px var(--s-2);
+  cursor: pointer;
+}
+.btn[aria-pressed="true"], .speed[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }
+.btn:hover, .speed:hover { color: var(--fg); }
+
+.time {
+  font: 400 var(--t-label)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.speeds { display: flex; }
+.speeds > .speed + .speed { border-left: 0; }
+.speed { font-variant-numeric: tabular-nums; padding: 6px 6px; }
+
+.menus { display: flex; gap: var(--s-2); }
+
+.kbd {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding-top: var(--s-2);
+  text-align: center;
+  font: 400 var(--t-micro)/1 var(--font-mono);
+  color: var(--fg-3);
+  pointer-events: none;
+}
+
+/* scrubber: 6 px track, nothing on it is dithered */
+.track { position: relative; flex: 1; min-width: 80px; height: 6px; background: var(--hair); }
+.band, .tick, .fill, .head { position: absolute; top: 0; height: 100%; }
+.band { pointer-events: auto; }
+.tick { width: 1px; top: -3px; height: 12px; background: var(--fg-3); }
+.tick[data-kind="prune"], .tick[data-kind="fault"] { background: var(--flame); }
+.fill { left: 0; background: var(--fg); pointer-events: none; }
+.head { width: 2px; top: -4px; height: 14px; translate: -1px; background: var(--paper-0); pointer-events: none; }
+.range { position: absolute; inset: -8px 0; width: 100%; height: 22px; margin: 0; opacity: 0; cursor: pointer; }
+.range[aria-disabled="true"] { cursor: not-allowed; }
+.track:has(.range:focus-visible) { outline: 2px solid var(--focus); outline-offset: 4px; }
+.bubble {
+  position: absolute;
+  bottom: 14px;
+  translate: -50%;
+  padding: 2px var(--s-1);
+  font: 400 var(--t-micro)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  background: var(--raised);
+  border: 1px solid var(--hair-strong);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Two-row strip: by canvas width (D8, rails open on a narrow desktop) and in the touch band. CSS has no `or`
+   across container and media queries, so the block is duplicated. */
+@container (max-width: 760px) {
+  .strip {
+    left: var(--s-3);
+    translate: none;
+    width: calc(100% - 2 * var(--s-3));
+    height: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: var(--s-2);
+    padding: var(--s-2);
+  }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+  .menus { flex-wrap: wrap; }
+  /* the kbd hint is a third grid row inside the strip, not hung below it: whatever --strip-bottom is, the
+     canvas never clips it (T7 review round 3) */
+  .kbd { position: static; padding-top: 0; }
+}
+
+/* ≤1024: full-width, two rows, every control a 44 px target; no keyboard, so no kbd hint */
+@media (max-width: 1024px) {
+  .strip {
+    left: var(--s-3);
+    translate: none;
+    width: calc(100% - 2 * var(--s-3));
+    bottom: var(--s-3);
+    height: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: var(--s-2);
+    padding: var(--s-2);
+    padding-bottom: max(var(--s-2), env(safe-area-inset-bottom));
+  }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+  .btn, .speed { min-width: 44px; min-height: 44px; }
+  .drawerBtn { display: inline-block; }
+  .menus { flex-wrap: wrap; }
+  .speeds { gap: var(--s-2); }
+  .speeds > .speed + .speed { border-left: 1px solid var(--hair); }   /* spaced targets keep their own hairline */
+  .range { inset: -19px 0; height: 44px; }
+  .kbd { display: none; }
+  :global(:root[data-hero="1"]) .strip { bottom: var(--strip-bottom); }
+}
+
+/* Phone landscape: one scrolling row, 52 px tall, so the mesh keeps a band above it */
+@media (max-width: 1024px) and (max-height: 500px) {
+  .strip {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    bottom: var(--s-2);
+    padding: var(--s-1) var(--s-2);
+    padding-bottom: max(var(--s-1), env(safe-area-inset-bottom));
+  }
+  .strip::-webkit-scrollbar { display: none; }
+  .row { display: contents; }
+  .strip > * { flex: none; }
+  .track { flex: 1 0 80px; }
+  .menus { flex-wrap: nowrap; }
+}

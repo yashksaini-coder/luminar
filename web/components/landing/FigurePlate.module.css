@@ -1,0 +1,23 @@
+.section { scroll-margin-top: var(--nav-h, 64px); }
+.plate { padding: 0; }
+.plate :global(.plate) { max-width: none; outline: var(--hair-w) solid var(--hair-strong); }
+.paper { position: absolute; inset: 12px; outline: 1px solid var(--paper-0); outline-offset: 6px; }
+.halo { position: absolute; right: -24px; top: -24px; z-index: 1; pointer-events: none; }
+/* Figure's stamp is the plate's last child; move it to the bottom-left corner */
+.plate :global(.plate) > span:last-child { left: 2%; top: auto; bottom: 6%; z-index: 1; }
+/* narrow plate (< 450 px, Figure.module.css): the figure's buttons run down the left, so the stamp sits bottom-right */
+@container (max-width: 449px) { .plate :global(.plate) > span:last-child { left: auto; right: 2%; } }
+
+/* legend strip: mono key chips naming the figure's buttons, the full-screen link on the right */
+.legend { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-6); margin-top: var(--s-6); }
+.keys { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0; }
+.label { margin-right: var(--s-2); font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.key { display: inline-flex; align-items: center; height: 28px; padding: 0 var(--s-3); border: var(--hair-w) solid var(--hair-strong); font: 500 12px/1 var(--font-mono); color: var(--fg-2); }
+.full {
+  display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; padding: 0 var(--s-4);
+  border: var(--hair-w) solid var(--hair-strong); font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--fg); text-decoration: none; transition: background var(--d-fast) var(--e2), border-color var(--d-fast) var(--e2);
+}
+.full:hover { background: var(--wash-bg); border-color: var(--paper-2); }
+.full:active { transform: translateY(1px); }
+@media (max-width: 560px) { .full { width: 100%; justify-content: center; } }

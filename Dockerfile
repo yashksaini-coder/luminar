@@ -1,12 +1,11 @@
-# ── Stage 1: Build frontend ───────────────────────────────────────────────────
+# ── Stage 1: Build web (Next static export) ────────────────────────────────
 FROM node:22-slim AS frontend-build
-
-WORKDIR /frontend
-
-COPY frontend/package.json frontend/package-lock.json ./
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
 RUN npm ci
-
-COPY frontend/ ./
+COPY web/ ./
+ARG NEXT_PUBLIC_API_URL=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 
@@ -23,8 +22,8 @@ RUN uv sync --no-dev --frozen
 
 COPY backend/ backend/
 
-# Copy the built frontend into the location main.py expects
-COPY --from=frontend-build /frontend/dist frontend/dist
+# web/out → the path backend/main.py:1043 mounts; the backend is not edited
+COPY --from=frontend-build /web/out frontend/dist
 
 EXPOSE 8080
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Luminar app icon: a 50 % dithered diamond in paper-0 on pitch-0 (docs/design/tokens.css). -->
+  <defs>
+    <pattern id="d" patternUnits="userSpaceOnUse" width="2" height="2">
+      <rect width="1" height="1" fill="#f2f2ef"/>
+      <rect x="1" y="1" width="1" height="1" fill="#f2f2ef"/>
+    </pattern>
+  </defs>
+  <rect width="32" height="32" fill="#0b0b0d"/>
+  <polygon points="16,3 29,16 16,29 3,16" fill="url(#d)"/>
+  <polygon points="16,3 29,16 16,29 3,16" fill="none" stroke="#f2f2ef" stroke-width="1"/>
+</svg>

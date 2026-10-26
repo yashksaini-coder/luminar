@@ -1,9 +1,0 @@
-/* Panels (group P) — deltas on top of style.css, which already carries the panel classes.
-   Loaded from ui/stats-panel.ts: a late @import in style.css is dropped by postcss-import. */
-.lm-msgs { gap: 4px; }
-.lm-msgs > .lm-label { margin-bottom: 4px; }
-.lm-cats { gap: 5px; }
-.lm-cats > .lm-label { margin-bottom: 3px; }
-.lm-infra { gap: 8px; }
-#milestones-section > .lm-label { margin-bottom: 2px; }
-.lm-kpi-unit[hidden], .lm-pi-note[hidden] { display: none; }

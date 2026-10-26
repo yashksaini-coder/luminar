@@ -1,0 +1,92 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  height: var(--toolbar-h);
+  padding: 0 var(--s-4);
+  padding-inline: max(var(--s-4), env(safe-area-inset-left)) max(var(--s-4), env(safe-area-inset-right));
+  border-bottom: 1px solid var(--hair);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+  font: 600 var(--t-ui)/1 var(--font-ui);
+  letter-spacing: .14em;
+  color: var(--paper-0);
+}
+
+.sub {
+  margin-left: var(--s-2);
+  font: 400 var(--t-label)/1 var(--font-mono);
+  letter-spacing: 0;
+  color: var(--paper-2);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: 600 var(--t-label)/1 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  border-radius: var(--r-0);
+  background: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }   /* the flex item that actually truncates (REEL · long title) */
+
+/* R7: flame-dim text is 3.1:1 and fails AA; --flame-text is 6.3:1 */
+.pill[data-state="offline"] { color: var(--flame-text); padding: 3px var(--s-2); border: 1px solid var(--hair); }
+.pill[data-state="connecting"] { color: var(--fg-3); }
+.pill[data-state="live"] { color: var(--signal); }
+.pill[data-state="reel"] { color: var(--paper-0); }
+
+.dot, .square {
+  width: 6px;
+  height: 6px;
+}
+.dot { border-radius: 50%; background: var(--signal); }
+.square { background: var(--paper-0); }
+
+.clock {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-0);
+}
+
+.spacer { flex: 1; }
+
+.badge, .preset, .link, .menuBtn {
+  font: 600 var(--t-label)/1 var(--font-ui);
+  letter-spacing: .12em;
+  color: var(--fg-3);
+  background: none;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-0);
+  padding: 4px var(--s-2);
+  text-decoration: none;
+}
+button.badge, .preset, .menuBtn { cursor: pointer; }
+.badge[aria-pressed="true"], .preset[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }
+.badge:hover, .preset:not(:disabled):hover, .link:hover, .menuBtn:hover { color: var(--fg); }
+.brand:hover { color: var(--fg); text-decoration: underline; text-underline-offset: .35em; text-decoration-thickness: 1px; }
+
+.presets { display: flex; gap: var(--s-3); }
+.group { display: flex; }
+.group > .preset + .preset { border-left: 0; }
+.preset { font-family: var(--font-mono); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+[data-reel] .presets { opacity: .5; }
+.preset:disabled { cursor: default; }
+
+.menuBtn { display: none; }
+/* ≤1024: brand, pill and Menu + only; the strip carries the time readout */
+@media (max-width: 1024px) {
+  .menuBtn { display: inline-block; flex: none; white-space: nowrap; min-height: 44px; min-width: 44px; }
+  .sub, .badge, .presets, .clock, .link { display: none; }
+}

@@ -1,0 +1,20 @@
+/* v2 section shell shared by the film, globe, features and honesty sections: content sits between the
+   GridFrame rails, the header is one grid row (mono slash kicker, serif h2 left, lead right on wide screens),
+   the body is the next. A .row is full width (its [data-grid] rule and + marks need that) and pads to the rails. */
+.row { padding-inline: var(--frame-x); }
+.head {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: end; gap: var(--s-6) var(--s-12);
+  padding: var(--s-16) var(--s-12) var(--s-12);
+}
+.kicker {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: var(--s-2); margin: 0;
+  font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3);
+}
+.kicker > span { color: var(--signal-text); }
+.h2 { margin: 0; font: 400 clamp(36px, 4.2vw, 60px)/1 var(--font-display); letter-spacing: -.015em; color: var(--fg); text-wrap: balance; }
+.lead { margin: 0; max-width: 34em; font: 400 16px/1.6 var(--font-ui); color: var(--fg-2); text-wrap: pretty; }
+.body { padding: var(--s-12); }
+
+@media (max-width: 1100px) { .head { padding-inline: var(--s-8); } .body { padding: var(--s-8); } }
+@media (max-width: 900px) { .head { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); padding: var(--s-12) var(--s-6) var(--s-8); } .body { padding: var(--s-6); } }
+@media (max-width: 560px) { .head { padding: var(--s-10) var(--s-4) var(--s-6); } .body { padding: var(--s-4); } }

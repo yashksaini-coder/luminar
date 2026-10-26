@@ -1,0 +1,52 @@
+{
+  "name": "luminar-web",
+  "private": true,
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "studio": "remotion studio",
+    "video": "remotion render LaunchV2 public/video/launch-16x9.mp4 --codec h264 --crf 28 --x264-preset slow --audio-codec aac --audio-bitrate 96k && remotion still LaunchV2 public/video/poster.png --frame 560",
+    "reel-stats": "node scripts/reel-stats.mjs",
+    "prebuild": "npm run reel-stats"
+  },
+  "dependencies": {
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/extensions": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
+    "@luma.gl/core": "9.4.2",
+    "@luma.gl/webgl": "9.4.2",
+    "@radix-ui/react-accordion": "1.2.21",
+    "@remotion/player": "4.0.538",
+    "culori": "4.0.2",
+    "d3-force": "3.0.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.538",
+    "zod": "3.25.76",
+    "zustand": "5.0.16"
+  },
+  "devDependencies": {
+    "@fontsource-variable/manrope": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@remotion/cli": "4.0.538",
+    "@types/culori": "4.0.1",
+    "@types/d3-force": "3.0.10",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.3",
+    "jsdom": "30.1.3",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}

@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/yashksaini-coder/luminar/actions/workflows/ci.yml"><img src="https://github.com/yashksaini-coder/luminar/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/typescript-5.7-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.7">
+  <img src="https://img.shields.io/badge/typescript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT"></a>
   <a href="https://github.com/sponsors/yashksaini-coder"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white" alt="Sponsor @yashksaini-coder on GitHub"></a>
 </p>
@@ -16,11 +16,14 @@ Built for a talk at Devcon 8 (Mumbai, 3–6 Nov 2026). _Talk link added once pub
 
 ## See it
 
+> [!NOTE]
+> The screen captures below (both GIFs, `ui-main`, `ui-radial`, `stage-hero`) were shot on the retired Vite frontend. `web/` keeps the same map, keys and reels, but its rails and inspector differ: [docs/ui.md](docs/ui.md) describes the current screens, [docs/readme-assets.md](docs/readme-assets.md) how to re-shoot them.
+
 ![Hero mode, 50 peers, reel sybil-eclipse: at T+10 s five Sybil nodes (red) graft into the mesh and flood it; P4 drives their score past −10 and the mesh prunes them with reason=score within two heartbeats, their markers turning hollow. At T+16 s four silent attackers close around peer-10; scoring sees only a small P3 deficit and never prunes them. At T+24 s the faults clear and the mesh heals in about 1.4 s.](assets/readme/demo-sybil-eclipse.gif)
 
 ![Geo layout, live Ethereum mainnet, Free Play underneath: 140 real observer nodes light up across the world map in the order they saw one slot's block, first sighting and p50 in the ticker. Arrival at observer nodes, ~2.5 min behind, not mesh paths.](assets/readme/live-mainnet.gif)
 
-Offline, no backend: `http://localhost:5173/?reel=sybil-eclipse&theme=stage&hero=1`.
+Offline, no backend: `http://localhost:3000/reels/sybil-eclipse/?theme=stage&hero=1`.
 
 ## Why
 
@@ -35,11 +38,11 @@ Hermes, Xatu and the ProbeLab dashboards record what the real network did; a Sha
 
 ```bash
 git clone https://github.com/yashksaini-coder/luminar && cd luminar
-make install   # uv sync --all-extras + npm install, ~1 min
-make dev       # backend :8000 + frontend :5173
+make install   # uv sync --all-extras + npm ci (web/), ~1 min
+make dev       # backend :8000 + web :3000
 ```
 
-Open http://localhost:5173 and press `Space`. For the offline demo, `make frontend` is enough: open `http://localhost:5173/?reel=sybil-eclipse` and the frontend replays a recorded WebSocket stream with no backend and no Wi-Fi.
+Open http://localhost:3000/sim/ and press `Space`. For the offline demo, `make web` is enough: open `http://localhost:3000/reels/sybil-eclipse/` and the frontend replays a recorded WebSocket stream with no backend and no Wi-Fi.
 
 <details>
 <summary>Requirements</summary>
@@ -52,15 +55,15 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 
 | control | where | what it does |
 |---|---|---|
-| play / pause | `Space`, toolbar | runs the trio simulation; `f` fits the view, `Esc` deselects |
-| nodes | toolbar: 20 · 50 · 100 · 200 · 500 | rebuilds the pool; the API clamps to 2–500 |
-| speed · duration | 0.5 · 1 · 2 · 3 · 5 · 10× · 1m · 2m · 5m · 10m | duration auto-pauses, default 5m |
+| play / pause | `Space`, command strip | runs the trio simulation; `r` resets, `f` fits the view, `Esc` deselects, `?` lists the keys |
+| nodes | toolbar: 20 · 50 · 100 · 200 | rebuilds the pool; the API clamps to 2–500 |
+| speed · duration | strip: 0.5 · 1 · 2 · 3 · 5 · 10× · toolbar: 1m · 2m · 5m · 10m | duration auto-pauses, default 5m; Play there extends it one step |
 | layout | top centre: Force · Radial · Geo | d3-force laid out once and frozen, rings by degree, world map for observer nodes |
 | Scenarios ▾ | 5 scripted runs | timed phases with narrator captions, table below |
-| Inject Fault ▾ | partition · Sybil ×5 · eclipse ×4 on the selected node · drop · clear all | latency is API-only: `POST /api/fault/latency` |
-| inspector | click a node | score sparkline, connected peers, live events for that peer |
+| Inject fault ▾ | partition · Sybil ×1–10 (default 5) · eclipse ×4 and drop on the selected node · clear all | latency is API-only: `POST /api/fault/latency` |
+| inspector | click a node or a log row | score sparkline, mesh peers vs topology peers, live events for that peer |
 | Reels ▾ | `1`–`9`, `0` back to live | 4 shipped, table below |
-| stage · hero | `t` · `h`, or `?theme=stage&hero=1` | projector theme; hero hides the panels and inspector and shows the ticker; both persist in `localStorage` |
+| stage · hero | `t` · `h`, or `?theme=stage&hero=1` | projector theme; hero hides the rails, legend and tooltip and shows the ticker; both persist in `localStorage` |
 | share | `s` | copies the current URL with `&peer=<id>`, plus `&t=<sec>` in a paused reel, so a link opens that moment |
 
 ![Main screen, Force layout, 50 peers after a Sybil attack: the five attackers sit pruned outside the mesh, n7 is selected and the inspector shows its score history, ten connected peers and live events; the stats panel has delivery, propagation, the delivery CDF and event categories.](assets/readme/ui-main.png)
@@ -88,10 +91,10 @@ Python 3.12 with `uv`, Node 22 with `npm`. `make docker` runs both halves in one
 ```bash
 LUMINAR_ALLOW_RECORD=1 make backend                                                              # recording is off by default; never on a public deploy
 uv run python scripts/record_reel.py record sybil-eclipse demo_sybil_eclipse --nodes 50 --duration 40 --min-score-prunes 1
-uv run python scripts/record_reel.py check frontend/public/reels/sybil-eclipse.jsonl             # fails on dropped events
+uv run python scripts/record_reel.py check web/public/reels/sybil-eclipse.jsonl                  # fails on dropped events
 ```
 
-A reel is the `/ws/events` frame stream written to `frontend/public/reels/<name>.jsonl` and listed in `manifest.json`.
+A reel is the `/ws/events` frame stream written to `web/public/reels/` as `<name>.jsonl` and listed in `manifest.json`.
 
 </details>
 
@@ -101,7 +104,7 @@ Click **MAINNET** in the toolbar, start the backend with `LUMINAR_MAINNET_FEED=1
 
 What it is and is not:
 
-- Arrival time at observer nodes, not the gossip mesh path. Nobody outside the mesh sees the path.
+- Arrival at observer nodes, not mesh paths. Nobody outside the mesh sees the path.
 - ~2.5 min behind the chain, polled once per slot, degrades to "no data" when the API is slow.
 - Observers are snapshot nodes with real geo coordinates; the simulated peers are hidden in the Geo layout.
 - Source: ethPandaOps' Xatu arrival data (`fct_block_first_seen_by_node`), CC BY 4.0, undocumented infrastructure. Notes in [docs/research-live-network.md](docs/research-live-network.md).
@@ -140,7 +143,7 @@ Short version; the full table is in [docs/protocols.md](docs/protocols.md#how-fa
 | eclipse visibility to scoring | P3 deficit only, floor −0.25 | same shape | faithful to the mechanism |
 | flood publish, IHAVE/IWANT | first hop to all neighbours; pulls at heartbeat granularity | same; async RPC | faithful; simplified timing |
 | signatures, validation, IDONTWANT | none | real | not modelled |
-| determinism | wall-clock trio, unseeded | — | reproducible recordings, never identical runs |
+| determinism | wall-clock trio, unseeded | — | reproducible recordings, not identical runs |
 
 ## Architecture
 
@@ -158,11 +161,11 @@ flowchart LR
     bus --> api
     api -. "trio.from_thread" .-> trio
   end
-  subgraph frontend ["frontend · TypeScript · Vite"]
-    store["store.ts"]
+  subgraph frontend ["web · Next.js static export · React"]
+    store["lib/store.ts · zustand"]
     map["deck.gl + d3-force<br/>Force · Radial · Geo"]
-    ui["panels · charts · narrator"]
-    reels["reels/*.jsonl"]
+    ui["rails · inspector · narrator"]
+    reels["public/reels/*.jsonl"]
     store --> map
     store --> ui
     reels -- "offline replay" --> store
@@ -186,10 +189,12 @@ flowchart LR
 | `backend/otel/` | OTLP/JSON exporter, Prometheus `/metrics` |
 | `backend/telemetry/` | ingest from real peers |
 | `backend/metrics/` | collector behind the stats panel |
-| `frontend/src/api/` | REST client and WebSocket; every fetch goes through `client.ts` |
-| `frontend/src/map/` | deck.gl renderer, d3-force layout, overlay |
-| `frontend/src/ui/` | panels, inspector, narrator, keyboard |
-| `frontend/src/charts/` | delivery CDF and friends |
+| `web/app/` | routes: `/` landing, `/sim/`, `/reels/[name]/`, `/figure/` |
+| `web/components/map/` | deck.gl renderer, frozen d3-force layout, icon atlas |
+| `web/components/sim/` | toolbar, command strip, rails, inspector, narrator, legend |
+| `web/components/dither/` | Bayer 8×8 dither, halo ring, diamond, stamp, figure, loupe |
+| `web/lib/` | zustand store, REST + WebSocket + reel player, `copy.ts` |
+| `web/remotion/` | the launch video (`npm run video`, local Chrome) |
 | `scripts/` | `record_reel.py`, `mainnet_to_reel.py`, `otel_smoke.py` |
 
 Swagger at http://localhost:8000/docs: 24 GET, 18 POST, 2 WebSocket routes. Details in [docs/architecture.md](docs/architecture.md) and [docs/backend.md](docs/backend.md).
@@ -197,19 +202,20 @@ Swagger at http://localhost:8000/docs: 24 GET, 18 POST, 2 WebSocket routes. Deta
 ## Development
 
 ```bash
-make check       # lint + test + typecheck + build, the same four jobs CI runs
+make check       # lint + test + web-check + build (ruff, pytest, tsc/eslint/unit tests, next build)
 make test        # uv run pytest tests/ -v, 126 tests in 15 files, trio mode
 make lint        # ruff check + ruff format --check, line length 100
-make typecheck   # cd frontend && npx tsc --noEmit
+make typecheck   # cd web && npx tsc --noEmit
+make web-check   # tsc + eslint + unit tests
 make fmt         # ruff format
 ```
 
-Tests are `async def` under trio; a fixture builds `EventBus` → `SimulationClock` → engine by hand, see `tests/test_gossip_engine.py`. Commits follow `type(scope): message` with scopes `backend`, `frontend`, `deploy`.
+Tests are `async def` under trio; a fixture builds `EventBus` → `SimulationClock` → engine by hand, see `tests/test_gossip_engine.py`. Commits follow `type(scope): message` with scopes `backend`, `web`, `video`, `deploy`.
 
 ## Deploy
 
 ```bash
-make docker      # builds the frontend, serves it with the backend from one container on :8080
+make docker      # builds web/, serves it with the backend from one container on :8080
 ```
 
 `render.yaml` and `.do/app.yaml` use the same root `Dockerfile` (the DigitalOcean spec boots 50 nodes). Set `LUMINAR_ADMIN_TOKEN` on anything public: every non-GET request then needs an `X-Luminar-Token` header and visitors get a read-only viewer plus the reels.
@@ -228,26 +234,25 @@ make docker      # builds the frontend, serves it with the backend from one cont
 | `LUMINAR_RING_SIZE` | 50000 | event ring buffer, ~12 MB; raise it on a laptop, not on a 512 MB instance |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | enables OTLP/JSON trace export |
 | `LUMINAR_OTLP_TRACE_PCT` | 5 | percentage of message traces exported |
-| `VITE_API_URL` | same origin | build-time; where the frontend finds the API |
+| `NEXT_PUBLIC_API_URL` | same origin | build-time; where the frontend finds the API |
 
 </details>
 
 ## Docs
 
 - [docs/protocols.md](docs/protocols.md): GossipSub v1.1, P1–P4 scoring, backoff, semaphores, the faithfulness table
-- [docs/architecture.md](docs/architecture.md): threading model and data flow; its embedded diagram (`assets/architecture.png`) predates the Vite rewrite
+- [docs/architecture.md](docs/architecture.md): threading model and data flow; its embedded diagram (`assets/architecture.png`) predates the Next.js rewrite in `web/`
 - [docs/backend.md](docs/backend.md): modules, engine, event system
 - [docs/ui.md](docs/ui.md): panels, inspector, keyboard
 - [docs/deployment.md](docs/deployment.md): Docker, Render, DigitalOcean, env vars
 - [docs/research-live-network.md](docs/research-live-network.md): mainnet data sources and what they can and cannot show
-- [docs/roadmap-devcon8.md](docs/roadmap-devcon8.md): plan of record for the talk
 - [docs/readme-assets.md](docs/readme-assets.md): how every image and GIF above is regenerated
 
 ## Devcon 8
 
 ![Stage theme with the hero layout on a 1440×840 viewport: the mesh alone, stats panel, event log and inspector hidden, the phase ticker along the bottom, paused at T+12.9 s with all five Sybils pruned, as projected during the talk.](assets/readme/stage-hero.png)
 
-The stage build is `?reel=sybil-eclipse&theme=stage&hero=1`; `t` and `h` toggle the same at a live backend. Mumbai, 3–6 Nov 2026.
+The stage build is `/reels/sybil-eclipse/?theme=stage&hero=1`; `t` and `h` toggle the same at a live backend. Mumbai, 3–6 Nov 2026.
 
 ## License
 
