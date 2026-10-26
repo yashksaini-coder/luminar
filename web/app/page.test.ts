@@ -37,6 +37,15 @@ test('rendered page: the skip link is the first focusable element and points at 
   document.body.innerHTML = ''
 })
 
+test('rendered page: every id is unique and every aria-labelledby resolves to one', () => {
+  document.body.innerHTML = r(h(Home))
+  const ids = [...document.querySelectorAll('[id]')].map((e) => e.id)
+  expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([])
+  for (const e of document.querySelectorAll('[aria-labelledby]'))
+    for (const id of e.getAttribute('aria-labelledby')!.split(/\s+/)) expect(document.getElementById(id), id).not.toBeNull()
+  document.body.innerHTML = ''
+})
+
 test('faq: Radix accordion, eight product questions, first open, every answer in FAQPage JSON-LD, no commands', () => {
   const m = r(h(Faq))
   expect(QA).toHaveLength(8)

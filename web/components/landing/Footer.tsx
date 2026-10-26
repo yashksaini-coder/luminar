@@ -49,8 +49,8 @@ export default function Footer() {
 
       <div className={styles.info} data-grid="">
         <div className={styles.how}>
-          <h3 className={styles.label} id="how-h">[ How it works ]</h3>
-          <ol aria-labelledby="how-h">
+          <h3 className={styles.label} id="foot-how-h">[ How it works ]</h3>
+          <ol aria-labelledby="foot-how-h">
             {STEPS.map(([s, d], n) => <li key={s}><span className={styles.n}>{String(n + 1).padStart(2, '0')}</span><b>{s}</b><span className={styles.d}>{d}</span></li>)}
           </ol>
         </div>
