@@ -18,7 +18,7 @@ export const TABS: Tab[] = [
   { id: 'docker', label: 'Docker', needs: 'Docker only', opens: 'http://localhost:8080',
     lines: [...CLONE, { cmd: 'docker compose up --build', note: 'site and backend in one container' }] },
   { id: 'offline', label: 'Offline', needs: 'Node 22 with npm · no backend, no Wi-Fi', opens: 'http://localhost:3000/reels/sybil-eclipse/',
-    lines: [...CLONE, { cmd: 'make install' }, { cmd: 'make web', note: 'the web half only' }] },
+    lines: [...CLONE, { cmd: 'cd web' }, { cmd: 'npm ci' }, { cmd: 'npm run dev', note: 'the web half only' }] },
 ]
 export const copyText = (t: Tab) => t.lines.map(l => l.cmd).join('\n')
 

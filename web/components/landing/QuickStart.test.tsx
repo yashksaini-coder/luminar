@@ -30,7 +30,7 @@ test('arrow keys, Home and End move selection and focus, wrapping at the ends', 
   tabs()[0].focus(); key(tabs()[0], 'ArrowRight')
   expect(tabs()[1].getAttribute('aria-selected')).toBe('true'); expect(document.activeElement).toBe(tabs()[1])
   expect(panel().textContent).toContain('docker compose up --build'); expect(panel().textContent).toContain('http://localhost:8080')
-  key(tabs()[1], 'ArrowRight'); expect(panel().textContent).toContain('make web'); expect(panel().textContent).toContain('/reels/sybil-eclipse/')
+  key(tabs()[1], 'ArrowRight'); expect(panel().textContent).toContain('npm ci'); expect(panel().textContent).not.toContain('make install'); expect(panel().textContent).toContain('/reels/sybil-eclipse/')
   key(tabs()[2], 'ArrowRight'); expect(tabs()[0].getAttribute('aria-selected')).toBe('true')
   key(tabs()[0], 'ArrowLeft'); expect(tabs()[2].getAttribute('aria-selected')).toBe('true')
   key(tabs()[2], 'Home'); expect(tabs()[0].getAttribute('aria-selected')).toBe('true')

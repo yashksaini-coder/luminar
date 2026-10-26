@@ -53,10 +53,11 @@
   .table th, .table td { padding: var(--s-3) var(--s-4); }
   .head { padding: var(--s-3) var(--s-4); }
   .hint { display: inline; }
-  /* fixed widths: each value column (11rem) fits beside the sticky 9rem column in a 356 px scroller, so every value can scroll clear of it */
-  .table { width: 31rem; min-width: 0; table-layout: fixed; }
+  /* fixed widths: each value column (13.25rem) fills the 356 px scroller beside the sticky 9rem column, so the max scroll
+     (35.5rem - 356 px = 212 px) equals one value column: at the end Luminar sits wholly under the sticky column */
+  .table { width: 35.5rem; min-width: 0; table-layout: fixed; }
   .table thead th:first-child { width: 9rem; }
-  .table thead th:nth-child(n + 2) { width: 11rem; white-space: normal; }
+  .table thead th:nth-child(n + 2) { width: 13.25rem; white-space: normal; }
   /* the parameter column stays put while the values scroll under it */
   .table tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); box-shadow: inset calc(-1 * var(--hair-w)) 0 var(--hair); }
 }
