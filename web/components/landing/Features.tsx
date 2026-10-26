@@ -1,17 +1,22 @@
 'use client'
-// Features bento: six cards, each a mono kicker, a serif title, one or two sentences and a small live
-// visual that acts out its claim (design-to-motion B4). Each card is its own reveal (the whole grid is
-// over 3.3 phone viewports tall, so it would never reach the 30% bar), staggered by column; each visual runs a story on its own JS clock only while ≥30% of it is on screen, offset so the
-// cards never act in unison. Reduced motion (or no IntersectionObserver) draws one still frame instead.
-// The server markup IS that still frame, so no-JS readers get the informative state too.
-// Numbers come from lib/reel-stats.json and the reel manifest; ARRIVALS are real observer arrivals.
-import { type ComponentType, type CSSProperties, useEffect, useRef } from 'react'
+// Features (v2): a hairline grid of five cells between the rails, each a numbered mono kicker, a serif
+// title, one or two sentences and a live visual that acts out its claim (design-to-motion B4); the mainnet
+// cell spans two columns with the world map of observer arrivals (condensed from the old MainnetCard).
+// Each cell is its own reveal (the grid is over 3.3 phone viewports tall, so it would never reach the 30%
+// bar), staggered by column; each visual runs a story on its own JS clock only while ≥30% of it is on
+// screen, offset so the cells never act in unison. Reduced motion (or no IntersectionObserver) draws one
+// still frame instead. The server markup IS that still frame, so no-JS readers get the informative state.
+// Numbers come from lib/reel-stats.json and the reel manifest; ARR are real observer arrivals.
+import { type ComponentType, type CSSProperties, useEffect, useRef, useState } from 'react'
 import Stamp from '@/components/dither/Stamp'
 import { easeCount } from '@/components/fx/pixel-field'
-import { ARRIVAL, SAME_NAMES } from '@/lib/copy'
+import { getStatic } from '@/lib/api/client'
+import { ARRIVAL } from '@/lib/copy'
 import { reducedMotion } from '@/lib/prefs'
 import stats from '@/lib/reel-stats.json'
 import { REEL_MANIFEST, reelHref } from '@/lib/reels'
+import SectionHead from './SectionHead'
+import s from './sections.module.css'
 import styles from './Features.module.css'
 
 type Draw = (root: HTMLElement, s: number) => void
@@ -158,69 +163,91 @@ function ScrubVisual() {
   )
 }
 
-// 4 · Mainnet: ten of the 138 observers of slot 15466393 light in their real arrival order and spacing.
-// Sampled every ~15th rank from public/reels/mainnet-block-wave.jsonl (BlockSeen, seen_ms); the test re-checks them.
+// 4 · Mainnet: an equirectangular world (public/geo/land-110m.json, fetched once the cell nears the
+// viewport) whose observer sites light in the order they first saw the block of slot 15466393, replayed
+// from the recording at 0.4× speed. No LIVE claim: this page is static, the dots are the recorded slot.
 export const SLOT = 15466393
-export const ARRIVALS: [string, number][] = [['AT', 3247], ['FI', 3272], ['FI', 3298], ['FI', 3329], ['US', 3359], ['BR', 3389], ['BR', 3433], ['US', 3494], ['AU', 3581], ['US', 5195]]
-const OBSERVERS = REEL_MANIFEST.find((r) => r.name === 'mainnet-block-wave')?.nodes ?? 0
-const litAt = (ms: number) => 0.5 + ((ms - ARRIVALS[0][1]) / 1000) * 2.4   // 2.4× slower than real time
-const drawWave: Draw = (root, s) => {
-  const fade = track([[6.4, 1], [6.8, 0]], s)
-  set(root, 'lit', (el, k) => op(el, track([[litAt(ARRIVALS[k][1]), 0], [litAt(ARRIVALS[k][1]) + 0.15, 1]], s) * fade))
-  set(root, 'ring', (el, k) => {
-    const t = s - litAt(ARRIVALS[k][1]), on = t >= 0 && t < 0.9
-    op(el, on ? 0.55 * (1 - t / 0.9) : 0)
-    el.style.transform = `scale(${on ? 1 + 1.6 * easeCount(t / 0.9) : 1})`
-  })
+export const OBSERVERS = REEL_MANIFEST.find(r => r.name === 'mainnet-block-wave')?.nodes ?? 0
+/** [lon, lat, first seen ms after slot start, observers at the site]: slot 15466393 of
+ *  public/reels/mainnet-block-wave.jsonl, observers grouped by site (x / 2.5, −y / 2.5), sorted by arrival. */
+export const ARR: [number, number, number, number][] = [
+  [24.9,60.2,3247,35], [16.4,48.2,3247,3], [-0.2,51.6,3248,1], [26,64,3258,6], [1.4,43.6,3278,2], [8.2,50.1,3286,1], [13.4,52.5,3287,1], [4.9,52.4,3305,2],
+  [-0.1,51.5,3305,1], [10.5,51.5,3305,1], [14.5,46,3307,1], [-3.7,40.4,3313,1], [11.1,49.4,3316,4], [10,53.6,3321,1], [-79.4,43.7,3325,1], [4.5,50.8,3328,1],
+  [-98.5,39.8,3330,1], [2,46,3331,2], [-123.1,49.2,3342,1], [-89.2,43.2,3344,1], [-96.5,33,3346,4], [10.4,48.2,3347,1], [2.2,48.9,3355,1], [-115.1,36.2,3359,2],
+  [-81.4,28.5,3360,1], [77.6,13,3361,3], [-74.1,40.6,3363,1], [-97.8,30.3,3363,1], [-96.1,19.1,3363,1], [-75.2,-10,3374,1], [-105,39.7,3380,2], [19.9,50.1,3382,1],
+  [-16.9,32.7,3382,1], [20,52,3386,1], [-46.6,-23.6,3389,4], [-74.3,40.7,3390,2], [151.2,-33.9,3396,9], [-102,23,3398,1], [-122,37.4,3402,6], [103.8,1.3,3405,1],
+  [-82.4,34.8,3407,1], [33,34.7,3415,1], [23.3,42.7,3417,2], [-89.5,43,3417,1], [-125.9,49.2,3425,1], [139.7,35.7,3428,1], [21,52.2,3430,1], [76.9,43.2,3437,1],
+  [28,-26.2,3450,2], [-122.4,37.6,3454,1], [145,-37.8,3457,3], [-120.7,35.5,3494,1], [-74.2,40.9,3504,1], [12.5,41.9,3507,1], [-97.2,49.9,3526,1], [153,-27.5,3526,2],
+  [-74.6,40.8,3531,1], [100.5,13.8,3541,1], [174.8,-36.8,3597,2], [47.8,29.5,3710,1], [-87.6,41.8,5195,1],
+]
+export const FIRST_MS = ARR[0][2]
+export const LAST_MS = ARR[ARR.length - 1][2]
+/** CUM[n] = observers at the first n sites */
+const CUM = ARR.reduce<number[]>((a, [, , , n]) => [...a, a[a.length - 1] + n], [0])
+export const SPEED = 0.4
+const LEAD = 0.7, HOLD = 1.8, RESET = 0.6, PLAY = (LAST_MS - FIRST_MS) / 1000 / SPEED
+export const MAP_LOOP = LEAD + PLAY + HOLD + RESET
+/** story seconds → ms after slot start on screen; −1 = nothing lit (lead in, reset) */
+export function msAt(t: number): number {
+  const p = t % MAP_LOOP - LEAD
+  if (p < 0 || p > PLAY + HOLD) return -1
+  return Math.min(LAST_MS, FIRST_MS + p * 1000 * SPEED)
 }
-function WaveVisual() {
-  const ref = useStory(7.2, 6.2, drawWave, 0.6)
-  return (
-    <div ref={ref} className={styles.wave} aria-hidden="true">
-      <p className={styles.meta}>recorded slot {SLOT}</p>
-      <ol className={styles.strip}>
-        {ARRIVALS.map(([cc, ms], k) => (
-          <li key={k}>
-            <span className={styles.obs}><span className={styles.lit} data-a="lit" /><span className={styles.ring} data-a="ring" style={{ opacity: 0 }} /></span>
-            <span className={styles.cc}>{cc}</span><span className={styles.ms}>{ms}</span>
-          </li>
-        ))}
-      </ol>
-      <p className={styles.meta}>{OBSERVERS} observers · ms in slot</p>
-    </div>
-  )
-}
+export const litCount = (ms: number) => { let n = 0; while (n < ARR.length && ARR[n][2] <= ms) n++; return n }
 
-// 5 · Metrics: the curl types, four gossipsub_* names land, the publish counter ticks with each message.
-export const CMD = 'curl localhost:8000/metrics'
-export const NAMES = ['gossipsub_mesh_peer_counts', 'gossipsub_score_per_mesh', 'gossipsub_topic_iwant_msgs', 'gossipsub_topic_msg_published']
-const TYPE = [0.3, 0.055] as const   // start, s per glyph
-const COUNT_FROM = 3.1, COUNT_EVERY = 0.6, COUNT_MAX = 6
-const drawMetrics: Draw = (root, s) => {
-  const back = s > 7.6 ? Math.ceil((s - 7.6) / 0.03) : 0   // deletes a little faster than it types
-  const n = Math.max(0, Math.min(CMD.length, Math.floor((s - TYPE[0]) / TYPE[1])) - back)
-  set(root, 'cmd', el => { el.textContent = CMD.slice(0, n) })
-  set(root, 'caret', el => op(el, n < CMD.length && s > TYPE[0] ? 1 : s % 1 < 0.5 ? 1 : 0))
-  const done = TYPE[0] + CMD.length * TYPE[1]
-  set(root, 'line', (el, k) => op(el, track([[done + 0.2 + k * 0.15, 0.2], [done + 0.5 + k * 0.15, 1], [7.4, 1], [7.6, 0.2]], s)))   // last scrape stays faint, never an empty card
-  const c = s < COUNT_FROM ? 0 : Math.min(COUNT_MAX, 1 + Math.floor((s - COUNT_FROM) / COUNT_EVERY))
-  set(root, 'count', el => { el.textContent = String(c) })
-  const since = s - COUNT_FROM
-  set(root, 'flash', el => op(el, since >= 0 && since < COUNT_MAX * COUNT_EVERY ? 0.6 * (1 - (since % COUNT_EVERY) / COUNT_EVERY) : 0))
+type LandFile = { features: { geometry: { coordinates: number[][][] } }[] }
+const VIEW = { x: -180, y: -72, w: 360, h: 124 }   // lat 72°N … 52°S: every site with room for its ping, no polar sea
+/** Outer rings as one path in degrees (y = −lat), points closer than 0.6° dropped, Antarctica cropped. */
+export function landPath(fc: LandFile): string {
+  let d = ''
+  for (const f of fc.features) {
+    const ring = f.geometry.coordinates[0]
+    if (!ring || ring.every(([, lat]) => lat < -58)) continue
+    let px = Infinity, py = Infinity, p = ''
+    for (const [lon, lat] of ring) {
+      if (Math.abs(lon - px) + Math.abs(lat - py) < 0.6) continue
+      p += `${p ? 'L' : 'M'}${lon.toFixed(1)},${(-lat).toFixed(1)}`; px = lon; py = lat
+    }
+    if (p.split('L').length > 2) d += `${p}Z`
+  }
+  return d
 }
-function MetricsVisual() {
-  const ref = useStory(8.6, 7.2, drawMetrics, 2.2)
+const drawMap: Draw = (root, t) => {
+  const ms = msAt(t), n = litCount(ms)
+  root.querySelectorAll('[data-dot]').forEach((el, i) => el.toggleAttribute('data-lit', i < n))
+  set(root, 'ms', el => { el.textContent = ms < 0 ? '····' : String(Math.round(ms)) })
+  set(root, 'obs', el => { el.textContent = String(CUM[n]) })
+}
+function MapVisual() {
+  const ref = useStory(MAP_LOOP, MAP_LOOP - RESET - 0.01, drawMap, 0.6)
+  const [land, setLand] = useState('')
+  useEffect(() => {
+    const box = ref.current
+    if (!box) return
+    let alive = true
+    const load = () => getStatic<LandFile>('/geo/land-110m.json').then(fc => { if (alive && fc) setLand(landPath(fc)) })
+    if (typeof IntersectionObserver === 'undefined') { load(); return () => { alive = false } }
+    const near = new IntersectionObserver(([e]) => { if (e.isIntersecting) { near.disconnect(); load() } }, { rootMargin: '600px 0px' })
+    near.observe(box)
+    return () => { alive = false; near.disconnect() }
+  }, [ref])
   return (
-    <div ref={ref} className={styles.code} aria-hidden="true">
-      <p className={styles.cmd}><span className={styles.dim}>$ </span><span data-a="cmd">{CMD}</span><span className={styles.caret} data-a="caret" /></p>
-      <ul>
-        {NAMES.map((name) => (
-          <li key={name} data-a="line">
-            {name === NAMES[3] && <span className={styles.flash} data-a="flash" style={{ opacity: 0 }} />}
-            <span>{name}</span>{name === NAMES[3] && <b data-a="count">{COUNT_MAX}</b>}
-          </li>
+    <div ref={ref} className={styles.map} aria-hidden="true">
+      <p className={styles.mapTag}><span>slot {SLOT}</span><span>recorded · {SPEED}× speed</span></p>
+      <svg className={styles.world} viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`}>
+        <path className={styles.land} d={land} data-ready={land ? '' : undefined} />
+        {ARR.map(([lon, lat, , n], i) => (
+          <g key={i} data-dot="" data-lit="" transform={`translate(${lon} ${-lat})`}>
+            <circle className={styles.idle} r={1.6 + Math.sqrt(n) * 0.55} />
+            <circle className={styles.ping} r={1.6 + Math.sqrt(n) * 0.55} />
+            <circle className={styles.core} r={1.6 + Math.sqrt(n) * 0.55} />
+          </g>
         ))}
-      </ul>
+      </svg>
+      <p className={styles.mapRead}>
+        <span><b data-a="ms">{LAST_MS}</b> ms after slot start</span>
+        <span><b data-a="obs">{OBSERVERS}</b> / {OBSERVERS} observers</span>
+      </p>
     </div>
   )
 }
@@ -247,7 +274,7 @@ function TickerVisual() {
   )
 }
 
-interface Card { kicker: string; title: string; body: string; visual: ComponentType; alt: string; link?: [string, string] }
+interface Card { kicker: string; title: string; body: string; visual: ComponentType; alt: string; link: [string, string]; wide?: boolean }
 export const CARDS: Card[] = [
   {
     kicker: 'P1–P4 scoring', title: 'Peer scoring that bites', visual: ScoreVisual,
@@ -263,24 +290,19 @@ export const CARDS: Card[] = [
   },
   {
     kicker: 'Recordings', title: 'Reproducible recordings', visual: ScrubVisual,
-    body: 'Record the frames the backend streams to JSONL and replay them offline with no backend. Scrub straight to the graft, the prune or the heal.',
+    body: 'Any run can be recorded and replayed in the browser with no backend. Scrub straight to the graft, the prune or the heal.',
     alt: `A playhead sweeps a ${stats.simDurationS} s recording past beats at ${BEATS.map(([t]) => `${t} s`).join(', ')}.`,
     link: [reelHref('sybil-eclipse'), 'Watch the Sybil recording'],
   },
   {
-    kicker: 'Live mainnet', title: 'Real block arrivals', visual: WaveVisual,
-    body: `The Geo view lights ethPandaOps observers as each mainnet block reaches them: ${ARRIVAL}.`,
-    alt: `Ten observers of recorded slot ${SLOT} light in arrival order, from ${ARRIVALS[0][1]} ms to ${ARRIVALS[ARRIVALS.length - 1][1]} ms.`,
+    kicker: 'Live mainnet', title: 'Real block arrivals, on a map', visual: MapVisual, wide: true,
+    body: `In mainnet mode the Geo view lights ethPandaOps observers as each block reaches them: ${ARRIVAL}. The pattern is the real network's, never the path a block took.`,
+    alt: `World map: ${OBSERVERS} observer nodes at ${ARR.length} sites light in the order they first saw the block of slot ${SLOT}, from ${FIRST_MS} ms to ${LAST_MS} ms after slot start.`,
     link: [reelHref('mainnet-block-wave'), 'Watch the recorded block wave'],
   },
   {
-    kicker: 'Observability', title: 'Same metric names', visual: MetricsVisual,
-    body: `/metrics carries ${SAME_NAMES}, scraped by the bundled Prometheus; publish traces go out over OpenTelemetry. The names match; the numbers are the toy's.`,
-    alt: `A terminal runs ${CMD} and lists four gossipsub metric names while the publish counter ticks.`,
-  },
-  {
     kicker: 'Stage mode', title: 'Built for the stage', visual: TickerVisual,
-    body: 'Add ?theme=stage&hero=1 to any recording for a projector theme and a broadcast ticker. Keys 1 to 9 jump between recordings.',
+    body: 'Every recording opens in a projector theme with a broadcast ticker, and the number keys jump between recordings mid talk.',
     alt: `A broadcast ticker counts up to delivery ${stats.deliveryPct}%, ${stats.avgHops} average hops and ${stats.avgPropagationMs} ms propagation.`,
     link: [reelHref('sybil-eclipse', new URLSearchParams('theme=stage&hero=1')), 'Open a recording on stage'],
   },
@@ -290,25 +312,25 @@ const at = (i: number) => ({ '--i': i }) as CSSProperties
 
 export default function Features() {
   return (
-    <section className={styles.section} aria-labelledby="features-h">
-      <header className={styles.head} data-reveal="">
-        <p className={styles.kicker} data-k="up" style={at(0)}>What it does</p>
-        <h2 id="features-h" className={styles.h2} data-k="up" style={at(1)}>A GossipSub v1.1 network you can run on a laptop</h2>
-        <p className={styles.lead} data-k="up" style={at(2)}>20 to 200 simulated libp2p peers with mesh, IHAVE/IWANT and P1–P4 peer scoring. Attack it, record it, scrape it.</p>
-      </header>
-      <ul className={styles.grid}>
-        {CARDS.map(({ kicker, title, body, visual: Visual, alt, link }, k) => (
-          <li key={title} data-reveal="">
-            <article className={styles.card} data-k="card" style={at(k % 3)}>
-              <figure className={`plate ${styles.visual}`}><Visual /><figcaption className="sr-only">{alt}</figcaption></figure>
-              <p className={styles.cardKicker}>{kicker}</p>
-              <h3 className={styles.h3}>{title}</h3>
-              <p className={styles.body}>{body}</p>
-              {link && <a className={`chev ${styles.link}`} href={link[0]}>{link[1]} <span aria-hidden="true">›</span></a>}
-            </article>
-          </li>
-        ))}
-      </ul>
+    <section id="features" className={styles.section} aria-labelledby="features-h">
+      <SectionHead id="features-h" kicker="What it does"
+        title="A GossipSub v1.1 network you can run on a laptop"
+        lead={'20 to 200 simulated libp2p peers with mesh, IHAVE/IWANT and P1\u2060–\u2060P4 peer scoring. Attack it, record it, replay it.'} />
+      <div className={s.row} data-grid="">
+        <ul className={styles.grid}>
+          {CARDS.map(({ kicker, title, body, visual: Visual, alt, link, wide }, k) => (
+            <li key={title} data-reveal="" className={wide ? styles.wide : undefined}>
+              <article className={styles.card} data-k="card" style={at(k % 3)}>
+                <p className={styles.cardKicker}><span>{String(k + 1).padStart(2, '0')}</span>{kicker}</p>
+                <figure className={`plate ${styles.visual}`}><Visual /><figcaption className="sr-only">{alt}</figcaption></figure>
+                <h3 className={styles.h3}>{title}</h3>
+                <p className={styles.body}>{body}</p>
+                <a className={styles.link} href={link[0]}>{link[1]}<span aria-hidden="true">→</span></a>
+              </article>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }

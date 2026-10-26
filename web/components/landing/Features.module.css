@@ -1,24 +1,47 @@
-/* Features bento: 1 column, 2 from 640, 3×2 from 1024. Square hairline cards on the panel surface;
-   each visual sits in a pitch .plate well (stays dark in light mode). Stories only move transform and
-   opacity; the defaults below are the still frame (no JS, reduced motion). */
-.section { width: min(var(--col-wide), 100% - 2 * var(--gutter)); margin: 72px auto var(--s-24); }
-.head { max-width: var(--col-prose); }
-.kicker { margin: 0 0 var(--s-4); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--fg-3); }
-.h2 { margin: 0; font: 400 var(--t-h1)/var(--lh-tight) var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); text-wrap: balance; }
-.lead { margin: var(--s-5) 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); text-wrap: pretty; }
-
-.grid { display: grid; grid-template-columns: 1fr; gap: var(--s-4); margin: var(--s-12) 0 0; padding: 0; list-style: none; }
-@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Features (v2): a hairline grid of cells between the rails (1 column, 2 from 640, 3 from 1024; the map
+   cell spans two). The lines are the grid's 1 px gaps over a --hair background, so no cell carries a
+   one-sided border. Each visual sits in a pitch .plate well (stays dark in light mode). Stories only move
+   transform and opacity; the defaults below are the still frame (no JS, reduced motion). */
+.section { scroll-margin-top: var(--nav-h, 64px); }
+.grid {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-flow: dense; gap: var(--hair-w);
+  margin: 0; padding: 0; list-style: none; background: var(--hair);
+}
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wide { grid-column: span 2; } }
 @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-.grid > li { display: flex; min-width: 0; }
-.card { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: var(--s-6); background: var(--panel); border: var(--hair-w) solid var(--hair); transition: border-color var(--d-fast) var(--e2); }
-.card:hover, .card:focus-within { border-color: var(--hair-strong); }
-.visual { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; container-type: inline-size; height: 172px; margin: 0 0 var(--s-6); padding: var(--s-4); border: var(--hair-w) solid var(--hair); overflow: hidden; }
-.cardKicker { margin: 0 0 var(--s-2); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--fg-3); }
-.h3 { margin: 0; font: 400 calc(var(--t-kpi) * .8)/1.1 var(--font-display); letter-spacing: var(--track-poster); color: var(--fg); text-wrap: balance; }
-.body { margin: var(--s-3) 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--fg-2); text-wrap: pretty; }
-.link { margin-top: auto; padding-top: var(--s-3); align-self: flex-start; }
+.grid > li { display: flex; min-width: 0; background: var(--bg); }
+.card {
+  position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: var(--s-8);
+  transition: background var(--d-fast) var(--e2);
+}
+.card:hover, .card:focus-within { background: var(--panel); }
+.cardKicker {
+  display: flex; align-items: center; gap: var(--s-3); margin: 0 0 var(--s-6);
+  font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3);
+}
+.cardKicker span { color: var(--signal-text); }
+.visual {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; container-type: inline-size;
+  height: 184px; margin: 0 0 var(--s-8); padding: var(--s-4); outline: var(--hair-w) solid var(--hair); overflow: hidden;
+  background-image: radial-gradient(var(--hair) 1px, transparent 1.2px); background-size: 12px 12px; background-position: 6px 6px;
+  transition: outline-color var(--d-fast) var(--e2);
+}
+.card:hover .visual, .card:focus-within .visual { outline-color: var(--hair-strong); }
+.wide .visual { height: auto; min-height: 184px; }
+.h3 { margin: 0; font: 400 30px/36px var(--font-display); letter-spacing: -.01em; color: var(--fg); text-wrap: balance; }
+.body { margin: var(--s-3) 0 0; max-width: 40em; font: 400 15px/1.6 var(--font-ui); color: var(--fg-2); text-wrap: pretty; }
+.link {
+  display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; margin-top: auto; padding-top: var(--s-4); align-self: flex-start;
+  font: 500 12px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg); text-decoration: none;
+}
+.link span { transition: transform var(--d-fast) var(--ease); }
+.link:hover { color: var(--signal-text); }
+.link:hover span { transform: translateX(3px); }
+.link::after { content: ''; position: absolute; inset: 0; }   /* the whole cell is the link's hit area */
+.link:focus-visible { outline: none; }
+.card:has(.link:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
+@media (max-width: 560px) { .card { padding: var(--s-6) var(--s-4); } .h3 { font-size: 24px; line-height: 32px; } }
 .dim { color: var(--fg-3); }
 .visual p { margin: 0; }
 
@@ -33,7 +56,8 @@
 .stamp { margin-left: auto; transform-origin: center; }
 
 /* 2 · mini mesh: discs are honest peers, the flame diamond the Sybil (colour + shape) */
-.mesh, .mesh svg { width: 100%; height: 100%; }
+.mesh { width: 100%; height: 152px; }
+.mesh svg { display: block; width: 100%; height: 100%; }
 .meshLink { stroke: var(--link-mesh); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .attackLink { stroke: var(--flame); stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 .peer { fill: var(--fg); }
@@ -54,26 +78,24 @@
 .playhead { position: absolute; left: -1px; top: 12px; width: 2px; height: 32px; background: var(--signal); }
 .ends { display: flex; justify-content: space-between; font: 500 var(--t-label)/1 var(--font-mono); color: var(--fg-3); }
 
-/* 4 · observers: two rows of five, each a ◎ ring that fills with signal when the block arrives */
-.wave { width: 100%; display: grid; gap: var(--s-3); }
-.meta { font: 500 var(--t-label)/1 var(--font-mono); color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-2) var(--s-1); margin: 0; padding: 0; list-style: none; }
-.strip li { display: grid; justify-items: center; gap: 3px; }
-.obs { position: relative; width: 14px; height: 14px; border: 1px solid var(--signal-text); border-radius: var(--r-node); }
-.lit, .ring { position: absolute; inset: 2px; border-radius: var(--r-node); background: var(--signal); }
-.ring { inset: -1px; background: none; border: 1px solid var(--signal); }
-.cc { font: 500 var(--t-label)/1 var(--font-mono); color: var(--fg-3); }
-.ms { font: 500 var(--t-label)/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
-
-/* 5 · terminal: the typed curl and four series names; the publish counter ticks with a wash */
-.code { width: 100%; font: 400 min(var(--t-body), 5.4cqi)/1.6 var(--font-mono); color: var(--fg-2); }
-.code ul { margin: var(--s-2) 0 0; padding: 0; list-style: none; }
-.code li { position: relative; display: flex; justify-content: space-between; gap: var(--s-2); white-space: nowrap; }
-.code li > span:not(.flash) { overflow: hidden; text-overflow: ellipsis; }
-.code b { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--signal-text); }
-.cmd { color: var(--fg); white-space: nowrap; overflow: hidden; }
-.caret { display: inline-block; width: .55em; height: 1.1em; margin-left: 1px; vertical-align: -.2em; background: var(--fg); }
-.flash { position: absolute; inset: 0 -4px; background: var(--wash); outline: 1px solid var(--hair); }
+/* 4 · world map: land in --raised, one hollow disc per site; the signal core fades in when the block
+   reaches it, with one ring ping. The svg keeps its 360 : 112 ratio. */
+.map { width: 100%; display: grid; gap: var(--s-3); }
+.mapTag, .mapRead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-1) var(--s-4); font: 500 12px/1.3 var(--font-mono); color: var(--fg-3); }
+.mapTag { letter-spacing: .12em; text-transform: uppercase; }
+.mapRead { color: var(--fg-2); }
+.mapRead b { display: inline-block; min-width: 4ch; font: 500 20px/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.mapRead span:last-child b { min-width: 3ch; text-align: right; }
+.world { display: block; width: 100%; height: auto; aspect-ratio: 360 / 124; overflow: hidden; }
+.land { fill: var(--raised); stroke: var(--hair); stroke-width: .3; opacity: 0; transition: opacity 700ms var(--e2); }
+.land[data-ready] { opacity: 1; }
+.idle { fill: none; stroke: var(--paper-3); stroke-width: .5; }
+.core { fill: var(--signal); opacity: 0; transition: opacity 350ms var(--e2); }
+.ping { fill: none; stroke: var(--signal); stroke-width: .5; opacity: 0; transform-box: fill-box; transform-origin: center; }
+[data-lit] > .core { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) { [data-lit] > .ping { animation: ping 1.4s var(--io) 1 both; } }
+@media (prefers-reduced-motion: reduce) { .land, .core { transition: none; } }
+@keyframes ping { from { transform: scale(1); opacity: .7; } to { transform: scale(2.6); opacity: 0; } }
 
 /* 6 · broadcast ticker: three readouts (label left, number right), values count up, a wash steps down */
 .ticker { width: 100%; display: grid; border: var(--hair-w) solid var(--hair); }
