@@ -42,7 +42,7 @@ const CONTRACT: [string, Record<string, unknown>, Record<string, Kind>][] = [
   }],
   ['lib/copy', copy, {
     MECHANISM: S, RECORDINGS: S, RECORDING_NOT_RUN: S, ARRIVAL: S, PROVENANCE: S, MESH_HIDDEN: S, SCRUB_LIVE: S,
-    ECLIPSE_WHY: S, SAME_NAMES: S, REEL_GUARD: S, geoOnly: F, FIG1: S, FIG2: S, FIG3: S, EVENT_LINE: S,
+    ECLIPSE_WHY: S, SAME_NAMES: S, REEL_GUARD: S, geoOnly: F, FIG1: S, FIG2: S, FIG3: S,
     REPO_URL: S, FORBIDDEN: O,
   }],
   ['lib/keys', keys, { KEY_BINDINGS: O, KBD_HINT: S, isTypingTarget: F, actionForKey: F }],

@@ -33,7 +33,7 @@ function Badges() {
       <button type="button" className={styles.badge} aria-pressed={mainnetOn} title={ARRIVAL} onClick={() => void toggleMainnet()}>
         MAINNET
       </button>
-      {active && <span className={styles.badge} title="peers reporting · drawer after Devcon">{`TELEMETRY ${peers}`}</span>}
+      {active && <span className={styles.badge} title="peers reporting telemetry">{`TELEMETRY ${peers}`}</span>}
     </>
   )
 }

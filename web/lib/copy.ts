@@ -12,7 +12,6 @@ export const geoOnly = (back: 'force' | 'radial') => `Geo shows real observers o
 export const FIG1 = 'Fifty peers, five Sybils grafted at once. P4 scoring prunes them in two heartbeats.'
 export const FIG2 = 'Same mechanism, toy constants.'
 export const FIG3 = '57 seconds: one publish, five Sybils, one eclipse, one heal.'
-export const EVENT_LINE = 'Devcon 8 · Mumbai · 3–6 Nov 2026'
 export const REPO_URL = 'github.com/yashksaini-coder/luminar'
 /** Phrases that may appear nowhere but this file (spec §4.10 grep). */
 export const FORBIDDEN = ['identical run', "beacon node's scoring", 'the scoring your beacon node runs', 'mesh path'] as const

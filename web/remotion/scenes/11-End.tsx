@@ -15,7 +15,7 @@ const STAGGER = 8
 const FLOW_FROM = 2, FLOW_SPAN = 7.5
 const FPS = 30
 
-export default function End({ data, orientation, span, repoUrl, eventLine }: SceneProps) {
+export default function End({ data, orientation, span, repoUrl }: SceneProps) {
   const f = useCurrentFrame()
   const l = LAYOUT.end[orientation]
   const tall = orientation === 'tall'
@@ -41,7 +41,6 @@ export default function End({ data, orientation, span, repoUrl, eventLine }: Sce
         <Mono px={px} style={{ ...rise(0), display: 'block' }}>
           {tall ? <>{repoUrl.slice(0, slash)}<br />{repoUrl.slice(slash)}</> : repoUrl}
         </Mono>
-        <Mono px={px} dim style={{ ...rise(1), display: 'block' }}>{eventLine}</Mono>
         </div>
       </div>
       <StampIn tilt={STAMP_TILT.end} anchor={l.stamp.anchor} inset={l.stamp.inset} at={30}>{STAMP.end}</StampIn>

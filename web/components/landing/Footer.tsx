@@ -1,6 +1,6 @@
 // Landing footer: wordmark and event line, routes, source and licence, then the copyright line.
 import Link from 'next/link'
-import { EVENT_LINE, REPO_URL } from '@/lib/copy'
+import { REPO_URL } from '@/lib/copy'
 import { reelHref } from '@/lib/reels'
 import styles from './Footer.module.css'
 
@@ -9,7 +9,6 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.brand}>
         <p className={styles.mark}>LUMINAR</p>
-        <p className={styles.event}><em>{EVENT_LINE}</em></p>
       </div>
       <div>
         <h3>Routes</h3>

@@ -46,7 +46,7 @@ export const Launch: FC<LaunchProps> = props => {
         const Scene = SCENES[span.id]
         return (
           <Sequence key={span.id} from={span.from} durationInFrames={span.durationInFrames} name={span.id}>
-            <Scene data={data} orientation={orientation} span={span} repoUrl={props.repoUrl} eventLine={props.eventLine} />
+            <Scene data={data} orientation={orientation} span={span} repoUrl={props.repoUrl} />
           </Sequence>
         )
       })}
