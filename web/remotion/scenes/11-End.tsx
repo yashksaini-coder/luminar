@@ -1,6 +1,6 @@
-/** Scene 11: the LUMINAR wordmark over the ghosted T+0 mesh, repo URL and event line rising, the mesh dissolving back into noise. */
+/** Scene 11: the LUMINAR wordmark over the live network still flowing (messages in flight, a slow drift), repo URL and event line rising. */
 import { interpolate, useCurrentFrame } from 'remotion'
-import { HaloRing } from '@/components/dither/HaloRing'
+import { focusPanel } from '../layers/focus'
 import { Mesh } from '../mesh/Mesh'
 import { Mono } from '../type/Mono'
 import { StampIn } from '../type/StampIn'
@@ -11,9 +11,9 @@ import type { SceneProps } from './types'
 const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 const RISE_AT = 10
 const STAGGER = 8
-const DISSOLVE = 40
-const RING = 200
-const RING_INSET = 96
+/** The healthy stretch of the reel (flood publish and mesh relays, before the T+10 Sybils): the end card replays it, looping. */
+const FLOW_FROM = 2, FLOW_SPAN = 7.5
+const FPS = 30
 
 export default function End({ data, orientation, span, repoUrl, eventLine }: SceneProps) {
   const f = useCurrentFrame()
@@ -21,7 +21,9 @@ export default function End({ data, orientation, span, repoUrl, eventLine }: Sce
   const tall = orientation === 'tall'
   const box = l.mesh!
   const px = l.monoPx!
-  const out = [span.durationInFrames - DISSOLVE, span.durationInFrames]
+  const simTime = FLOW_FROM + ((f / FPS) % FLOW_SPAN)
+  const fadeIn = interpolate(f, [0, 20], [0, 1], CLAMP)
+  const drift = interpolate(f, [0, span.durationInFrames], [1, 1.06])   // a slow push-in keeps the field moving
   const rise = (k: number) => {
     const t = interpolate(f, [RISE_AT + STAGGER * k, RISE_AT + STAGGER * k + 14], [0, 1], CLAMP)
     return { opacity: t, transform: `translateY(${24 * (1 - t)}px)` }
@@ -29,12 +31,10 @@ export default function End({ data, orientation, span, repoUrl, eventLine }: Sce
   const slash = repoUrl.indexOf('/') + 1
   return (
     <>
-      <Mesh data={data} box={box} camera={{ scale: 1 }} simTime={0} cell={l.cell}
-        style={{ edgeAlpha: 1, meshAlpha: 1, intensity: interpolate(f, out, [0.15, 0], CLAMP), field: interpolate(f, out, [0, 0.02], CLAMP) }} />
-      <div style={{ position: 'absolute', left: RING_INSET, bottom: tall ? 380 : RING_INSET, lineHeight: 0 }}>
-        <HaloRing size={RING} band={2} />
-      </div>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: px * 0.6, textAlign: 'center' }}>
+      <Mesh data={data} box={box} camera={{ scale: drift }} simTime={simTime} cell={l.cell} showAttackers={false}
+        style={{ intensity: 0.5 * fadeIn }} />
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: px * 0.6, padding: px, ...focusPanel(56) }}>
         <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, letterSpacing: '0.14em', marginRight: '-0.14em', fontSize: l.headlinePx, lineHeight: 1, color: 'var(--fg)', marginBottom: px }}>
           LUMINAR
         </div>
@@ -42,6 +42,7 @@ export default function End({ data, orientation, span, repoUrl, eventLine }: Sce
           {tall ? <>{repoUrl.slice(0, slash)}<br />{repoUrl.slice(slash)}</> : repoUrl}
         </Mono>
         <Mono px={px} dim style={{ ...rise(1), display: 'block' }}>{eventLine}</Mono>
+        </div>
       </div>
       <StampIn tilt={STAMP_TILT.end} anchor={l.stamp.anchor} inset={l.stamp.inset} at={30}>{STAMP.end}</StampIn>
     </>

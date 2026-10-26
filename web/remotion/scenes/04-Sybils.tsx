@@ -6,6 +6,7 @@ import { Mesh } from '../mesh/Mesh'
 import { Ticker } from '../mesh/Ticker'
 import { lerpCamera } from '../mesh/view'
 import { frameForSimTime, simTimeAt } from '../timeline'
+import { focusPanel } from '../layers/focus'
 import { Mono } from '../type/Mono'
 import { StampIn } from '../type/StampIn'
 import { STAMP, STAMP_TILT } from './copy'
@@ -34,7 +35,7 @@ export default function Sybils({ data, orientation, span }: SceneProps) {
   return (
     <>
       <Mesh data={data} box={l.mesh!} camera={camera} simTime={simTime} cell={l.cell} />
-      <div style={{ position: 'absolute', ...labelPos, paddingBottom: 6, borderBottom: '1px solid var(--paper-2)' }}>
+      <div style={{ position: 'absolute', ...labelPos, ...focusPanel(16), borderRadius: 0, paddingBottom: 6, borderBottom: '1px solid var(--paper-2)' }}>
         <Mono dim px={l.monoPx}>{data.phases[0]?.label}</Mono>
       </div>
       <Ticker data={data} simTime={simTime} orientation={orientation} invalid style={{ left: r.x, top: r.y, bottom: undefined }} />

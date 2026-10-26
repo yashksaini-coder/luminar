@@ -1,5 +1,6 @@
 /** Live readout of delivery, hops and latency from the reel's analytics: one line bottom-left (wide), a 3-line stack top-left (tall). */
 import type { CSSProperties, JSX } from 'react'
+import { focusPanel } from '../layers/focus'
 import type { Orientation } from '../props'
 import type { ReelData } from '../reel/parse'
 import { SAFE_TALL } from '../timeline'
@@ -18,7 +19,7 @@ export function Ticker({ data, simTime, orientation, invalid, healed, style }: {
   const wide = orientation === 'wide'
   const place: CSSProperties = wide ? { left: EDGE, bottom: EDGE, whiteSpace: 'pre' } : { left: EDGE, top: SAFE_TALL.top, display: 'flex', flexDirection: 'column' }
   return (
-    <div style={{ position: 'absolute', ...MONO, ...place, ...style }}>
+    <div style={{ position: 'absolute', ...MONO, ...focusPanel(20), ...place, ...style }}>
       {items.map((s, i) => (
         <span key={s} style={s.startsWith('invalid') ? { color: 'var(--flame)' } : undefined}>
           {wide && i > 0 ? ' · ' : ''}{s}

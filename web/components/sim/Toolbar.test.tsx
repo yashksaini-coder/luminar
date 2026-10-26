@@ -25,7 +25,7 @@ test('pill reads CONNECTING…, OFFLINE, LIVE, then REEL · title', () => {
   act(() => useStore.setState({ reel: { name: 'r', title: 'Eclipse', durationMs: 1, durationSim: 1 } }))
   expect(q('pill').textContent).toBe('REEL · Eclipse'); expect(q('pill').getAttribute('data-state')).toBe('reel')
 })
-test('the Home button and the wordmark both lead back to the landing page', () => {
-  expect(host.querySelector('a[aria-label="Home"]')?.getAttribute('href')).toBe('/')
+test('the LUMINAR wordmark links back to the landing page', () => {
+  expect(host.querySelector('a[aria-label="Home"]')).toBeNull()
   expect([...host.querySelectorAll('a')].find(a => a.textContent?.startsWith('LUMINAR'))?.getAttribute('href')).toBe('/')
 })

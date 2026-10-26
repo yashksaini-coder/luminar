@@ -1,7 +1,7 @@
-/** Scene 8: dithered Grafana and Jaeger cards slide in while the seven Lighthouse series names type on beneath them. */
+/** Scene 8: the Grafana and Jaeger screenshots (shown as-is, not dithered) slide in while the seven Lighthouse series names type on beneath them. */
 import { interpolate, useCurrentFrame } from 'remotion'
 import { SERIES } from '../constants'
-import { DitheredStill } from '../layers/DitheredStill'
+import { Still } from '../layers/DitheredStill'
 import { Parallax } from '../layers/Parallax'
 import { Fig } from '../type/Fig'
 import { Mono } from '../type/Mono'
@@ -26,16 +26,16 @@ export default function SameNames({ orientation }: SceneProps) {
   return (
     <>
       {tall ? (
-        <DitheredStill src="stills/grafana.png" box={l.mesh!} focus={[0.5, 0.35]} border cell={l.cell}
+        <Still src="stills/grafana.png" box={l.mesh!} focus={[0.5, 0.35]} border
           style={{ transform: `translateX(${slide(-120)}px)` }} />
       ) : (
         <>
           <Parallax depth={0.6} pan={f * 0.1} style={{ position: 'absolute', inset: 0 }}>
-            <DitheredStill src="stills/grafana.png" box={{ x: 120, y: CARD_Y, ...CARD }} border cell={l.cell}
+            <Still src="stills/grafana.png" box={{ x: 120, y: CARD_Y, ...CARD }} border
               style={{ transform: `translateX(${slide(-120)}px)` }} />
           </Parallax>
           <Parallax depth={0.9} pan={f * 0.1} style={{ position: 'absolute', inset: 0 }}>
-            <DitheredStill src="stills/jaeger.png" box={{ x: 1000, y: CARD_Y, ...CARD }} border cell={l.cell}
+            <Still src="stills/jaeger.png" box={{ x: 1000, y: CARD_Y, ...CARD }} border
               style={{ transform: `translateX(${slide(120)}px)` }} />
           </Parallax>
         </>

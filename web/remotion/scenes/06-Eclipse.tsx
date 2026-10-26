@@ -5,6 +5,7 @@ import { ScoreStrip } from '../mesh/ScoreStrip'
 import { lerpCamera } from '../mesh/view'
 import { SAFE_TALL, simTimeAt } from '../timeline'
 import { Fig } from '../type/Fig'
+import { focusPanel } from '../layers/focus'
 import { Mono } from '../type/Mono'
 import { StampIn } from '../type/StampIn'
 import { FIG, FIG_N, STAMP, STAMP_TILT } from './copy'
@@ -28,7 +29,7 @@ export default function Eclipse({ data, orientation, span }: SceneProps) {
   return (
     <>
       <Mesh data={data} box={l.mesh!} camera={camera} simTime={simTime} cell={l.cell} />
-      <div style={{ position: 'absolute', ...labelPos, paddingBottom: 6, borderBottom: '1px solid var(--paper-2)' }}>
+      <div style={{ position: 'absolute', ...labelPos, ...focusPanel(16), borderRadius: 0, paddingBottom: 6, borderBottom: '1px solid var(--paper-2)' }}>
         <Mono dim px={l.monoPx}>{data.phases[1]?.label}</Mono>
       </div>
       {f >= STRIP_FROM && (

@@ -9,6 +9,9 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
   font: 600 var(--t-ui)/1 var(--font-ui);
   letter-spacing: .14em;
@@ -59,7 +62,7 @@
 
 .spacer { flex: 1; }
 
-.badge, .preset, .link, .menuBtn, .home {
+.badge, .preset, .link, .menuBtn {
   font: 600 var(--t-label)/1 var(--font-ui);
   letter-spacing: .12em;
   color: var(--fg-3);
@@ -71,9 +74,8 @@
 }
 button.badge, .preset, .menuBtn { cursor: pointer; }
 .badge[aria-pressed="true"], .preset[aria-pressed="true"] { color: var(--fg); border-color: var(--hair-strong); }
-.badge:hover, .preset:not(:disabled):hover, .link:hover, .menuBtn:hover, .home:hover { color: var(--fg); }
-.brand:hover { color: var(--fg); }
-.home { flex: none; white-space: nowrap; color: var(--fg-2); }
+.badge:hover, .preset:not(:disabled):hover, .link:hover, .menuBtn:hover { color: var(--fg); }
+.brand:hover { color: var(--fg); text-decoration: underline; text-underline-offset: .35em; text-decoration-thickness: 1px; }
 
 .presets { display: flex; gap: var(--s-3); }
 .group { display: flex; }
@@ -86,6 +88,5 @@ button.badge, .preset, .menuBtn { cursor: pointer; }
 /* ≤1024: brand, pill and Menu + only; the strip carries the time readout */
 @media (max-width: 1024px) {
   .menuBtn { display: inline-block; flex: none; white-space: nowrap; min-height: 44px; min-width: 44px; }
-  .home { display: inline-flex; align-items: center; min-height: 44px; }
   .sub, .badge, .presets, .clock, .link { display: none; }
 }

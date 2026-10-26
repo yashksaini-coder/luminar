@@ -66,8 +66,7 @@ function Clock() {
 export default function Toolbar({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
     <header className={styles.bar}>
-      <Link href="/" className={styles.home} aria-label="Home">← Home</Link>
-      <Link href="/" className={styles.brand} title="Back to the Luminar home page">
+      <Link href="/" className={styles.brand} title="Luminar home">
         LUMINAR <span className={styles.sub}>gossipsub v1.1</span>
       </Link>
       <Pill />
