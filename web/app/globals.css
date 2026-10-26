@@ -182,6 +182,8 @@
   --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
   --gutter: clamp(16px, 2.5vw, 36px);       /* 16 at phone width              */
   --col-prose: 620px; --col-wide: 1080px;
+  --frame-max: 1320px;                      /* v2 page grid: the two rails sit at --frame-x from each edge */
+  --frame-x: max(var(--gutter), (100% - var(--frame-max)) / 2);   /* % of the full-width box it is used on */
   --nav-h: 56px; --toolbar-h: 44px; --row-h: 22px; --ticker-h: 56px;
   --strip-h: 52px;                          /* floating command strip         */
   --rail-l: 264px; --rail-r: 312px;
@@ -203,6 +205,8 @@
   --dither-50: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23f2f2ef'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23f2f2ef'/%3E%3C/svg%3E") 0 0 / 2px 2px;
   --dither-flame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='1' height='1' fill='%23ff5a2c'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23ff5a2c'/%3E%3C/svg%3E") 0 0 / 2px 2px;
   --hatch: repeating-linear-gradient(45deg, transparent 0 2px, rgb(11 11 13 / .55) 2px 3px);
+  --hatch-hair: repeating-linear-gradient(-45deg, var(--hair) 0 1px, transparent 1px 14px);   /* light 45° lines on the pitch (v2 hero cell) */
+  --plus-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' shape-rendering='crispEdges'%3E%3Cpath d='M5 0h1v11H5zM0 5h11v1H0z'/%3E%3C/svg%3E") center / 11px 11px no-repeat;   /* grid registration +, used as a mask */
   --loupe: 132px;
 
   /* ---- stamp (the rotated off-white label) ------------------------------ */

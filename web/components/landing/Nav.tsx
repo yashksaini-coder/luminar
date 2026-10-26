@@ -1,5 +1,7 @@
 'use client'
-// Landing nav and the full-screen menu overlay: four reel rows with one-frame dithered cards, three routes (spec §7.4.1).
+// Landing nav (v2, Axiom reference): wordmark left, centred mono slash links, one boxed CTA right, inside the
+// grid rails. ≤1024 px the links fold into the full-screen menu: four reel rows with one-frame dithered cards,
+// three routes (spec §7.4.1).
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -10,8 +12,9 @@ import { drawPlateFrame, type PlateFrames } from './plate-draw'
 import styles from './Nav.module.css'
 
 const GITHUB = `https://${REPO_URL}`
-const ROUTES: [string, string][] = [['Simulator', '/sim/'], ['Figure', '/figure/'], ['Source', GITHUB]]
+const ROUTES: [string, string][] = [['Simulator', '/sim/'], ['Figure', '/figure/'], ['GitHub', GITHUB]]
 const trim = (p: string) => p.replace(/\/+$/, '') || '/'   // '/sim/' and '/sim' are the same page
+const Slash = () => <span className={styles.slash} aria-hidden="true">/</span>
 
 function AttackerLayer({ card }: { card: PlateFrames }) {   // attackers stay flat: never dithered
   const ref = useRef<HTMLCanvasElement>(null)
@@ -70,16 +73,22 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
 
   return (
     <header className={styles.nav}>
-      <Link href="/" className={styles.brand} aria-current={cur('/')}><span className={styles.word}>LUMINAR</span> <span className={styles.sub}>gossipsub v1.1</span></Link>
-      <nav className={styles.links} aria-label="Primary">
-        <a href="/sim/" aria-current={cur('/sim/')}>Simulator</a>
-        <a href={`/reels/${reels[0].name}/`} aria-current={cur(`/reels/${reels[0].name}/`)}>Recordings</a>
-        <a href={GITHUB} rel="noopener" target="_blank">GitHub</a>
-      </nav>
-      <button ref={btnRef} type="button" className={styles.menuBtn} data-open={open || undefined}
-        aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen(o => !o)}>
-        Menu <span className={styles.plus} aria-hidden="true" />
-      </button>
+      <div className={styles.bar}>
+        <Link href="/" className={styles.brand} aria-current={cur('/')}><span className={styles.mark} aria-hidden="true" /><span className={styles.word}>Luminar</span></Link>
+        <nav className={styles.links} aria-label="Primary">
+          <a href="/sim/" aria-current={cur('/sim/')}><Slash />Simulator</a>
+          <Link href="/#attacks"><Slash />Attacks</Link>
+          <a href={`/reels/${reels[0].name}/`} aria-current={cur(`/reels/${reels[0].name}/`)}><Slash />Recordings</a>
+          <a href={GITHUB} rel="noopener" target="_blank"><Slash />GitHub</a>
+        </nav>
+        <div className={styles.end}>
+          <a href="/sim/" className={styles.cta}>Open the simulator</a>
+          <button ref={btnRef} type="button" className={styles.menuBtn} data-open={open || undefined}
+            aria-expanded={open} aria-controls="site-menu" onClick={() => setOpen(o => !o)}>
+            Menu <span className={styles.plus} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
       {open && (
         <div id="site-menu" ref={dlgRef} role="dialog" aria-modal="true" aria-label="Menu" className={styles.overlay}>
           <div ref={innerRef} className={styles.inner}>
@@ -95,7 +104,7 @@ export default function Nav({ reels, cards }: { reels: ReelManifest; cards: Reco
                         <span className={styles.name}>{reel.title}</span>
                         <span className={styles.line}>{reel.blurb}</span>
                       </span>
-                      <span className={styles.end}>{reel.real && <span className={styles.tag}>REAL</span>}<span aria-hidden="true">›</span></span>
+                      <span className={styles.tail}>{reel.real && <span className={styles.tag}>REAL</span>}<span aria-hidden="true">›</span></span>
                     </a>
                   </li>
                 ))}

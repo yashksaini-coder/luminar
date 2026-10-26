@@ -1,49 +1,63 @@
-// Landing hero: the two-line poster, the lead (ending on the honesty line), the two calls to action,
-// the proof line from the recording and Fig. 1, the live replay plate. The section reveals once (D2):
-// poster lines, lead, CTA, chevron, proof and Fig. 1 caption rise in reading order. The inline script
-// after the section sets data-in at parse time (a forced reflow first so the transition still runs):
-// the lead is the LCP element and must not wait for the Reveal island to hydrate (Lighthouse LCP 7 s → ~FCP).
-// Above the poster, four spec chips say what it is at a glance; under the CTAs, a terminal chip copies the
-// whole local setup (clone, install, run) for the developer who would rather start than read.
+// Landing hero (v2, Axiom reference): two grid cells between the rails. Left, on a hairline hatch: the chip,
+// the serif headline, the lead (ending on the honesty line) and two CTAs. Right: the PixelField globe of
+// fifty peers with a publish wave crossing it, under a status chip and a level meter. Below, one grid row:
+// the "modelled on" wordmarks (text, not logos) and the stats bar from the recording with blinking cursors.
+// The section reveals once (D2); the inline script after it sets data-in at parse time because the lead is
+// the LCP element and must not wait for the Reveal island to hydrate (hence suppressHydrationWarning: data-in).
 import type { CSSProperties } from 'react'
-import Figure from '@/components/dither/Figure'
-import CopyCommand from '@/components/landing/CopyCommand'
-import PlateReplay from '@/components/landing/PlateReplay'
-import type { PlateFrames } from '@/components/landing/plate-draw'
-import { FIG1, MECHANISM, REPO_URL } from '@/lib/copy'
-import plateFrames from '@/lib/plate-frames.json'
+import Cursor from '@/components/fx/Cursor'
+import PixelField from '@/components/fx/PixelField'
+import { MECHANISM } from '@/lib/copy'
 import stats from '@/lib/reel-stats.json'
 import { reelHref } from '@/lib/reels'
 import styles from './Hero.module.css'
 
-const PRUNE_AFTER_S = (stats.firstScorePruneAt - stats.sybilAt).toFixed(1)   // 11.9 − 10.2 → 1.7
-export const PROOF = `${stats.peers} peers · ${stats.sybils} Sybils · first prune ${PRUNE_AFTER_S} s after the graft · ${stats.deliveryPct}% delivery`
-export const CHIPS = ['GossipSub v1.1', 'P1–P4 scoring', '20–200 peers', 'OpenTelemetry']
-export const SETUP = `git clone https://${REPO_URL} && cd luminar && make install && make dev`
+export const LEAD = `Fifty simulated peers run GossipSub v1.1 with P1–P4 peer scoring. Inject Sybils, an eclipse or a partition and watch the score bite, live or from a recording. ${MECHANISM}`
+export const MODELLED_ON = ['libp2p', 'GossipSub v1.1', 'Ethereum', 'OpenTelemetry', 'Prometheus'] as const
+/** value, unit, label: every number from the sybil-eclipse recording (lib/reel-stats.json) */
+export const STATS: [number, string, string][] = [
+  [stats.peers, '', 'Peers'],
+  [stats.heartbeatsToPrune, 'heartbeats', 'Sybils pruned in'],
+  [stats.deliveryPct, '%', 'Delivery'],
+]
+const METER = 14
 const i = (n: number) => ({ '--i': n }) as CSSProperties
 
 export default function Hero() {
   return (<>
-    <section className={styles.hero} data-reveal="">
-      <div className={styles.prose}>
-        <ul className={styles.chips} aria-label="What it is" data-k="up" style={i(0)}>{CHIPS.map((c) => <li key={c}>{c}</li>)}</ul>
-        <h1 className={styles.poster}><span data-k="up" style={i(1)}>Gossip,</span><br /><span data-k="up" style={i(2)}><em>scored.</em></span></h1>
-        <p className={styles.lead} data-k="up" style={i(3)}>
-          {`Fifty simulated peers run GossipSub v1.1: mesh, flood publish, IHAVE/IWANT and P1–P4 peer scoring. Inject Sybils, an eclipse or a partition and watch the score bite, live or from a recording. ${MECHANISM}`}
-        </p>
-        <div className={styles.row}>
-          <span data-k="pop" style={i(4)}><a className={`btn btn-primary ${styles.cta}`} href="/sim/">Open the simulator</a></span>
-          <span data-k="up" style={i(5)}><a className="chev" href={reelHref('sybil-eclipse')}>Watch a recording <span aria-hidden="true">›</span></a></span>
+    <section className={styles.top} data-reveal="" aria-labelledby="hero-h" suppressHydrationWarning>
+      <div className={styles.cells} data-grid="">
+        <div className={styles.copy}>
+          <p className={styles.chip} data-k="up" style={i(0)}>GossipSub v1.1 simulator<Cursor /></p>
+          <h1 id="hero-h" className={styles.h1}><span data-k="up" style={i(1)}>Watch a peer-to-peer</span> <span data-k="up" style={i(2)}>network defend itself</span></h1>
+          <p className={styles.lead} data-k="up" style={i(3)}>{LEAD}</p>
+          <div className={styles.ctas}>
+            <span data-k="pop" style={i(4)}><a className={styles.primary} href="/sim/">Open the simulator</a></span>
+            <span data-k="up" style={i(5)}><a className={styles.ghost} href={reelHref('sybil-eclipse')}>Watch a recording</a></span>
+          </div>
         </div>
-        <div className={styles.term} data-k="up" style={i(6)}>
-          <code><span className={styles.prompt} aria-hidden="true">$</span> make dev <span className={styles.where}>→ localhost:3000</span></code>
-          <CopyCommand text={SETUP} label="Copy the clone, install and run commands" className={styles.copy} />
+        <div className={styles.visual}>
+          <PixelField preset="sphere" tint="signal" cell={7} nodes={stats.peers} className={styles.globe}
+            aria-label={`${stats.peers} peers on a turning globe; a publish spreads hop by hop across the mesh`} />
+          <p className={styles.status}><span className={styles.dot} aria-hidden="true" />All peers gossiping</p>
+          <span className={styles.meter} aria-hidden="true">{Array.from({ length: METER }, (_, n) => <i key={n} style={i(n)} />)}</span>
         </div>
-        <p className={styles.proof} data-k="up" style={i(7)}>{PROOF}</p>
       </div>
-      <div className={styles.plate}>
-        <Figure n={1} caption={FIG1} captionI={7}><PlateReplay plate={plateFrames as PlateFrames} /></Figure>
+      <div className={styles.strip} data-grid="">
+        <div className={styles.marks}>
+          <p className={styles.label} id="modelled-on">Modelled on</p>
+          <ul aria-labelledby="modelled-on">{MODELLED_ON.map((m, n) => <li key={m} data-mark={n}>{m}</li>)}</ul>
+        </div>
+        <dl className={styles.stats} aria-label="From the sybil-eclipse recording">
+          {STATS.map(([v, unit, label], n) => (
+            <div key={label} data-k="up" style={i(6 + n)}>
+              <dt>{label}</dt>
+              <dd>{v}{unit === '%' ? '%' : unit && <span className={styles.unit}>{unit}</span>}<Cursor /></dd>
+            </div>
+          ))}
+        </dl>
       </div>
+      <div className={styles.close} data-grid="" aria-hidden="true" />
     </section>
     <script dangerouslySetInnerHTML={{ __html: "(function(s){s.offsetWidth;s.dataset.in='1'})(document.currentScript.previousElementSibling)" }} />
   </>)

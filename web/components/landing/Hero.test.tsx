@@ -1,45 +1,50 @@
-import { act, createElement as h } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createElement as h } from 'react'
 import { renderToStaticMarkup as r } from 'react-dom/server'
-import { afterEach, expect, test, vi } from 'vitest'
-import CopyCommand, { COPIED_MS } from './CopyCommand'
-import Hero, { CHIPS, SETUP } from './Hero'
+import { expect, test } from 'vitest'
+import { MECHANISM } from '@/lib/copy'
+import stats from '@/lib/reel-stats.json'
+import Hero, { LEAD, MODELLED_ON, STATS } from './Hero'
 
-afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); document.body.innerHTML = '' })
+const doc = () => new DOMParser().parseFromString(r(h(Hero)), 'text/html')
 
-test('hero: four spec chips above the poster, the terminal chip under the CTAs, the parse-time reveal script kept', () => {
-  const m = r(h(Hero)); const d = new DOMParser().parseFromString(m, 'text/html')
-  expect([...d.querySelectorAll('ul[aria-label="What it is"] li')].map(l => l.textContent)).toEqual(['GossipSub v1.1', 'P1–P4 scoring', '20–200 peers', 'OpenTelemetry'])
-  expect(CHIPS).toHaveLength(4)
-  expect(m.indexOf('What it is')).toBeLessThan(m.indexOf('<h1')); expect(m.indexOf('Open the simulator')).toBeLessThan(m.indexOf('make dev'))
-  expect(d.querySelector('code')!.textContent).toBe('$ make dev → localhost:3000')
-  expect(d.querySelector('button[aria-label="Copy the clone, install and run commands"]')!.textContent).toBe('copy')
-  expect(d.querySelector('[role="status"][aria-live="polite"]')).not.toBeNull()
-  expect(SETUP).toBe('git clone https://github.com/yashksaini-coder/luminar && cd luminar && make install && make dev')
-  expect([...d.querySelectorAll('section [data-k]')].map(e => e.getAttribute('style'))).toEqual(['--i:0', '--i:1', '--i:2', '--i:3', '--i:4', '--i:5', '--i:6', '--i:7', '--i:7'])
+test('hero copy: chip with cursor, two-phrase serif headline, lead ending on the honesty line, two CTAs', () => {
+  const d = doc()
+  expect(d.querySelector('p')!.textContent).toBe('GossipSub v1.1 simulator')
+  expect(d.querySelector('p [aria-hidden="true"]')).not.toBeNull()   // the cursor
+  expect([...d.querySelectorAll('h1 > span')].map(s => s.textContent)).toEqual(['Watch a peer-to-peer', 'network defend itself'])
+  expect(LEAD.endsWith(MECHANISM)).toBe(true); expect(d.body.textContent).toContain(LEAD)
+  const ctas = [...d.querySelectorAll('section a')].map(a => [a.textContent, a.getAttribute('href')])
+  expect(ctas).toEqual([['Open the simulator', '/sim/'], ['Watch a recording', '/reels/sybil-eclipse/']])
+})
+
+test('no developer furniture in the hero: no terminal, command, copy button or clone line', () => {
+  const m = r(h(Hero))
+  expect(m).not.toMatch(/make dev|git clone|\$ |<code|<button|curl/)
+})
+
+test('right cell: a labelled sphere PixelField, the status chip and a decorative level meter', () => {
+  const d = doc()
+  const c = d.querySelector('canvas[data-preset="sphere"]')!
+  expect(c.getAttribute('role')).toBe('img'); expect(c.getAttribute('aria-label')).toContain(`${stats.peers} peers`)
+  expect(d.body.textContent).toContain('All peers gossiping')
+})
+
+test('modelled-on strip is plain text wordmarks, labelled "modelled on", never "trusted by"', () => {
+  const d = doc(), items = [...d.querySelectorAll('ul[aria-labelledby="modelled-on"] li')]
+  expect(items.map(l => l.textContent)).toEqual([...MODELLED_ON]); expect(d.querySelectorAll('ul img, ul svg')).toHaveLength(0)
+  expect(d.body.textContent).toContain('Modelled on'); expect(d.body.textContent).not.toMatch(/trusted/i)
+})
+
+test('stats bar: three numbers straight from reel-stats.json, each followed by a cursor', () => {
+  const d = doc(), dds = [...d.querySelectorAll('dl dd')]
+  expect(STATS.map(s => s[0])).toEqual([stats.peers, stats.heartbeatsToPrune, stats.deliveryPct])
+  expect(dds.map(dd => dd.textContent)).toEqual([`${stats.peers}`, `${stats.heartbeatsToPrune}heartbeats`, `${stats.deliveryPct}%`])
+  for (const dd of dds) expect(dd.lastElementChild!.getAttribute('aria-hidden')).toBe('true')
+})
+
+test('grid rows, reveal order and the parse-time reveal script', () => {
+  const m = r(h(Hero)), d = doc()
+  expect(d.querySelectorAll('section [data-grid]')).toHaveLength(3)
+  expect([...d.querySelectorAll('section [data-k]')].map(e => e.getAttribute('style'))).toEqual(['--i:0', '--i:1', '--i:2', '--i:3', '--i:4', '--i:5', '--i:6', '--i:7', '--i:8'])
   expect(m).toMatch(/<\/section><script>\(function\(s\)\{s\.offsetWidth;s\.dataset\.in='1'\}\)\(document\.currentScript\.previousElementSibling\)<\/script>$/)
-})
-
-function mount(writeText?: (s: string) => Promise<void>) {
-  ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-  vi.useFakeTimers(); vi.stubGlobal('navigator', { clipboard: writeText ? { writeText } : undefined })
-  const host = document.body.appendChild(document.createElement('div')); const root = createRoot(host)
-  act(() => root.render(h(CopyCommand, { text: SETUP, label: 'Copy the commands' })))
-  return { root, btn: host.querySelector('button')!, status: host.querySelector('[role="status"]')! }
-}
-
-test('copy writes the whole setup to the clipboard, says "copied" for 1.5 s in the button and the live region, then resets', async () => {
-  const writeText = vi.fn(async () => {}); const { root, btn, status } = mount(writeText)
-  await act(async () => { btn.click() })
-  expect(writeText).toHaveBeenCalledWith(SETUP); expect(btn.textContent).toBe('copied'); expect(btn.dataset.state).toBe('copied'); expect(status.textContent).toBe('copied')
-  act(() => { vi.advanceTimersByTime(COPIED_MS - 10) }); expect(btn.textContent).toBe('copied')
-  act(() => { vi.advanceTimersByTime(20) }); expect(btn.textContent).toBe('copy'); expect(status.textContent).toBe('')
-  act(() => root.unmount())
-})
-
-test('without a clipboard (http on a LAN) it says "copy failed" instead of pretending', async () => {
-  const { root, btn, status } = mount()
-  await act(async () => { btn.click() })
-  expect(btn.textContent).toBe('copy failed'); expect(status.textContent).toBe('copy failed')
-  act(() => root.unmount())
 })

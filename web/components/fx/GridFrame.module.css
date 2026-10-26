@@ -1,0 +1,14 @@
+/* --frame-x (globals.css): distance from the viewport edge to a rail, on any full-width box. */
+.frame { position: relative; overflow-x: clip; }
+.rails {
+  position: absolute; inset: 0 var(--frame-x); z-index: 2; pointer-events: none;
+  border-inline: var(--hair-w) solid var(--hair);
+}
+.frame :global([data-grid]) { position: relative; border-top: var(--hair-w) solid var(--hair); }
+.frame :global([data-grid])::before, .frame :global([data-grid])::after {
+  content: ''; position: absolute; z-index: 3; top: -6px; width: 11px; height: 11px; pointer-events: none;
+  background: var(--hair-strong);
+  -webkit-mask: var(--plus-mark); mask: var(--plus-mark);
+}
+.frame :global([data-grid])::before { left: calc(var(--frame-x) - 5px); }
+.frame :global([data-grid])::after { right: calc(var(--frame-x) - 5px); }

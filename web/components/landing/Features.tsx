@@ -7,7 +7,7 @@
 // Numbers come from lib/reel-stats.json and the reel manifest; ARRIVALS are real observer arrivals.
 import { type ComponentType, type CSSProperties, useEffect, useRef } from 'react'
 import Stamp from '@/components/dither/Stamp'
-import { easeCount } from '@/components/landing/Readouts'
+import { easeCount } from '@/components/fx/pixel-field'
 import { ARRIVAL, SAME_NAMES } from '@/lib/copy'
 import { reducedMotion } from '@/lib/prefs'
 import stats from '@/lib/reel-stats.json'
