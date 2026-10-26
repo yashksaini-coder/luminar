@@ -7,6 +7,21 @@
 .lead { margin: 22px 0 0; font: 400 var(--t-lead)/var(--lh-prose) var(--font-display); color: var(--paper-1); }   /* h1 → lead 22 */
 .row { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4) var(--s-8); }   /* lead → row 28 */
 .cta { display: inline-flex; align-items: center; height: 44px; padding: 0 var(--s-5); font: 500 var(--t-ui)/1 var(--font-ui); text-decoration: none; }
+/* spec chips (mono, hairline, square): what it is before the poster says it with feeling */
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0 0 var(--s-6); padding: 0; list-style: none; }
+.chips li { display: inline-flex; align-items: center; height: 28px; padding: 0 var(--s-3); border: var(--hair-w) solid var(--hair-strong); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: .04em; color: var(--fg-2); white-space: nowrap; }
+/* terminal chip: one line of shell on the panel surface with its copy button flush right, 44 px tall */
+.term { display: inline-flex; align-items: stretch; max-width: 100%; margin-top: var(--s-5); border: var(--hair-w) solid var(--hair-strong); background: var(--panel); }
+.term code { display: inline-flex; align-items: center; gap: .6ch; min-height: 44px; padding: 0 var(--s-4); font: 500 var(--t-ui)/1 var(--font-mono); color: var(--fg); white-space: nowrap; overflow: hidden; }
+.prompt { color: var(--fg-3); }
+.where { color: var(--fg-3); }
+.copy { min-width: 11ch; min-height: 44px; padding: 0 var(--s-4); border: 0; border-left: var(--hair-w) solid var(--hair-strong); background: none; color: var(--fg-2); font: 500 var(--t-label)/1 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; cursor: pointer; touch-action: manipulation; transition: background var(--d-fast) var(--e2), color var(--d-fast) var(--e2); }
+.copy:hover { background: var(--wash); color: var(--fg); }
+.copy:active { transform: translateY(1px); }
+.copy:focus-visible { outline-offset: -2px; }
+.copy[data-state=copied] { color: var(--signal-text); }
+.copy[data-state=failed] { color: var(--fg); }
+@media (max-width: 420px) { .where { display: none; } }
 .proof { margin-top: var(--s-4); font: 500 var(--t-body) var(--font-mono); color: var(--paper-2); }
 /* phone landscape (844×390): the whole CTA sits above the fold */
 @media (max-height: 500px) {
