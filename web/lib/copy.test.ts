@@ -1,6 +1,7 @@
 import { test, expect } from 'vitest'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { DURATION, FPS } from '@/remotion/v2/timeline'
 import { FORBIDDEN, FIG3, PROVENANCE, MECHANISM, RECORDING_NOT_RUN, ARRIVAL, REEL_GUARD, geoOnly } from '@/lib/copy'
 test('honesty sentences are verbatim', () => {
   expect(MECHANISM).toBe('Same mechanism, toy constants.')
@@ -9,7 +10,10 @@ test('honesty sentences are verbatim', () => {
   expect(RECORDING_NOT_RUN).toBe('reproducible recording, not an identical run')
   expect(REEL_GUARD).toBe('Press 0 to leave the reel first')
   expect(geoOnly('radial')).toBe('Geo shows real observers only — switched to radial')
-  expect(FIG3).toBe('57 seconds: one publish, five Sybils, one eclipse, one heal.')
+  expect(FIG3).toBe('45 seconds: one publish, five Sybils, one eclipse, one heal.')
+})
+test('Fig. 3 caption states the LaunchV2 length', () => {
+  expect(FIG3.startsWith(`${Math.floor(DURATION / FPS)} seconds:`)).toBe(true)
 })
 test('forbidden phrases appear only in lib/copy.ts', () => {
   const hits: string[] = []
