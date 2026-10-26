@@ -1,6 +1,7 @@
 /* ---- v2 hero: two cells between the grid rails, then the wordmark + stats row ---------------- */
 .top { padding-top: var(--s-16); }
-.cells, .strip { display: grid; grid-template-columns: 1fr 1fr; padding-inline: var(--frame-x); }
+.cells { display: grid; grid-template-columns: 1fr 1fr; padding-inline: var(--frame-x); }
+.strip { display: grid; grid-template-columns: 1fr; padding-inline: var(--frame-x); }
 .copy {
   position: relative; display: flex; flex-direction: column; justify-content: center;
   min-height: min(600px, 100dvh - var(--nav-h) - 220px); padding: var(--s-16) var(--s-12);
@@ -45,7 +46,7 @@
 @keyframes pulse { 50% { opacity: .25; } }
 @keyframes level { from { opacity: .3; transform: scaleY(.5); } to { opacity: 1; transform: scaleY(1); } }
 
-.marks { position: relative; padding: var(--s-8) var(--s-6) var(--s-8) var(--s-12); border-right: var(--hair-w) solid var(--hair); }
+.marks { position: relative; display: flex; align-items: baseline; gap: var(--s-8); padding: var(--s-8) var(--s-6) var(--s-8) var(--s-12); }
 .label { margin: 0 0 var(--s-4); font: 500 11px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
 .marks ul { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-5); margin: 0; padding: 0; list-style: none; color: var(--fg-3); }
 .marks li { transition: color var(--d-fast) var(--e2); }
@@ -56,23 +57,16 @@
 .marks [data-mark="3"] { font: 500 15px/1 var(--font-ui); letter-spacing: -.02em; }
 .marks [data-mark="4"] { font: 700 12px/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
-.stats > div { padding: var(--s-8) var(--s-6); }
-.stats > div + div { border-left: var(--hair-w) solid var(--hair); }
-.stats dt { font: 500 11px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
-.stats dd { margin: var(--s-3) 0 0; font: 500 36px/1 var(--font-ui); font-feature-settings: var(--tnum); letter-spacing: -.02em; color: var(--fg); white-space: nowrap; }
-.unit { margin-left: .3em; font: 500 14px/1 var(--font-mono); letter-spacing: 0; color: var(--fg-2); }
 .close { height: var(--s-16); }
 
 @media (max-width: 1100px) {
   .copy { padding: var(--s-12) var(--s-8); }
   .marks { padding: var(--s-6) var(--s-8); }
-  .stats > div { padding: var(--s-6) var(--s-4); }
-  .stats dd { font-size: 30px; }
-}
+    }
 @media (max-width: 900px) {
   .top { padding-top: var(--s-8); }
-  .cells, .strip { grid-template-columns: 1fr; }
+  .cells { grid-template-columns: 1fr; }
+  .marks { flex-direction: column; gap: var(--s-3); }
   .copy { min-height: 0; padding: var(--s-12) var(--s-6); border-right: 0; }
   .copy::before, .copy::after { display: none; }
   .visual { min-height: 0; aspect-ratio: 1; max-height: 560px; border-top: var(--hair-w) solid var(--hair); }
@@ -87,11 +81,7 @@
   .visual .globe { left: var(--s-2); width: calc(100% - 2 * var(--s-2)); height: calc(100% - var(--s-10) - var(--s-2)); }
   .marks { padding: var(--s-6) var(--s-4); }
   .marks ul { gap: var(--s-3) var(--s-6); }
-  .stats > div { padding: var(--s-5) var(--s-3); }
-  .stats dt { min-height: 2lh; font-size: 10px; line-height: 1.2; letter-spacing: .08em; }
-  .stats dd { font-size: 24px; }
-  .unit { display: block; margin: var(--s-1) 0 0; font-size: 11px; }
-}
+        }
 @media (prefers-reduced-motion: reduce) { .dot, .meter i { animation: none; } }
 /* phone landscape (844×390): the CTAs sit above the fold */
 @media (max-height: 500px) and (orientation: landscape) { .top { padding-top: var(--s-4); } .copy { padding-block: var(--s-8); } }

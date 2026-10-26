@@ -1,7 +1,7 @@
 // Landing hero (v2, Axiom reference): two grid cells between the rails. Left, on a hairline hatch: the chip,
 // the serif headline, the lead (ending on the honesty line) and two CTAs. Right: the PixelField globe of
 // fifty peers with a publish wave crossing it, under a status chip and a level meter. Below, one grid row:
-// the "modelled on" wordmarks (text, not logos) and the stats bar from the recording with blinking cursors.
+// the "modelled on" wordmarks (text, not logos) across the full row.
 // The section reveals once (D2). The lead is the LCP element and must not wait for the Reveal island to hydrate,
 // so the root layout's head script sets data-in on [data-hero-reveal] at DOMContentLoaded (suppressHydrationWarning:
 // data-in). Keeping that script in the layout means React never renders a <script> on client navigation.
@@ -15,12 +15,6 @@ import styles from './Hero.module.css'
 
 export const LEAD = `Fifty simulated peers run GossipSub v1.1 with P1–P4 peer scoring. Inject Sybils, an eclipse or a partition and watch the score bite, live or from a recording. ${MECHANISM}`
 export const MODELLED_ON = ['libp2p', 'GossipSub v1.1', 'Ethereum', 'OpenTelemetry', 'Prometheus'] as const
-/** value, unit, label: every number from the sybil-eclipse recording (lib/reel-stats.json) */
-export const STATS: [number, string, string][] = [
-  [stats.peers, '', 'Peers'],
-  [stats.heartbeatsToPrune, 'heartbeats', 'Sybils pruned in'],
-  [stats.deliveryPct, '%', 'Delivery'],
-]
 const METER = 14
 const i = (n: number) => ({ '--i': n }) as CSSProperties
 
@@ -49,14 +43,6 @@ export default function Hero() {
           <p className={styles.label} id="modelled-on">Modelled on</p>
           <ul aria-labelledby="modelled-on">{MODELLED_ON.map((m, n) => <li key={m} data-mark={n}>{m}</li>)}</ul>
         </div>
-        <dl className={styles.stats} aria-label="From the sybil-eclipse recording">
-          {STATS.map(([v, unit, label], n) => (
-            <div key={label} data-k="up" style={i(6 + n)}>
-              <dt>{label}</dt>
-              <dd>{v}{unit === '%' ? '%' : unit && <span className={styles.unit}>{unit}</span>}<Cursor /></dd>
-            </div>
-          ))}
-        </dl>
       </div>
       <div className={styles.close} data-grid="" aria-hidden="true" />
     </section>
