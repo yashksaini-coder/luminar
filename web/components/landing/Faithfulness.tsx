@@ -14,10 +14,10 @@ export const ROWS: Row[] = [
   { name: 'Heartbeat', sym: 'interval', ours: '1 s', main: '0.7 s' },
   { name: 'Score thresholds', sym: 'graft · prune', ours: '−5 · −10', main: '−4000 · −8000 · −16000', mainNote: 'gossip · publish · graylist' },
   { name: 'Score terms', sym: 'score function', ours: 'P1–P4', oursNote: 'time in mesh, first deliveries, delivery deficit, invalid messages', main: 'P1–P7', mainNote: 'adds application score, IP colocation, behaviour penalty' },
-  { name: 'Link latency', sym: 'per hop', ours: '5–50 ms', oursNote: 'uniform random', main: 'real internet', mainNote: 'blocks reach p50 in 104 ms (9 KB) to 348 ms (238 KB), ethPandaOps' },
+  { name: 'Link latency', sym: 'per hop', ours: '5–50 ms', oursNote: 'uniform random', main: 'real internet', mainNote: 'end to end, ethPandaOps sees blocks reach half the observers in 104 ms (9 KB) to 348 ms (238 KB)' },
   { name: 'Signatures', sym: 'validation', ours: 'none', oursNote: 'attackers send invalid messages by construction', main: 'BLS', mainNote: 'blocks and attestations are checked before relay' },
   { name: 'IWANT timing', sym: 'gossip pull', ours: 'at the heartbeat', oursNote: 'pulls wait for the next tick', main: 'on IHAVE', mainNote: 'sent as soon as the IHAVE arrives' },
-  { name: 'Eclipse visibility', sym: 'scoring', ours: 'invisible', oursNote: ECLIPSE_WHY, main: 'more signals', mainNote: 'P6 IP colocation scores attackers that share an address' },
+  { name: 'Eclipse visibility', sym: 'scoring', ours: 'invisible', oursNote: ECLIPSE_WHY, main: 'hard too', mainNote: 'P6 only scores attackers that share an IP; distinct addresses stay unseen' },
 ]
 
 const CAPTION = 'Luminar constants against Lighthouse defaults on mainnet'
