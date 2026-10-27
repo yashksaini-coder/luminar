@@ -217,7 +217,7 @@ Tests are `async def` under trio; a fixture builds `EventBus` → `SimulationClo
 make docker      # builds web/, serves it with the backend from one container on :8080
 ```
 
-`render.yaml` and `.do/app.yaml` use the same root `Dockerfile` (the DigitalOcean spec boots 50 nodes). Set `LUMINAR_ADMIN_TOKEN` on anything public: every non-GET request then needs an `X-Luminar-Token` header and visitors get a read-only viewer plus the reels.
+`.do/app.yaml` uses the root `Dockerfile` (one container, 50 nodes). The hosted demo is split: the site on Vercel, the backend on Render from `Dockerfile.backend` (`render.yaml`). Set `LUMINAR_ADMIN_TOKEN` on anything public: every non-GET request then needs an `X-Luminar-Token` header and visitors get a read-only viewer plus the reels.
 
 <details>
 <summary>Environment variables</summary>

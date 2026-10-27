@@ -41,7 +41,8 @@ Owned by Yash (not an OSS contribution — the `~/oss_contribution_logs/` rule d
   for same-origin files).
 - Deployment: root `Dockerfile` serves built frontend + backend on `$PORT` (8080);
   `render.yaml`, `.do/`, `docker-compose.yml`, `start.sh`. Docker copies web/out to
-  frontend/dist (the path main.py mounts; backend untouched). Env: NEXT_PUBLIC_API_URL
+  frontend/dist (the path main.py mounts; backend untouched). Hosted split: site on Vercel
+  (Root `web`, Next.js preset, no output override), backend on Render via `Dockerfile.backend`. Env: NEXT_PUBLIC_API_URL
   (build-time, unset in the container), `LUMINAR_NODE_COUNT`, `LUMINAR_LOG_LEVEL`, `PORT`.
 
 ## Devcon 8 work (branch feat/devcon8, Oct–Nov 2026)

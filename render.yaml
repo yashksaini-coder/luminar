@@ -1,13 +1,21 @@
 services:
   - type: web
-    name: luminar-backend
+    name: luminar
     runtime: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./Dockerfile.backend
     plan: free
-    region: oregon
+    region: singapore
     healthCheckPath: /api/sim/snapshot
+    buildFilter:
+      paths:
+        - backend/**
+        - pyproject.toml
+        - uv.lock
+        - Dockerfile.backend
     envVars:
       - key: PORT
         value: "8080"
       - key: LUMINAR_NODE_COUNT
         value: "20"
+      - key: LUMINAR_ADMIN_TOKEN
+        sync: false

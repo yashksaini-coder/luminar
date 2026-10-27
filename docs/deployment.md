@@ -73,10 +73,12 @@ Grep to confirm before relying on a name: `grep -rn 'os.environ' backend/`.
 
 ## Render
 
-`render.yaml`: Docker runtime from the root `Dockerfile`, free plan, `PORT=8080`,
-`LUMINAR_NODE_COUNT=20`, health check `GET /api/sim/snapshot`. Push to `master` and connect
-the repo as a Blueprint; nothing else to configure. No change for the Next.js build: the same
-`Dockerfile`, health check and env apply.
+Backend only. `render.yaml`: Docker runtime from `Dockerfile.backend` (Python + `backend/`, no
+Node stage, no `frontend/dist`, so `/` is 404 and only `/api/*`, `/ws/events`, `/metrics`
+answer), free plan, Singapore, `PORT=8080`, `LUMINAR_NODE_COUNT=20`, health check
+`GET /api/sim/snapshot`. The build filter skips deploys unless `backend/`, `pyproject.toml`,
+`uv.lock` or `Dockerfile.backend` changed. Set `LUMINAR_ADMIN_TOKEN` in the dashboard.
+The site is on Vercel (below) and talks to this service through `NEXT_PUBLIC_API_URL`.
 
 ## DigitalOcean App Platform
 
@@ -86,9 +88,11 @@ the same `Dockerfile`, health check and env apply.
 
 ## Vercel
 
-Not a deploy target. The app is a static export served by FastAPI (no Node in production); a
-Vercel preview of `web/` would need `NEXT_PUBLIC_API_URL` pointed at a running backend and is
-outside the deploy story.
+Serves the site (`web/` static export). Project settings: Root Directory `web`, Framework
+Next.js, Build / Install / Output Directory all defaults (an Output Directory override breaks
+the Next.js builder: it reads `.next/routes-manifest.json`, then picks up `out/` itself).
+Config variables (not Secret; they are public): `NEXT_PUBLIC_API_URL` = the Render origin,
+`NEXT_PUBLIC_SITE_URL` = the Vercel origin. Both are inlined at build, so redeploy after a change.
 
 ## Laptop observability (not deployed)
 
