@@ -15,6 +15,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_PID=""
 SHUTTING_DOWN=false
 
+# Load .env once (the shell's own variables win; blank values keep the defaults below)
+if [[ -z "${LUMINAR_ENV_LOADED:-}" && -f "$ROOT/.env" ]]; then
+  LUMINAR_ENV_LOADED=1 exec "$ROOT/scripts/with-env.sh" "$0" "$@"
+fi
+
 # Defaults
 NODE_COUNT="${LUMINAR_NODE_COUNT:-20}"
 LOG_LEVEL="${LUMINAR_LOG_LEVEL:-INFO}"

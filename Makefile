@@ -11,12 +11,12 @@ install: ## Install all dependencies (backend + web)
 
 # ── Development ────────────────────────────────────────
 
-backend: ## Start backend API server (:8000)
-	uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+backend: ## Start backend API server (:8000), with .env loaded
+	./scripts/with-env.sh uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 dev: ## Start backend + web together
 	@echo "\033[36m[luminar]\033[0m Starting backend on :8000..."
-	@uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload &
+	@./scripts/with-env.sh uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload &
 	@sleep 2
 	@echo "\033[36m[luminar]\033[0m Starting web on :3000..."
 	@cd web && npm run dev
