@@ -27,7 +27,7 @@ interface ParticleDraw { kind: ParticleKind; pos: Pos; angle: number; color: RGB
 interface PulseDraw { id: string; pos: Pos; color: RGBA }
 
 declare global {
-  interface Window { __luminar?: { store: typeof useStore; fitView: typeof fitView; viewState: typeof getViewState; layerIds: typeof layerIds } }
+  interface Window { __luminar?: { store: typeof useStore; fitView: typeof fitView; viewState: typeof getViewState; layerIds: typeof layerIds; positions: typeof visiblePositions } }
 }
 
 // Either a real deck.gl Deck or the Canvas 2D stand-in; renderer.ts only calls setProps/finalize on it.
@@ -201,7 +201,7 @@ export function initRenderer(canvas: HTMLCanvasElement, tooltipEl: HTMLElement |
   })
   dirty = true
   raf = requestAnimationFrame(tick)
-  window.__luminar = { store: useStore, fitView, viewState: getViewState, layerIds }
+  window.__luminar = { store: useStore, fitView, viewState: getViewState, layerIds, positions: visiblePositions }   // positions: the demo recorder aims clicks
 }
 
 export function destroyRenderer(): void {

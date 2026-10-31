@@ -1,4 +1,4 @@
-.PHONY: help install backend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check web-video web-stats deploy-aws
+.PHONY: help install backend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check web-video web-stats deploy-aws demo-record demo-draft demo-render
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -68,6 +68,15 @@ docker: ## Run with Docker Compose
 	docker compose up --build
 
 # ── Observability (laptop only) ────────────────────────
+
+demo-record: ## Film the demo's shots from web/out frame-by-frame (demo/shots.mjs) and encode the clips
+	cd web && npm run build && cd ../demo && npm install --no-audit --no-fund && npx playwright install chromium && node record.mjs && node encode.mjs
+
+demo-draft: ## Quick 540p draft of the demo film with sound (demo/out/render/draft.mp4)
+	cd demo && node finish.mjs --draft
+
+demo-render: ## Final demo masters: clean + captions + 1080p review copy + SRT/VTT → web/video-out/
+	cd demo && bash make-sfx.sh && node make-music.mjs && node finish.mjs
 
 deploy-aws: ## Build Dockerfile.backend and roll it out to the Lightsail service (ap-south-1)
 	./scripts/deploy-aws.sh

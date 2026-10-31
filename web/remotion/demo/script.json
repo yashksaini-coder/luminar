@@ -1,0 +1,84 @@
+{
+  "comment": "The demo's single source of truth (demo/SCRIPT.md in data). Seconds on the film clock; every cut on the 100 BPM grid (0.6 s). The composition, the caption sidecars, the cue mixer and the music bed all read this file; nothing retypes a time or a number. {NAME} in a caption is web/lib/copy.ts NAME: the honesty sentences live only there.",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "bpm": 100,
+  "scenes": [
+    { "id": "open", "at": 0.0, "dur": 4.8, "kind": "card" },
+    { "id": "mesh", "at": 4.8, "dur": 9.0, "kind": "shot" },
+    { "id": "sybil", "at": 13.8, "dur": 7.8, "kind": "shot" },
+    { "id": "eclipse", "at": 21.6, "dur": 7.8, "kind": "shot" },
+    { "id": "heal", "at": 29.4, "dur": 6.0, "kind": "shot" },
+    { "id": "mainnet", "at": 35.4, "dur": 6.0, "kind": "shot" },
+    { "id": "end", "at": 41.4, "dur": 10.2, "kind": "card" }
+  ],
+  "shots": {
+    "comment": "What demo/record.mjs filmed: real UI from web/out, reel sim seconds and playback speed. Files: web/public/demo/shots/<id>.mp4 (+ <id>.json with cursor events).",
+    "mesh": { "reel": "sybil-eclipse", "simFrom": 5.4, "speed": 0.5, "hero": true },
+    "sybil": { "reel": "sybil-eclipse", "simFrom": 9.7, "speed": 0.5, "hero": true },
+    "eclipse": { "reel": "sybil-eclipse", "simFrom": 15.9, "speed": 1, "hero": false, "click": { "at": 1.2, "peer": "peer-10" } },
+    "heal": { "reel": "sybil-eclipse", "simFrom": 23.4, "speed": 1, "hero": false },
+    "mainnet": { "reel": "mainnet-block-wave", "simFrom": 11.35, "speed": 0.5, "hero": true, "slot": 15466394 }
+  },
+  "landings": {
+    "comment": "Frame contracts from demo/SCRIPT.md: film seconds where a reel moment is on screen.",
+    "firstPublish": 5.6,
+    "sybilGraft": 15.0,
+    "firstPrune": 18.2,
+    "allPruned": 19.2,
+    "peerClick": 22.8,
+    "faultsCleared": 30.1,
+    "healed": 31.5,
+    "blockWave": 36.7
+  },
+  "captions": [
+    { "at": 0.6, "until": 4.6, "text": "GossipSub v1.1 · run live · broken on purpose" },
+    { "at": 5.4, "until": 9.0, "text": "50 peers · one publish · every hop drawn" },
+    { "at": 15.0, "until": 18.4, "text": "five Sybils graft in and flood" },
+    { "at": 19.2, "until": 21.4, "text": "pruned by score · two heartbeats · nobody coordinated it" },
+    { "at": 22.8, "until": 26.0, "text": "four silent attackers eclipse peer-10" },
+    { "at": 26.0, "until": 29.2, "text": "nothing invalid, so P4 never fires · only P3, floored at −0.25" },
+    { "at": 30.2, "until": 35.2, "text": "faults cleared · mesh healed in 1.4 s · delivery 100 %" },
+    { "at": 36.0, "until": 41.2, "text": "real mainnet · slot 15466394 · 138 observers, in the order they saw the block" },
+    { "at": 41.8, "until": 46.0, "text": "same mechanism, toy constants · D 6 · heartbeat 1 s · prune at −10" },
+    { "at": 46.2, "until": 51.6, "text": "github.com/yashksaini-coder/luminar" }
+  ],
+  "vo": [
+    { "at": 0, "text": "Peer scoring is what keeps gossip alive under attack." },
+    { "at": 3.42, "text": "Nobody has watched it work." },
+    { "at": 6.02, "text": "Luminar. Fifty simulated peers. GossipSub one point one." },
+    { "at": 9.43, "text": "One publish. Every hop. Drawn." },
+    { "at": 13.8, "text": "Five Sybils graft in, and flood." },
+    { "at": 16.5, "text": "P4 scores the spam. Two heartbeats." },
+    { "at": 19.2, "text": "Pruned. Nobody coordinated it.", "anchor": true },
+    { "at": 21.6, "text": "Now the quiet attack. Four silent peers eclipse node ten." },
+    { "at": 25.61, "text": "Nothing invalid. Scoring never fires. That is the limit, on screen." },
+    { "at": 30.19, "text": "Clear the faults. The mesh re-grafts in one point four seconds." },
+    { "at": 35.4, "text": "And the real network. Mainnet blocks, arriving at a hundred and thirty-eight observers." },
+    { "at": 41.4, "text": "Same mechanism. Toy constants." },
+    { "at": 44.4, "text": "Break it yourself.", "anchor": true }
+  ],
+  "airPockets": [[18.6, 19.2], [46.2, 51.6]],
+  "cues": [
+    { "t": 0.6, "sound": "stamp", "db": -11, "why": "wordmark stamps on the open card" },
+    { "t": 4.8, "sound": "dissolve", "db": -13, "why": "the one dissolve that sounds; later dissolves are silent" },
+    { "t": 5.6, "sound": "blip", "db": -14, "why": "first publish establishes the message sound, then silence" },
+    { "t": 15.0, "sound": "thud", "db": -12, "why": "five Sybils graft in (the phase card and the first attack links land here)" },
+    { "t": 19.2, "sound": "big-hit", "db": -8, "why": "PRUNED: the thesis moment, the one big hit" },
+    { "t": 22.8, "sound": "tap", "db": -14, "why": "the cursor clicks peer-10" },
+    { "t": 31.5, "sound": "resolve", "db": -12, "why": "mesh healed in 1.4 s" },
+    { "t": 36.7, "sound": "swell", "db": -13, "why": "the mainnet block wave lights the observers" },
+    { "t": 44.4, "sound": "stamp", "db": -10, "why": "Break it yourself" }
+  ],
+  "music": {
+    "comment": "Mood per scene for demo/make-music.mjs; the bed starts at 0 and runs the film's length.",
+    "open": "sparse, airy, a slow sub pulse",
+    "mesh": "warm major, soft electric piano on the grid, light arpeggio",
+    "sybil": "tension: minor, bass pulse on every beat, filter opening; only the sub bass during the air pocket 18.6–19.2, full release on 19.2",
+    "eclipse": "hollow, quiet, slow suspended chords",
+    "heal": "bright, arpeggio returns, resolves to major",
+    "mainnet": "wide pad, high shimmer",
+    "end": "swell from 46.2, final chord rings out and ends with the last frame"
+  }
+}

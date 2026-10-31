@@ -28,6 +28,8 @@ Owned by Yash (not an OSS contribution — the `~/oss_contribution_logs/` rule d
 - `make typecheck` — `cd web && npx tsc --noEmit`
 - `make web-check` — tsc + eslint + vitest in `web/`
 - `make build` — `next build` static export → `web/out`
+- `make demo-record` / `demo-draft` / `demo-render` — the demo film (`demo/README.md`; `web/remotion/demo/script.json`
+  is its single source of truth; generated audio and shot clips are gitignored, the master lives in `web/public/video/`)
 - `make check` — lint + test + web-check + build. CI (`.github/workflows/ci.yml`) runs the same.
 - Always use `uv run …`, never bare `python`/`pytest`. `web/` uses `npm` (lockfile committed).
 

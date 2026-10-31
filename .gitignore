@@ -59,3 +59,9 @@ recordings/
 /docs/design/*.md
 /docs/design-prompt.md
 /docs/roadmap-devcon8.md
+
+# Demo film pipeline (demo/): rendered frames, shot clips and node_modules are rebuilt by demo/record.mjs
+/demo/node_modules/
+/demo/out/
+/web/public/demo/shots/
+/web/public/demo/audio/

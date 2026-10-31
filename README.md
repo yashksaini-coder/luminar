@@ -22,6 +22,8 @@ Luminar is a real-time simulator of libp2p GossipSub v1.1: 2–500 peers run mes
 
 Offline, no backend: `http://localhost:3000/reels/sybil-eclipse/?theme=stage&hero=1`.
 
+**Demo film** (52 s, voiced, captions in [`demo-16x9.vtt`](web/public/video/demo-16x9.vtt)): [`web/public/video/demo-16x9.mp4`](web/public/video/demo-16x9.mp4). It is the real UI filmed frame by frame from a recording, scored from the same script, and rebuilds from a clean checkout: `make demo-record && make demo-render` ([demo/README.md](demo/README.md)).
+
 ## Why
 
 Hermes, Xatu and the ProbeLab dashboards record what the real network did; a Shadow or Testground run tells you what a scripted network would do, from logs, after it finishes. Neither lets you push one peer past the prune threshold and watch the mesh react in the same second. Luminar runs the scoring loop live with the attack as a button, so the P4 penalty, the PRUNE it causes and the mesh healing around it are one visible chain of events. The eclipse case is the point: scoring prunes the loud Sybils and never sees the quiet eclipse, and the picture shows why. It teaches the rule; it does not predict your beacon node.
