@@ -30,7 +30,7 @@ const DESCRIPTION = 'GossipSub v1.1 peer scoring you can watch bite: fifty peers
 
 export const metadata: Metadata = {
   // NEXT_PUBLIC_SITE_URL is the deploy origin (land-05); without it og:image resolves against localhost.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),   // `||`: an empty value (web/.env.example copied as is) is not a URL
   title: { default: 'Luminar', template: '%s · Luminar' },
   description: 'Real-time GossipSub v1.1 simulator',
   openGraph: { title: 'Luminar', description: DESCRIPTION, images: ['/video/poster.png'] },
