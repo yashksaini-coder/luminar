@@ -71,14 +71,20 @@ needed.
 
 Grep to confirm before relying on a name: `grep -rn 'os.environ' backend/`.
 
-## Render
+## AWS Lightsail (backend, current)
 
-Backend only. `render.yaml`: Docker runtime from `Dockerfile.backend` (Python + `backend/`, no
-Node stage, no `frontend/dist`, so `/` is 404 and only `/api/*`, `/ws/events`, `/metrics`
-answer), free plan, Singapore, `PORT=8080`, `LUMINAR_NODE_COUNT=20`, health check
-`GET /api/sim/snapshot`. The build filter skips deploys unless `backend/`, `pyproject.toml`,
-`uv.lock` or `Dockerfile.backend` changed. Set `LUMINAR_ADMIN_TOKEN` in the dashboard.
-The site is on Vercel (below) and talks to this service through `NEXT_PUBLIC_API_URL`.
+Container service `luminar` in ap-south-1, power micro (0.5 vCPU, 1 GB), 1 node, image from
+`Dockerfile.backend`. URL: `https://luminar.94ajt3h6esd90.ap-south-1.cs.amazonlightsail.com`
+(HTTPS and `wss://` included, no domain needed). Health check `GET /api/sim/snapshot`.
+No build on push: `make deploy-aws` builds, pushes and rolls out the current checkout. The
+admin token is read from `~/.config/luminar/admin-token` (gitignored, outside the repo) and set
+as `LUMINAR_ADMIN_TOKEN`; mutating requests without it get 403. Presenters paste it into
+Legend › gear › Admin token.
+
+## Render (suspended)
+
+`render.yaml` describes the old free-tier service (`Dockerfile.backend`, Singapore, build filter
+on backend paths). Suspended since 2026-10-31; it cold-started in ~33 s and had no admin token.
 
 ## DigitalOcean App Platform
 

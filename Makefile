@@ -1,4 +1,4 @@
-.PHONY: help install backend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check web-video web-stats
+.PHONY: help install backend dev test lint typecheck build check clean docker fmt otel-up otel-down otel-smoke web web-build web-test web-check web-video web-stats deploy-aws
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -68,6 +68,9 @@ docker: ## Run with Docker Compose
 	docker compose up --build
 
 # ── Observability (laptop only) ────────────────────────
+
+deploy-aws: ## Build Dockerfile.backend and roll it out to the Lightsail service (ap-south-1)
+	./scripts/deploy-aws.sh
 
 otel-up: ## Start Jaeger + Prometheus + Grafana (deploy/otel); run backend with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 	docker compose -f deploy/otel/docker-compose.yml up -d
